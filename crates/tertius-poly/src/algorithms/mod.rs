@@ -9,9 +9,9 @@
 
 pub mod fft;
 pub mod gcd;
+pub mod geobucket;
 pub mod karatsuba;
 pub mod ntt;
 
-// TODO: Implement these modules
+// TODO: Implement Kronecker substitution
 // pub mod kronecker;
-// pub mod geobucket;
