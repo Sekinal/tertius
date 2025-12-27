@@ -1,0 +1,18 @@
+[package]
+name = "tertius-core"
+description = "Core expression engine for the Tertius CAS: arena, hash-consing, expression types"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+smallvec.workspace = true
+hashbrown.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+criterion.workspace = true
+

@@ -1,0 +1,40 @@
+[workspace]
+members = ["crates/*"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/tertius-cas/tertius"
+rust-version = "1.75"
+
+[workspace.dependencies]
+# Core dependencies
+dashu = "0.4"
+egg = "0.9"
+smallvec = { version = "1.13", features = ["union", "const_generics"] }
+hashbrown = "0.15"
+rayon = "1.10"
+num-traits = "0.2"
+thiserror = "2.0"
+
+# Testing
+criterion = { version = "0.5", features = ["html_reports"] }
+proptest = "1.5"
+
+# Internal crates
+tertius-core = { path = "crates/tertius-core" }
+tertius-integers = { path = "crates/tertius-integers" }
+tertius-rings = { path = "crates/tertius-rings" }
+tertius-poly = { path = "crates/tertius-poly" }
+tertius-simplify = { path = "crates/tertius-simplify" }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+opt-level = 3
+
+[profile.bench]
+inherits = "release"
+debug = true

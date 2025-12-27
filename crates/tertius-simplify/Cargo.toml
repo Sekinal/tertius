@@ -1,0 +1,18 @@
+[package]
+name = "tertius-simplify"
+description = "Equality saturation-based simplification engine for Tertius CAS"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+tertius-core.workspace = true
+egg.workspace = true
+smallvec.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+criterion.workspace = true

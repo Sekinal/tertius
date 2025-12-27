@@ -1,0 +1,21 @@
+[package]
+name = "tertius-poly"
+description = "High-performance polynomial arithmetic for Tertius CAS"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+tertius-rings.workspace = true
+tertius-integers.workspace = true
+smallvec.workspace = true
+rayon.workspace = true
+num-traits.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+criterion.workspace = true
+

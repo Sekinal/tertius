@@ -1,0 +1,19 @@
+[package]
+name = "tertius"
+description = "Next-generation Computer Algebra System in Rust"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+tertius-core.workspace = true
+tertius-integers.workspace = true
+tertius-rings.workspace = true
+tertius-poly.workspace = true
+tertius-simplify.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+criterion.workspace = true
