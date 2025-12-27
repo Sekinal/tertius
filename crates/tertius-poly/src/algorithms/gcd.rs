@@ -3,7 +3,7 @@
 //! This module provides algorithms for computing the greatest common
 //! divisor of polynomials.
 
-use tertius_rings::traits::{EuclideanDomain, Field, Ring};
+use tertius_rings::traits::{EuclideanDomain, Field};
 
 use crate::dense::DensePoly;
 
@@ -110,6 +110,7 @@ pub fn primitive_part<R: EuclideanDomain>(p: &DensePoly<R>) -> DensePoly<R> {
 mod tests {
     use super::*;
     use tertius_rings::rationals::Q;
+    use tertius_rings::traits::Ring;
 
     #[test]
     fn test_poly_div_rem() {

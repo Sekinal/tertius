@@ -7,10 +7,11 @@
 //! - Geobucket-based sparse multiplication
 //! - Polynomial GCD
 
+pub mod fft;
 pub mod gcd;
 pub mod karatsuba;
+pub mod ntt;
 
 // TODO: Implement these modules
-// pub mod fft;
 // pub mod kronecker;
 // pub mod geobucket;

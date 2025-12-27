@@ -145,7 +145,7 @@ impl<R: Ring> SparsePoly<R> {
         // Combine like terms
         let mut i = 0;
         while i < self.terms.len() {
-            let mut j = i + 1;
+            let j = i + 1;
             while j < self.terms.len() && self.terms[i].0 == self.terms[j].0 {
                 let c = self.terms.remove(j).1;
                 self.terms[i].1 = self.terms[i].1.clone() + c;
