@@ -25,6 +25,9 @@ pub mod monomial;
 pub mod ordering;
 pub mod sparse;
 
+#[cfg(test)]
+mod proptests;
+
 pub use dense::DensePoly;
 pub use monomial::PackedMonomial;
 pub use ordering::MonomialOrder;

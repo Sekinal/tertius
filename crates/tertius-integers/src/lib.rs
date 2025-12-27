@@ -20,6 +20,9 @@ pub mod integer;
 pub mod modular;
 pub mod rational;
 
+#[cfg(test)]
+mod proptests;
+
 pub use integer::Integer;
 pub use modular::{ModInt, ModIntDyn};
 pub use rational::Rational;
