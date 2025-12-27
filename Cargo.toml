@@ -37,6 +37,7 @@ parking_lot = "0.12"
 crossbeam = "0.8"
 rand = "0.8"
 rand_chacha = "0.3"
+rustc-hash = "2.1"
 
 # Testing
 criterion = { version = "0.5", features = ["html_reports"] }

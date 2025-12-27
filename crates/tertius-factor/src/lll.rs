@@ -180,19 +180,35 @@ fn is_size_reduced(mu: &Q) -> bool {
     mu.clone() >= neg_half && mu.clone() <= half
 }
 
-/// Computes the nearest integer to a rational.
+/// Computes the nearest integer to a rational using banker's rounding (round half to even).
 fn nearest_integer(q: &Q) -> Q {
     let inner = q.as_inner();
     let num = inner.numerator();
     let den = inner.denominator();
 
-    // Compute floor((2*num + den) / (2*den))
-    let two = tertius_integers::Integer::new(2);
-    let shifted = num.clone() * two.clone() + den.clone();
-    let denom = den.clone() * two;
-    let rounded = shifted / denom;
+    // Compute floor and check if we're exactly at a half
+    let floor_val = num.clone() / den.clone();
+    let remainder = num.clone() % den.clone();
 
-    Q::from_integer(rounded.to_i64().unwrap_or(0))
+    // Check if remainder is exactly half (2*remainder == den)
+    let two = tertius_integers::Integer::new(2);
+    let double_rem = remainder.clone() * two.clone();
+
+    if double_rem == den {
+        // Exactly at half - round to even (banker's rounding)
+        let floor_i64 = floor_val.to_i64().unwrap_or(0);
+        if floor_i64 % 2 == 0 {
+            Q::from_integer(floor_i64) // floor is even, use it
+        } else {
+            Q::from_integer(floor_i64 + 1) // floor is odd, round up to even
+        }
+    } else if double_rem > den {
+        // More than half - round up
+        Q::from_integer(floor_val.to_i64().unwrap_or(0) + 1)
+    } else {
+        // Less than half - round down (use floor)
+        Q::from_integer(floor_val.to_i64().unwrap_or(0))
+    }
 }
 
 /// Updates μ after size reduction: b[k] -= r * b[j].

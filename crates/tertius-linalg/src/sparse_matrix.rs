@@ -46,6 +46,28 @@ impl<R: Ring + Clone> CsrMatrix<R> {
         }
     }
 
+    /// Creates a sparse matrix from raw CSR data.
+    ///
+    /// # Arguments
+    /// - `values`: Non-zero values in row-major order
+    /// - `col_indices`: Column index for each non-zero value
+    /// - `row_ptrs`: Row pointers (length = num_rows + 1)
+    /// - `num_cols`: Number of columns
+    #[must_use]
+    pub fn from_raw(
+        values: Vec<R>,
+        col_indices: Vec<usize>,
+        row_ptrs: Vec<usize>,
+        num_cols: usize,
+    ) -> Self {
+        Self {
+            values,
+            col_indices,
+            row_ptrs,
+            num_cols,
+        }
+    }
+
     /// Creates a sparse matrix from a dense matrix.
     ///
     /// Zero entries are not stored.

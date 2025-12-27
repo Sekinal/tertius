@@ -184,6 +184,14 @@ fn poly_gcd(a: &DensePoly<Z>, b: &DensePoly<Z>) -> DensePoly<Z> {
         return make_primitive(b);
     }
 
+    // If either is a constant, the GCD is 1 (we work with primitive polynomials)
+    if b.degree() == 0 {
+        return DensePoly::new(vec![z_one()]);
+    }
+    if a.degree() == 0 {
+        return DensePoly::new(vec![z_one()]);
+    }
+
     let (mut a, mut b) = if a.degree() >= b.degree() {
         (a.clone(), b.clone())
     } else {
@@ -198,8 +206,14 @@ fn poly_gcd(a: &DensePoly<Z>, b: &DensePoly<Z>) -> DensePoly<Z> {
 
         let r = pseudo_remainder(&a, &b);
 
-        if r.is_zero() || r.degree() == 0 {
-            break;
+        if r.is_zero() {
+            // b divides a, so gcd is b
+            return make_primitive(&b);
+        }
+
+        if r.degree() == 0 {
+            // Remainder is a constant, so gcd is 1
+            return DensePoly::new(vec![z_one()]);
         }
 
         let g_h_delta = Z(g.0.clone() * pow_z(&h.0, delta as u32));
@@ -218,7 +232,12 @@ fn poly_gcd(a: &DensePoly<Z>, b: &DensePoly<Z>) -> DensePoly<Z> {
         }
     }
 
-    make_primitive(&a)
+    if b.is_zero() {
+        make_primitive(&a)
+    } else {
+        // b is a non-zero constant
+        DensePoly::new(vec![z_one()])
+    }
 }
 
 fn pseudo_remainder(a: &DensePoly<Z>, b: &DensePoly<Z>) -> DensePoly<Z> {

@@ -1,0 +1,19 @@
+[package]
+name = "tertius-groebner"
+version = "0.1.0"
+edition = "2021"
+description = "M5GB Gröbner basis algorithm for Tertius CAS"
+license = "MIT"
+
+[dependencies]
+tertius-poly = { path = "../tertius-poly" }
+tertius-rings = { path = "../tertius-rings" }
+tertius-integers = { path = "../tertius-integers" }
+tertius-linalg = { path = "../tertius-linalg" }
+num-traits = "0.2"
+rayon = "1.10"
+parking_lot = "0.12"
+rustc-hash = "2.1"
+
+[dev-dependencies]
+proptest = "1"
