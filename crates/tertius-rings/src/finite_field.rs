@@ -139,6 +139,26 @@ impl<const P: u64> std::fmt::Display for FiniteField<P> {
     }
 }
 
+impl<const P: u64> num_traits::Zero for FiniteField<P> {
+    fn zero() -> Self {
+        Self(ModInt::new(0))
+    }
+
+    fn is_zero(&self) -> bool {
+        self.0.value() == 0
+    }
+}
+
+impl<const P: u64> num_traits::One for FiniteField<P> {
+    fn one() -> Self {
+        Self(ModInt::new(1))
+    }
+
+    fn is_one(&self) -> bool {
+        self.0.value() == 1
+    }
+}
+
 /// Type alias for GF(2), the field with two elements.
 pub type GF2 = FiniteField<2>;
 

@@ -168,6 +168,28 @@ impl std::fmt::Display for Q {
     }
 }
 
+impl num_traits::Zero for Q {
+    fn zero() -> Self {
+        Self(Rational::from(0))
+    }
+
+    fn is_zero(&self) -> bool {
+        use num_traits::Zero;
+        self.0.is_zero()
+    }
+}
+
+impl num_traits::One for Q {
+    fn one() -> Self {
+        Self(Rational::from(1))
+    }
+
+    fn is_one(&self) -> bool {
+        use num_traits::One;
+        self.0.is_one()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

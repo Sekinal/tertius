@@ -152,6 +152,26 @@ impl std::fmt::Display for Z {
     }
 }
 
+impl num_traits::Zero for Z {
+    fn zero() -> Self {
+        Self(Integer::new(0))
+    }
+
+    fn is_zero(&self) -> bool {
+        self.0.is_zero()
+    }
+}
+
+impl num_traits::One for Z {
+    fn one() -> Self {
+        Self(Integer::new(1))
+    }
+
+    fn is_one(&self) -> bool {
+        self.0.is_one()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
