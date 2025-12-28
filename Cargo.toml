@@ -16,7 +16,11 @@ tertius-poly = { path = "crates/tertius-poly" }
 tertius-linalg = { path = "crates/tertius-linalg" }
 tertius-factor = { path = "crates/tertius-factor" }
 tertius-groebner = { path = "crates/tertius-groebner" }
+tertius-series = { path = "crates/tertius-series" }
+tertius-limits = { path = "crates/tertius-limits" }
+tertius-solve = { path = "crates/tertius-solve" }
 criterion = { version = "0.5", features = ["html_reports"] }
+smallvec.workspace = true
 
 [workspace.package]
 version = "0.1.0"
@@ -55,6 +59,9 @@ tertius-simplify = { path = "crates/tertius-simplify" }
 tertius-linalg = { path = "crates/tertius-linalg" }
 tertius-factor = { path = "crates/tertius-factor" }
 tertius-groebner = { path = "crates/tertius-groebner" }
+tertius-solve = { path = "crates/tertius-solve" }
+tertius-series = { path = "crates/tertius-series" }
+tertius-limits = { path = "crates/tertius-limits" }
 
 [profile.release]
 lto = "thin"
@@ -71,4 +78,8 @@ harness = false
 
 [[bench]]
 name = "phase2_bench"
+harness = false
+
+[[bench]]
+name = "series_bench"
 harness = false

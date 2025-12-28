@@ -1,0 +1,20 @@
+[package]
+name = "tertius-limits"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Symbolic limit computation for the Tertius computer algebra system"
+
+[dependencies]
+tertius-core = { path = "../tertius-core" }
+tertius-integers = { path = "../tertius-integers" }
+tertius-rings = { path = "../tertius-rings" }
+tertius-series = { path = "../tertius-series" }
+num-traits.workspace = true
+thiserror.workspace = true
+smallvec.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true

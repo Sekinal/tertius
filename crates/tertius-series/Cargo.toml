@@ -1,0 +1,20 @@
+[package]
+name = "tertius-series"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Power series for the Tertius computer algebra system"
+
+[dependencies]
+tertius-core = { path = "../tertius-core" }
+tertius-integers = { path = "../tertius-integers" }
+tertius-rings = { path = "../tertius-rings" }
+tertius-poly = { path = "../tertius-poly" }
+num-traits.workspace = true
+thiserror.workspace = true
+parking_lot.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
