@@ -279,10 +279,11 @@ pub fn rothstein_trager<F: Field>(
     Some(LogarithmicPart { terms })
 }
 
-/// Finds rational roots of a polynomial using the rational root theorem.
+/// Finds rational roots of a polynomial over a generic field by trying small integers.
 ///
-/// For polynomials over Q, possible rational roots are ±(factor of constant)/(factor of leading).
-/// For finite fields, we can try all field elements.
+/// For polynomials over arbitrary fields, we try small integer values.
+/// For polynomials over Q specifically, use `find_rational_roots_q` which uses the
+/// rational root theorem for more complete root finding.
 fn find_rational_roots<F: Field>(p: &DensePoly<F>) -> Vec<F> {
     if p.is_zero() {
         return Vec::new();
@@ -302,6 +303,32 @@ fn find_rational_roots<F: Field>(p: &DensePoly<F>) -> Vec<F> {
 
     // Remove duplicates (in case of multiplicity)
     roots.dedup_by(|a, b| a == b);
+
+    roots
+}
+
+/// Finds all rational roots of a polynomial over Q using the rational root theorem.
+///
+/// For polynomials over Q, possible rational roots are ±(factor of constant)/(factor of leading).
+/// This function repeatedly finds and divides out roots until no more are found.
+fn find_rational_roots_q(p: &DensePoly<Q>) -> Vec<Q> {
+    if p.is_zero() {
+        return Vec::new();
+    }
+
+    let mut roots = Vec::new();
+    let mut current = p.coeffs().to_vec();
+
+    // Repeatedly find roots using rational root theorem
+    while poly_degree_q(&current) > 0 {
+        match find_rational_root_q(&current) {
+            Some(root) => {
+                roots.push(root.clone());
+                current = divide_by_linear_q(&current, &root);
+            }
+            None => break,
+        }
+    }
 
     roots
 }
@@ -403,7 +430,7 @@ pub fn rothstein_trager_algebraic(
     let r_poly = compute_resultant_poly(a, d);
 
     // First, try rational roots (fast path)
-    let rational_roots = find_rational_roots(&r_poly);
+    let rational_roots = find_rational_roots_q(&r_poly);
 
     if !rational_roots.is_empty() {
         // We have rational roots - can use them directly
@@ -639,8 +666,9 @@ fn make_monic_q(p: &[Q]) -> Vec<Q> {
     p.iter().map(|c| c.clone() * lead_inv.clone()).collect()
 }
 
-/// Finds a rational root of a polynomial over Q.
-/// Uses a simple search over small integers and common fractions.
+/// Finds a rational root of a polynomial over Q using the rational root theorem.
+///
+/// For p(t) = aₙtⁿ + ... + a₀, rational roots are ±p/q where p divides a₀ and q divides aₙ.
 fn find_rational_root_q(p: &[Q]) -> Option<Q> {
     if p.is_empty() || p.iter().all(|c| c.is_zero()) {
         return None;
@@ -651,8 +679,67 @@ fn find_rational_root_q(p: &[Q]) -> Option<Q> {
         return Some(Q::zero());
     }
 
-    // Try small integers first
-    for i in -20..=20i64 {
+    // Get integer coefficients by finding common denominator
+    // For simplicity, work with the polynomial as-is (rational coefficients)
+    // The roots of p(t) are the same regardless of scaling
+
+    let deg = poly_degree_q(p);
+    if deg == 0 {
+        return None; // Constant polynomial, no roots
+    }
+
+    // Get the constant term and leading coefficient
+    let a0 = &p[0];
+    let an = &p[deg];
+
+    if a0.is_zero() {
+        return Some(Q::zero());
+    }
+    if an.is_zero() {
+        // Leading coefficient is zero, reduce degree
+        let reduced: Vec<Q> = p.iter().take(deg).cloned().collect();
+        return find_rational_root_q(&reduced);
+    }
+
+    // For rational coefficients, apply rational root theorem properly:
+    // If p(t) = (c/d) + ... + (a/b)·tⁿ, multiply by LCM of denominators to clear them.
+    // For the cleared polynomial, roots r/s satisfy:
+    //   r divides |constant_term_of_cleared_poly|
+    //   s divides |leading_coeff_of_cleared_poly|
+    //
+    // Simplified approach: Consider that after clearing denominators:
+    //   - Numerator of root divides |a0_num| × |an_den|
+    //   - Denominator of root divides |an_num| × |a0_den|
+
+    // Extract numerators and denominators
+    let (a0_num, a0_den) = a0.num_den();
+    let (an_num, an_den) = an.num_den();
+
+    // Compute the products for the rational root theorem
+    // Root numerator divides: |a0_num * an_den|
+    // Root denominator divides: |an_num * a0_den|
+    let root_num_bound = a0_num.abs().saturating_mul(an_den.abs());
+    let root_den_bound = an_num.abs().saturating_mul(a0_den.abs());
+
+    // Get divisors
+    let num_divisors = small_divisors(root_num_bound, 500);
+    let den_divisors = small_divisors(root_den_bound, 1000);
+
+    // Try all combinations: ±p/q
+    for &p_val in &num_divisors {
+        for &q_val in &den_divisors {
+            for sign in &[1i64, -1i64] {
+                let candidate = Q::new(sign * p_val, q_val);
+                let val = eval_poly_q(p, &candidate);
+                if val.is_zero() {
+                    return Some(candidate);
+                }
+            }
+        }
+    }
+
+    // Fallback: try small integers
+    for i in -100..=100i64 {
         if i == 0 {
             continue;
         }
@@ -663,20 +750,41 @@ fn find_rational_root_q(p: &[Q]) -> Option<Q> {
         }
     }
 
-    // Try common fractions with small denominators
-    for denom in 2..=10i64 {
-        for num in 1..=20i64 {
-            for sign in &[1i64, -1i64] {
-                let candidate = Q::new(sign * num, denom);
-                let val = eval_poly_q(p, &candidate);
-                if val.is_zero() {
-                    return Some(candidate);
-                }
-            }
+    None
+}
+
+/// Returns divisors of n.
+///
+/// First finds all divisors up to `small_bound`, then adds their paired large divisors.
+/// This ensures we always find "medium-sized" divisors like 720 that might be missed
+/// by purely sequential iteration on highly composite numbers.
+fn small_divisors(n: i64, small_bound: usize) -> Vec<i64> {
+    if n == 0 {
+        return vec![1];
+    }
+    let n = n.abs();
+    let mut divs = Vec::new();
+
+    // First, find ALL divisors up to small_bound by checking each integer
+    let bound = small_bound.min(n as usize);
+    for i in 1..=bound {
+        if n % (i as i64) == 0 {
+            divs.push(i as i64);
         }
     }
 
-    None
+    // Also add their paired large divisors (n/i for each small divisor)
+    let small_count = divs.len();
+    for j in 0..small_count {
+        let large = n / divs[j];
+        if large > bound as i64 && !divs.contains(&large) {
+            divs.push(large);
+        }
+    }
+
+    divs.sort();
+    divs.dedup();
+    divs
 }
 
 /// Evaluates a polynomial at a rational point.
@@ -1084,7 +1192,7 @@ mod tests {
 
         // Step 2: Try rational roots
         let start = Instant::now();
-        let rational_roots = find_rational_roots(&r_poly);
+        let rational_roots = find_rational_roots_q(&r_poly);
         println!("Step 2 - Rational roots: {:?}", start.elapsed());
         println!("  Found {} rational roots", rational_roots.len());
 
@@ -1195,6 +1303,45 @@ mod tests {
         let gcd = poly_gcd_alg(&d_alg, &a_minus_alpha_dp, &field);
         println!("GCD computation: {:?}", start.elapsed());
         println!("  GCD degree: {}", gcd.len() - 1);
+    }
+
+    #[test]
+    fn test_7_linear_factors_debug() {
+        use std::time::Instant;
+
+        // ∫ 1/((x-1)(x-2)(x-3)(x-4)(x-5)(x-6)(x-7)) dx
+        // The denominator is x⁷ - 28x⁶ + 322x⁵ - 1960x⁴ + 6769x³ - 13132x² + 13068x - 5040
+        let a = poly(&[1]); // 1
+        let d = poly(&[-5040, 13068, -13132, 6769, -1960, 322, -28, 1]);
+
+        println!("Testing 7 linear factors:");
+        println!("  D degree: {}", d.degree());
+
+        // Step 1: Compute resultant polynomial
+        let start = Instant::now();
+        let r_poly = compute_resultant_poly(&a, &d);
+        println!("Step 1 - Resultant: {:?}", start.elapsed());
+        println!("  R(t) degree: {}", r_poly.degree());
+        println!("  R(t) coefficients: {:?}", r_poly.coeffs());
+
+        // Step 2: Try rational roots
+        let start = Instant::now();
+        let rational_roots = find_rational_roots_q(&r_poly);
+        println!("Step 2 - Rational roots: {:?}", start.elapsed());
+        println!("  Found {} rational roots: {:?}", rational_roots.len(), rational_roots);
+
+        // For 7 distinct linear factors (x-1)(x-2)...(x-7), the resultant polynomial has degree 7
+        // and should have 7 rational roots (possibly with multiplicities)
+        assert_eq!(r_poly.degree(), 7, "Resultant should have degree 7");
+        assert!(
+            rational_roots.len() >= 1,
+            "Should find at least one rational root for 7 linear factors"
+        );
+
+        // Verify that 1/720 is indeed a root (this is 1/D'(1) where D'(1) = 6!)
+        let test_root = Q::new(1, 720);
+        let test_val = eval_poly_q(r_poly.coeffs(), &test_root);
+        assert!(test_val.is_zero(), "1/720 should be a root of R(t)");
     }
 
     #[test]

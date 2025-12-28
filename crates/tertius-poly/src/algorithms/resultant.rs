@@ -4,7 +4,7 @@
 //! It's computed as the determinant of the Sylvester matrix.
 
 use std::ops::Neg;
-use tertius_rings::traits::Ring;
+use tertius_rings::traits::{EuclideanDomain, Ring};
 
 /// Computes the resultant of two univariate polynomials.
 ///
@@ -17,7 +17,7 @@ use tertius_rings::traits::Ring;
 ///
 /// # Returns
 /// The resultant res(f, g).
-pub fn resultant<R: Ring + Clone + Neg<Output = R>>(f: &[R], g: &[R]) -> R {
+pub fn resultant<R: EuclideanDomain + Clone + Neg<Output = R>>(f: &[R], g: &[R]) -> R {
     // Handle edge cases
     if f.is_empty() || g.is_empty() {
         return R::zero();
@@ -72,9 +72,11 @@ fn build_sylvester_matrix<R: Ring + Clone>(f: &[R], g: &[R], size: usize) -> Vec
     matrix
 }
 
-/// Computes the determinant using cofactor expansion (for small matrices) or
-/// LU decomposition approach.
-fn determinant<R: Ring + Clone + Neg<Output = R>>(matrix: &[Vec<R>]) -> R {
+/// Computes the determinant using Bareiss algorithm (fraction-free Gaussian elimination).
+///
+/// This is O(n³) compared to O(n!) for cofactor expansion.
+/// Works for any Euclidean domain (needed for exact division).
+fn determinant<R: EuclideanDomain + Clone + Neg<Output = R>>(matrix: &[Vec<R>]) -> R {
     let n = matrix.len();
     if n == 0 {
         return R::one();
@@ -112,37 +114,79 @@ fn determinant<R: Ring + Clone + Neg<Output = R>>(matrix: &[Vec<R>]) -> R {
         return pos + neg.neg();
     }
 
-    // For larger matrices, use cofactor expansion along the first row
-    let mut det = R::zero();
-    for j in 0..n {
-        if matrix[0][j].is_zero() {
-            continue;
-        }
+    // Bareiss algorithm: fraction-free Gaussian elimination
+    // We track row swaps to maintain correct sign
+    let mut m: Vec<Vec<R>> = matrix.to_vec();
+    let mut sign_flips = 0usize;
 
-        // Build the minor matrix (n-1 x n-1)
-        let mut minor = Vec::with_capacity(n - 1);
-        for i in 1..n {
-            let mut row = Vec::with_capacity(n - 1);
-            for k in 0..n {
-                if k != j {
-                    row.push(matrix[i][k].clone());
-                }
+    for k in 0..n - 1 {
+        // Find pivot in column k
+        let mut pivot_row = None;
+        for i in k..n {
+            if !m[i][k].is_zero() {
+                pivot_row = Some(i);
+                break;
             }
-            minor.push(row);
         }
 
-        let cofactor = determinant(&minor);
-        let term = matrix[0][j].clone() * cofactor;
+        let pivot_row = match pivot_row {
+            Some(r) => r,
+            None => return R::zero(), // Column is all zeros, det = 0
+        };
 
-        // Sign: (-1)^j
-        if j % 2 == 0 {
-            det = det + term;
-        } else {
-            det = det + term.neg();
+        // Swap rows if needed
+        if pivot_row != k {
+            m.swap(k, pivot_row);
+            sign_flips += 1;
+        }
+
+        // Get the pivot element and previous pivot (for Bareiss division)
+        let pivot = m[k][k].clone();
+        let prev_pivot = if k > 0 { m[k - 1][k - 1].clone() } else { R::one() };
+
+        // Eliminate column k in rows k+1 to n-1
+        for i in k + 1..n {
+            for j in k + 1..n {
+                // Bareiss formula: m[i][j] = (m[i][j] * pivot - m[i][k] * m[k][j]) / prev_pivot
+                let numerator = m[i][j].clone() * pivot.clone()
+                    + (m[i][k].clone() * m[k][j].clone()).neg();
+                // In an integral domain, this division is exact
+                m[i][j] = exact_div(&numerator, &prev_pivot);
+            }
+            m[i][k] = R::zero();
         }
     }
 
-    det
+    // The determinant is the (n-1, n-1) element, adjusted for sign
+    let det = m[n - 1][n - 1].clone();
+    if sign_flips % 2 == 0 {
+        det
+    } else {
+        det.neg()
+    }
+}
+
+/// Performs exact division in an Euclidean domain.
+///
+/// This assumes that divisor divides dividend exactly.
+/// The Bareiss algorithm guarantees this property.
+fn exact_div<R: EuclideanDomain + Clone>(dividend: &R, divisor: &R) -> R {
+    if divisor.is_one() {
+        return dividend.clone();
+    }
+    if divisor.is_zero() {
+        panic!("exact_div: division by zero");
+    }
+
+    let (quotient, remainder) = dividend.div_rem(divisor);
+
+    // Bareiss guarantees exact divisibility
+    debug_assert!(
+        remainder.is_zero(),
+        "exact_div: remainder should be zero in Bareiss algorithm"
+    );
+
+    quotient
 }
 
 /// Computes the discriminant of a univariate polynomial.
@@ -151,7 +195,7 @@ fn determinant<R: Ring + Clone + Neg<Output = R>>(matrix: &[Vec<R>]) -> R {
 /// disc(f) = (-1)^{n(n-1)/2} * res(f, f') / a_n
 ///
 /// where a_n is the leading coefficient and n is the degree.
-pub fn discriminant<R: Ring + Clone + Neg<Output = R>>(f: &[R]) -> R {
+pub fn discriminant<R: EuclideanDomain + Clone + Neg<Output = R>>(f: &[R]) -> R {
     if f.len() <= 1 {
         return R::zero();
     }

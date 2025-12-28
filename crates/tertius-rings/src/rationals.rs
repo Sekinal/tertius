@@ -34,6 +34,17 @@ impl Q {
     pub fn as_inner(&self) -> &Rational {
         &self.0
     }
+
+    /// Returns the numerator and denominator as i64 values.
+    ///
+    /// For large values that don't fit in i64, saturates at i64::MAX/MIN.
+    #[must_use]
+    pub fn num_den(&self) -> (i64, i64) {
+        use num_traits::ToPrimitive;
+        let num = self.0.numerator().to_i64().unwrap_or(i64::MAX);
+        let den = self.0.denominator().to_i64().unwrap_or(i64::MAX);
+        (num, den)
+    }
 }
 
 impl Ring for Q {
