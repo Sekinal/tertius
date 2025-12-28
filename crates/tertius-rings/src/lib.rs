@@ -26,10 +26,12 @@ pub mod finite_field;
 pub mod integers;
 pub mod poly_ring;
 pub mod rationals;
+pub mod splitting_field;
 pub mod traits;
 
 pub use algebraic::{AlgebraicField, AlgebraicNumber};
 pub use finite_field::FiniteField;
 pub use integers::Z;
 pub use rationals::Q;
+pub use splitting_field::SplittingField;
 pub use traits::{EuclideanDomain, Field, Ring};

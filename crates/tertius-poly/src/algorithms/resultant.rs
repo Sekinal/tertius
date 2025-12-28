@@ -72,7 +72,8 @@ fn build_sylvester_matrix<R: Ring + Clone>(f: &[R], g: &[R], size: usize) -> Vec
     matrix
 }
 
-/// Computes the determinant using Bareiss algorithm (fraction-free elimination).
+/// Computes the determinant using cofactor expansion (for small matrices) or
+/// LU decomposition approach.
 fn determinant<R: Ring + Clone + Neg<Output = R>>(matrix: &[Vec<R>]) -> R {
     let n = matrix.len();
     if n == 0 {
@@ -81,65 +82,67 @@ fn determinant<R: Ring + Clone + Neg<Output = R>>(matrix: &[Vec<R>]) -> R {
     if n == 1 {
         return matrix[0][0].clone();
     }
+    if n == 2 {
+        // 2x2: ad - bc
+        let a = &matrix[0][0];
+        let b = &matrix[0][1];
+        let c = &matrix[1][0];
+        let d = &matrix[1][1];
+        return a.clone() * d.clone() + (b.clone() * c.clone()).neg();
+    }
+    if n == 3 {
+        // 3x3: Sarrus' rule
+        let a = &matrix[0][0];
+        let b = &matrix[0][1];
+        let c = &matrix[0][2];
+        let d = &matrix[1][0];
+        let e = &matrix[1][1];
+        let f = &matrix[1][2];
+        let g = &matrix[2][0];
+        let h = &matrix[2][1];
+        let i = &matrix[2][2];
 
-    // Make a mutable copy
-    let mut a: Vec<Vec<R>> = matrix.to_vec();
-    let mut sign = true;
-    let mut prev_pivot = R::one();
-
-    for k in 0..n {
-        // Find pivot
-        let mut pivot_row = None;
-        for row in k..n {
-            if !a[row][k].is_zero() {
-                pivot_row = Some(row);
-                break;
-            }
-        }
-
-        let pivot_row = match pivot_row {
-            Some(r) => r,
-            None => return R::zero(), // Singular matrix
-        };
-
-        // Swap rows if needed
-        if pivot_row != k {
-            a.swap(k, pivot_row);
-            sign = !sign;
-        }
-
-        let pivot = a[k][k].clone();
-
-        // Bareiss elimination
-        for i in (k + 1)..n {
-            for j in (k + 1)..n {
-                // a[i][j] = (a[k][k] * a[i][j] - a[i][k] * a[k][j]) / prev_pivot
-                // For commutative rings with exact division this works
-                let numerator = pivot.clone() * a[i][j].clone()
-                    + (a[i][k].clone() * a[k][j].clone()).neg();
-                // Division by prev_pivot for fraction-free (we skip for now and accept extra factors)
-                a[i][j] = numerator;
-            }
-        }
-
-        // Clear column below pivot
-        for i in (k + 1)..n {
-            a[i][k] = R::zero();
-        }
-
-        prev_pivot = pivot;
+        // aei + bfg + cdh - ceg - bdi - afh
+        let pos = a.clone() * e.clone() * i.clone()
+            + b.clone() * f.clone() * g.clone()
+            + c.clone() * d.clone() * h.clone();
+        let neg = c.clone() * e.clone() * g.clone()
+            + b.clone() * d.clone() * i.clone()
+            + a.clone() * f.clone() * h.clone();
+        return pos + neg.neg();
     }
 
-    // For Bareiss, the determinant is the last diagonal element divided by appropriate factor
-    // For simplicity, since we're not doing the division, we compute differently
-    // Just return product of diagonal elements with sign adjustment
-    let mut det = a[n - 1][n - 1].clone();
+    // For larger matrices, use cofactor expansion along the first row
+    let mut det = R::zero();
+    for j in 0..n {
+        if matrix[0][j].is_zero() {
+            continue;
+        }
 
-    if sign {
-        det
-    } else {
-        det.neg()
+        // Build the minor matrix (n-1 x n-1)
+        let mut minor = Vec::with_capacity(n - 1);
+        for i in 1..n {
+            let mut row = Vec::with_capacity(n - 1);
+            for k in 0..n {
+                if k != j {
+                    row.push(matrix[i][k].clone());
+                }
+            }
+            minor.push(row);
+        }
+
+        let cofactor = determinant(&minor);
+        let term = matrix[0][j].clone() * cofactor;
+
+        // Sign: (-1)^j
+        if j % 2 == 0 {
+            det = det + term;
+        } else {
+            det = det + term.neg();
+        }
     }
+
+    det
 }
 
 /// Computes the discriminant of a univariate polynomial.
