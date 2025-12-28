@@ -1,0 +1,18 @@
+[package]
+name = "tertius-diffalg"
+description = "Differential algebra foundations for Tertius CAS (Risch algorithm)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+tertius-poly.workspace = true
+tertius-rings.workspace = true
+tertius-integers.workspace = true
+tertius-rational-func.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true

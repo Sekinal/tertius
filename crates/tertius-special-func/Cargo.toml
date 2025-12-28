@@ -1,0 +1,17 @@
+[package]
+name = "tertius-special-func"
+description = "Special functions for Tertius CAS (polylogarithms, elliptic integrals, hypergeometric)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+tertius-poly.workspace = true
+tertius-rings.workspace = true
+tertius-integers.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
