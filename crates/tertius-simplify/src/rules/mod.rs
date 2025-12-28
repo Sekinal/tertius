@@ -3,6 +3,7 @@
 pub mod arithmetic;
 pub mod trig;
 pub mod exp_log;
+pub mod integration;
 
 use egg::Rewrite;
 use crate::language::TertiusLang;
@@ -13,5 +14,6 @@ pub fn all_rules() -> Vec<Rewrite<TertiusLang, ()>> {
     rules.extend(arithmetic::rules());
     rules.extend(trig::rules());
     rules.extend(exp_log::rules());
+    rules.extend(integration::rules());
     rules
 }

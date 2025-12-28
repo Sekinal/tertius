@@ -9,7 +9,7 @@ Tertius is a high-performance, modular CAS designed for speed and correctness. I
 
 ## Features
 
-### Core Capabilities
+### Core Capabilities (Phase 1)
 
 - **Arbitrary Precision Arithmetic**: Integers and rationals with no size limits
 - **Polynomial Algebra**: Dense and sparse representations with adaptive algorithms
@@ -17,12 +17,21 @@ Tertius is a high-performance, modular CAS designed for speed and correctness. I
 - **Algebraic Number Fields**: Q(α) for algebraic extensions
 - **Symbolic Simplification**: Equality saturation via the `egg` library
 
+### Advanced Algorithms (Phase 2)
+
+- **Polynomial Factorization**: Van Hoeij algorithm with LLL lattice reduction
+- **Gröbner Bases**: M5GB algorithm (F5 signatures + M4GB caching)
+- **Sparse Linear Algebra**: Block Wiedemann, Smith Normal Form
+- **Sparse Interpolation**: Ben-Or/Tiwari algorithm
+- **Sparse GCD**: Hu-Monagan parallel algorithm
+- **Symbolic Integration**: Differentiation/integration rules via equality saturation
+
 ### Performance Highlights
 
 - **Hash-Consing**: O(1) structural equality via arena allocation
 - **Algorithm Selection**: Automatic switching between schoolbook, Karatsuba, and FFT/NTT
 - **SIMD-Friendly**: Bit-packed monomials for cache-efficient operations
-- **Parallel-Ready**: Designed for `rayon`-based parallelism
+- **Parallel Throughout**: `rayon`-based parallelism in all major algorithms
 
 ## Benchmark Results
 
@@ -46,6 +55,16 @@ Tertius is a high-performance, modular CAS designed for speed and correctness. I
 | FFT+CRT (Integer) | 256 | 2.55 ms | 3-prime NTT |
 | FFT+CRT (Integer) | 1024 | 10.4 ms | 3-prime NTT |
 
+### Phase 2 Algorithms
+
+| Operation | Input Size | Time | Notes |
+|-----------|------------|------|-------|
+| Sparse GCD | degree 2 | 102 ns | Common factor detection |
+| Sparse GCD | degree 5 | 96 ns | Euclidean algorithm over GF(101) |
+| Sparse SpMV | 10×10 | 57 ns | Bidiagonal CSR matrix |
+| Sparse SpMV | 50×50 | 272 ns | Bidiagonal CSR matrix |
+| Sparse SpMV | 100×100 | 547 ns | Bidiagonal CSR matrix |
+
 ## Architecture
 
 ```
@@ -54,8 +73,11 @@ tertius/
 │   ├── tertius-core/      # Arena, expressions, hash-consing
 │   ├── tertius-integers/  # Arbitrary precision (dashu wrapper)
 │   ├── tertius-rings/     # Ring/Field traits, Z, Q, Z_p
-│   ├── tertius-poly/      # Polynomial arithmetic
-│   ├── tertius-simplify/  # egg-based simplification
+│   ├── tertius-poly/      # Polynomial arithmetic + sparse algorithms
+│   ├── tertius-simplify/  # egg-based simplification + calculus
+│   ├── tertius-linalg/    # Sparse linear algebra (CSR, Wiedemann)
+│   ├── tertius-factor/    # Polynomial factorization (Van Hoeij, LLL)
+│   ├── tertius-groebner/  # Gröbner bases (M5GB algorithm)
 │   └── tertius/           # Facade crate
 ├── benches/               # Criterion benchmarks
 └── scripts/               # Comparison scripts
@@ -111,7 +133,7 @@ Geobucket algorithm with O(log n) amortized insertion time.
 ## Testing
 
 ```bash
-# Run all tests (101 tests total)
+# Run all tests (217 tests total)
 cargo test
 
 # Run property-based tests
@@ -132,20 +154,25 @@ Using `proptest`, Tertius verifies:
 ## Comparing with SymPy
 
 ```bash
+# Phase 1 NTT benchmarks
 cd scripts
 uv run python benchmark_sympy.py
+
+# Phase 2 comprehensive benchmarks (multiplication, GCD, factorization, Gröbner)
+uv run python benchmark_phase2.py
 ```
 
-Sample output:
+Sample output from Phase 2 benchmarks:
 ```
-Comparison with Tertius NTT (modular arithmetic):
--------------------------------------------------------
-Degree     Tertius NTT (ms)   SymPy ZZ (ms)   Speedup
--------------------------------------------------------
-16                  0.007             0.039        5.6x
-64                  0.025             0.255       10.2x
-256                 0.107             2.827       26.4x
-1024                0.512            22.880       44.7x
+Polynomial Multiplication (NTT vs SymPy ZZ):
+  Degree   Tertius NTT (ms)   SymPy ZZ (ms)   Speedup
+      16              0.007           0.041      5.9x
+      64              0.025           0.406     16.3x
+     256              0.107           3.663     34.2x
+    1024              0.512          26.510     51.8x
+
+Note: Tertius NTT uses modular arithmetic (single prime).
+      SymPy uses arbitrary precision integers.
 ```
 
 ## Crate Documentation
@@ -155,19 +182,24 @@ Degree     Tertius NTT (ms)   SymPy ZZ (ms)   Speedup
 | `tertius-core` | Arena allocation, expression DAG, hash-consing |
 | `tertius-integers` | `Integer`, `Rational`, `ModInt<P>` types |
 | `tertius-rings` | `Ring`, `Field`, `EuclideanDomain` traits |
-| `tertius-poly` | `DensePoly<R>`, `SparsePoly<R>`, algorithms |
-| `tertius-simplify` | `egg`-based algebraic simplification |
+| `tertius-poly` | `DensePoly<R>`, `SparsePoly<R>`, FFT/NTT, sparse GCD |
+| `tertius-simplify` | `egg`-based simplification, calculus rules |
+| `tertius-linalg` | Sparse matrices (CSR), Block Wiedemann, Smith Normal Form |
+| `tertius-factor` | Van Hoeij factorization, LLL, Berlekamp-Zassenhaus |
+| `tertius-groebner` | M5GB Gröbner basis algorithm |
 | `tertius` | Unified API facade |
 
 ## Contributing
 
 Contributions are welcome! Areas of interest:
 
-- [ ] Gröbner basis computation (F4/F5 algorithms)
-- [ ] Factorization algorithms
-- [ ] Symbolic integration (Risch algorithm)
+- [x] Gröbner basis computation (M5GB algorithm)
+- [x] Factorization algorithms (Van Hoeij, LLL, Berlekamp-Zassenhaus)
+- [x] Symbolic integration (differentiation/integration rules)
+- [ ] Risch algorithm (full elementary function integration)
 - [ ] Python bindings (PyO3)
 - [ ] WASM target
+- [ ] Multivariate factorization (Lecerf's algorithm)
 
 ## License
 

@@ -13,6 +13,9 @@ tertius-core = { path = "crates/tertius-core" }
 tertius-integers = { path = "crates/tertius-integers" }
 tertius-rings = { path = "crates/tertius-rings" }
 tertius-poly = { path = "crates/tertius-poly" }
+tertius-linalg = { path = "crates/tertius-linalg" }
+tertius-factor = { path = "crates/tertius-factor" }
+tertius-groebner = { path = "crates/tertius-groebner" }
 criterion = { version = "0.5", features = ["html_reports"] }
 
 [workspace.package]
@@ -64,4 +67,8 @@ debug = true
 
 [[bench]]
 name = "poly_bench"
+harness = false
+
+[[bench]]
+name = "phase2_bench"
 harness = false

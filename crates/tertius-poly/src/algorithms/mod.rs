@@ -6,6 +6,10 @@
 //! - Kronecker substitution
 //! - Geobucket-based sparse multiplication
 //! - Polynomial GCD
+//! - Berlekamp-Massey algorithm
+//! - Ben-Or/Tiwari sparse interpolation
+//! - Sparse GCD (Hu-Monagan)
+//! - Resultants
 
 pub mod fft;
 pub mod gcd;
@@ -13,5 +17,7 @@ pub mod geobucket;
 pub mod karatsuba;
 pub mod ntt;
 
-// TODO: Implement Kronecker substitution
-// pub mod kronecker;
+pub mod ben_or_tiwari;
+pub mod berlekamp_massey;
+pub mod resultant;
+pub mod sparse_gcd;

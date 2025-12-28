@@ -38,6 +38,12 @@ define_language! {
         // Other functions
         "abs" = Abs(Id),
         "factorial" = Factorial(Id),
+
+        // Calculus operators
+        // Int(expr, var) = indefinite integral of expr with respect to var
+        "int" = Int([Id; 2]),
+        // D(expr, var) = derivative of expr with respect to var
+        "D" = Derivative([Id; 2]),
     }
 }
 
