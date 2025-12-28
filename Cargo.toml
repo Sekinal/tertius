@@ -19,6 +19,10 @@ tertius-groebner = { path = "crates/tertius-groebner" }
 tertius-series = { path = "crates/tertius-series" }
 tertius-limits = { path = "crates/tertius-limits" }
 tertius-solve = { path = "crates/tertius-solve" }
+tertius-rational-func = { path = "crates/tertius-rational-func" }
+tertius-integrate = { path = "crates/tertius-integrate" }
+tertius-diffalg = { path = "crates/tertius-diffalg" }
+tertius-special-func = { path = "crates/tertius-special-func" }
 criterion = { version = "0.5", features = ["html_reports"] }
 smallvec.workspace = true
 

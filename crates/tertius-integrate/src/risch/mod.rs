@@ -23,8 +23,8 @@ use tertius_poly::dense::DensePoly;
 use tertius_rational_func::RationalFunction;
 use tertius_rings::traits::Field;
 
-pub use logarithmic::{integrate_log_polynomial, LogExtIntegrationResult};
-pub use exponential::{integrate_exp_polynomial, ExpExtIntegrationResult};
+pub use logarithmic::{integrate_log_polynomial, integrate_log_power, LogExtIntegrationResult};
+pub use exponential::{integrate_exp_polynomial, integrate_poly_times_exp, ExpExtIntegrationResult, ExpPowerIntegral};
 pub use heuristic::{heuristic_integrate, HeuristicResult};
 
 /// Result of attempting integration via the Risch algorithm.
