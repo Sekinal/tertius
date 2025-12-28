@@ -254,9 +254,19 @@ impl Eq for PackedMonomial {}
 
 impl Hash for PackedMonomial {
     fn hash<H: Hasher>(&self, state: &mut H) {
+        // Hash must be consistent with PartialEq which compares up to max(num_vars).
+        // To ensure equal monomials hash equally regardless of num_vars,
+        // we hash all exponents up to the last non-zero one.
         self.total_degree.hash(state);
-        let n = self.num_vars as usize;
-        self.exponents[..n].hash(state);
+
+        // Find the actual extent of non-zero exponents
+        let mut last_nonzero = 0;
+        for i in 0..MAX_VARS {
+            if self.exponents[i] != 0 {
+                last_nonzero = i + 1;
+            }
+        }
+        self.exponents[..last_nonzero].hash(state);
     }
 }
 
