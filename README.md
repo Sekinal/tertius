@@ -42,7 +42,7 @@ Tertius consistently outperforms SymPy across polynomial algebra operations. The
 
 ### Advanced Algorithms
 
-- **Polynomial Factorization**: Van Hoeij algorithm with LLL lattice reduction
+- **Polynomial Factorization**: Van Hoeij (univariate) + Lecerf (multivariate) with LLL lattice reduction
 - **Gröbner Bases**: M5GB algorithm (F5 signatures + M4GB caching)
 - **FGLM**: Gröbner basis conversion from grevlex to lex ordering
 - **Sparse Linear Algebra**: Block Wiedemann, Smith Normal Form
@@ -70,7 +70,7 @@ NTT-based multiplication over finite fields vs SymPy's arbitrary-precision integ
 
 ### Polynomial Factorization
 
-Van Hoeij factorization with LLL lattice reduction:
+**Univariate** (Van Hoeij with LLL lattice reduction):
 
 | Polynomial | Tertius | SymPy | Speedup |
 |------------|---------|-------|---------|
@@ -80,6 +80,15 @@ Van Hoeij factorization with LLL lattice reduction:
 | x⁴ + 4 (Sophie Germain) | 38 µs | 657 µs | **17x** |
 
 *Factorization over Z using Hensel lifting and LLL-based factor recombination.*
+
+**Multivariate** (Lecerf's algorithm):
+
+| Polynomial | Variables | Tertius | Notes |
+|------------|-----------|---------|-------|
+| (x+1)(x+2) in Z[x,y] | 2 | 4 µs | Bivariate dispatch |
+| (x+1)² in Z[x,y,z] | 3 | 5 µs | Lecerf algorithm |
+
+*Multivariate factorization using evaluation-interpolation with Hensel lifting.*
 
 ### Gröbner Basis Computation
 
@@ -222,6 +231,21 @@ Converts Gröbner bases from grevlex (fast to compute) to lex (triangular form):
 
 Complexity: O(nD³) where D is the dimension of K[x]/I.
 
+### Lecerf's Algorithm (Multivariate Factorization)
+
+Factors sparse multivariate polynomials over Z[x₁,...,xₙ]:
+
+1. **Evaluation**: Specialize f(x₁,...,xₙ) → f(x₁,a₂,...,aₙ) at random points
+2. **Univariate Factorization**: Factor the univariate polynomial using Van Hoeij
+3. **Hensel Lifting**: Lift factors variable-by-variable using multivariate Hensel
+4. **Leading Coefficient Precomputation**: Use lc₁(h) | lc₁(f) constraint to prune search
+5. **Factor Recombination**: Combine lifted factors that divide the original
+
+Key optimizations:
+- Sparse interpolation via Ben-Or/Tiwari for coefficient recovery
+- LLL-based pruning of factor combinations
+- Parallel Hensel lifting steps
+
 ### Risch Algorithm (Symbolic Integration)
 
 The Risch algorithm is a complete decision procedure for elementary function integration:
@@ -287,7 +311,7 @@ Using `proptest`, Tertius verifies:
 | `tertius-poly` | `DensePoly<R>`, `SparsePoly<R>`, FFT/NTT, sparse GCD |
 | `tertius-simplify` | `egg`-based simplification, calculus rules |
 | `tertius-linalg` | Sparse matrices (CSR), Block Wiedemann, Smith Normal Form |
-| `tertius-factor` | Van Hoeij factorization, LLL, Berlekamp-Zassenhaus |
+| `tertius-factor` | Van Hoeij + Lecerf factorization, LLL, multivariate Hensel |
 | `tertius-groebner` | M5GB Gröbner basis algorithm |
 | `tertius-solve` | FGLM algorithm, triangular solving |
 | `tertius-rational-func` | Rational functions, partial fractions, Hermite reduction |
@@ -311,9 +335,9 @@ Contributions are welcome! Areas of interest:
 - [x] Risch algorithm (full elementary function integration)
 - [x] Special functions (polylogarithms, elliptic integrals, hypergeometric)
 - [x] Non-integrability proofs (Liouville's theorem)
+- [x] Multivariate factorization (Lecerf's algorithm)
 - [ ] Python bindings (PyO3)
 - [ ] WASM target
-- [ ] Multivariate factorization (Lecerf's algorithm)
 - [ ] Differential equations (symbolic ODE solver)
 
 ---
