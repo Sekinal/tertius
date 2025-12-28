@@ -57,13 +57,37 @@ Tertius is a high-performance, modular CAS designed for speed and correctness. I
 
 ### Phase 2 Algorithms
 
-| Operation | Input Size | Time | Notes |
-|-----------|------------|------|-------|
-| Sparse GCD | degree 2 | 102 ns | Common factor detection |
-| Sparse GCD | degree 5 | 96 ns | Euclidean algorithm over GF(101) |
-| Sparse SpMV | 10×10 | 57 ns | Bidiagonal CSR matrix |
-| Sparse SpMV | 50×50 | 272 ns | Bidiagonal CSR matrix |
-| Sparse SpMV | 100×100 | 547 ns | Bidiagonal CSR matrix |
+#### Polynomial GCD (over GF(101))
+
+| Input | Tertius | SymPy | Speedup |
+|-------|---------|-------|---------|
+| degree 5, common factor | 102 ns | 27 µs | **~265x** |
+| degree 5+3, common factor | 96 ns | 25 µs | **~260x** |
+
+#### Polynomial Factorization (over Z)
+
+| Polynomial | SymPy | Algorithm |
+|------------|-------|-----------|
+| x⁴ - 1 | 329 µs | Van Hoeij + LLL |
+| x⁶ - 1 | 345 µs | Van Hoeij + LLL |
+| x⁴ + 4 (Sophie Germain) | 507 µs | Van Hoeij + LLL |
+| (x+1)⁵ | 629 µs | Van Hoeij + LLL |
+
+#### Gröbner Basis (grevlex order)
+
+| System | SymPy | Basis Size | Algorithm |
+|--------|-------|------------|-----------|
+| cyclic-3 | 0.4 ms | 3 | M5GB |
+| katsura-3 | 0.9 ms | 4 | M5GB |
+| cyclic-4 | 2.3 ms | 7 | M5GB |
+
+#### Sparse Linear Algebra
+
+| Operation | Size | Time | Notes |
+|-----------|------|------|-------|
+| Sparse SpMV | 10×10 | 57 ns | CSR bidiagonal |
+| Sparse SpMV | 50×50 | 272 ns | CSR bidiagonal |
+| Sparse SpMV | 100×100 | 547 ns | CSR bidiagonal |
 
 ## Architecture
 
