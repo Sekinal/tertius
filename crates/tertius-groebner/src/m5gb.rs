@@ -5,7 +5,7 @@
 //! - M4GB-style caching for efficient reductions
 //! - Parallel matrix reduction for batch processing
 
-use crate::criteria::{is_rewritable, product_criterion, sugar_selection};
+use crate::criteria::{is_rewritable_excluding, product_criterion, sugar_selection};
 use crate::labeled_poly::LabeledPoly;
 use crate::macaulay::{MacaulayMatrix, MonomialKey};
 use crate::monomial::PackedMonomial;
@@ -168,10 +168,13 @@ impl<R: Field + Clone + Send + Sync + Neg<Output = R>> M5GB<R> {
         }
 
         // Filter pairs using F5 criteria
+        // Note: We exclude the pair members themselves from the rewritability check
         let filtered: Vec<_> = if self.config.use_f5_criteria {
             selected
                 .into_iter()
-                .filter(|pair| !is_rewritable(&pair.signature, &self.basis))
+                .filter(|pair| {
+                    !is_rewritable_excluding(&pair.signature, &self.basis, pair.i, pair.j)
+                })
                 .collect()
         } else {
             selected
@@ -443,6 +446,37 @@ mod tests {
 
         // Should have a Gröbner basis
         assert!(!basis.is_empty());
+    }
+
+    #[test]
+    fn test_m5gb_quadratic_with_linear() {
+        // System that was failing in FGLM tests:
+        // x^2 - 1 = 0, y - x = 0
+        // Complete GB should be: {x^2 - 1, x - y, y^2 - 1} or equivalent
+
+        // x^2 - 1
+        let f = vec![(ff(1), mono(&[2, 0])), (ff(100), mono(&[0, 0]))];
+
+        // y - x = y + 100*x
+        let g = vec![(ff(1), mono(&[0, 1])), (ff(100), mono(&[1, 0]))];
+
+        let gens = vec![f, g];
+        let basis = groebner_basis(gens);
+
+        // Should have 3 elements: x^2-1, x-y, y^2-1
+        assert!(
+            basis.len() >= 3,
+            "Expected at least 3 basis elements, got {}",
+            basis.len()
+        );
+
+        // Verify y^2 - 1 is in the basis (should have LM = y^2)
+        let has_y2 = basis.iter().any(|p| {
+            p.leading_monomial()
+                .map(|m| m.exponent(0) == 0 && m.exponent(1) == 2)
+                .unwrap_or(false)
+        });
+        assert!(has_y2, "Basis should contain y^2 - 1");
     }
 
     #[test]

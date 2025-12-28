@@ -265,6 +265,31 @@ impl<R: Ring> DensePoly<R> {
         coeffs.extend(self.coeffs.clone());
         Self::new(coeffs)
     }
+
+    /// Raises the polynomial to a non-negative integer power.
+    #[must_use]
+    pub fn pow(&self, n: u32) -> Self {
+        if n == 0 {
+            return Self::one();
+        }
+        if n == 1 {
+            return self.clone();
+        }
+
+        let mut result = Self::one();
+        let mut base = self.clone();
+        let mut exp = n;
+
+        while exp > 0 {
+            if exp & 1 == 1 {
+                result = result.mul(&base);
+            }
+            base = base.mul(&base);
+            exp >>= 1;
+        }
+
+        result
+    }
 }
 
 impl<R: Ring> std::fmt::Display for DensePoly<R> {

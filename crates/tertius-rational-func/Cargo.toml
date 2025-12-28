@@ -1,0 +1,17 @@
+[package]
+name = "tertius-rational-func"
+description = "Rational functions P(x)/Q(x) for Tertius CAS"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+tertius-poly.workspace = true
+tertius-rings.workspace = true
+tertius-integers.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true

@@ -62,6 +62,7 @@ tertius-groebner = { path = "crates/tertius-groebner" }
 tertius-solve = { path = "crates/tertius-solve" }
 tertius-series = { path = "crates/tertius-series" }
 tertius-limits = { path = "crates/tertius-limits" }
+tertius-rational-func = { path = "crates/tertius-rational-func" }
 
 [profile.release]
 lto = "thin"

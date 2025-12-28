@@ -9,24 +9,44 @@ use crate::signature::{SignedPair, Signature};
 
 /// Checks the F5 criterion: whether a signature is rewritable.
 ///
-/// A signature σ is rewritable if there exists a polynomial g in the basis
-/// such that lm(g) divides σ.monomial and sig(g) < σ with the same index.
+/// A signature σ = (m, i) is rewritable if there exists a polynomial g in the basis
+/// with sig(g) = (t, i) (same index) such that t divides m and sig(g) < σ.
+///
+/// This detects when an S-polynomial would just reproduce work already done
+/// with a smaller signature.
 pub fn is_rewritable<R: Clone + PartialEq>(
     sig: &Signature,
     basis: &[LabeledPoly<R>],
 ) -> bool {
-    for g in basis {
+    is_rewritable_excluding(sig, basis, usize::MAX, usize::MAX)
+}
+
+/// Like `is_rewritable`, but excludes specific basis indices from consideration.
+///
+/// This is used when checking pairs (i, j) to avoid filtering based on
+/// the pair members themselves.
+pub fn is_rewritable_excluding<R: Clone + PartialEq>(
+    sig: &Signature,
+    basis: &[LabeledPoly<R>],
+    exclude_i: usize,
+    exclude_j: usize,
+) -> bool {
+    for (idx, g) in basis.iter().enumerate() {
+        // Skip excluded indices (the pair members themselves)
+        if idx == exclude_i || idx == exclude_j {
+            continue;
+        }
+
+        // Must have the same signature index
         if g.signature.index != sig.index {
             continue;
         }
 
-        if let Some(lm) = g.leading_monomial() {
-            // Check if lm(g) divides the monomial part of σ
-            if sig.monomial.is_divisible_by(lm) {
-                // Check if sig(g) < σ
-                if g.signature.cmp_pot(sig) == std::cmp::Ordering::Less {
-                    return true;
-                }
+        // Check if g's signature monomial divides sig's monomial
+        if sig.monomial.is_divisible_by(&g.signature.monomial) {
+            // Check if sig(g) < σ in POT ordering
+            if g.signature.cmp_pot(sig) == std::cmp::Ordering::Less {
+                return true;
             }
         }
     }

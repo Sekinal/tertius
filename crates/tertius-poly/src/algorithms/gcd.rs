@@ -106,6 +106,81 @@ pub fn primitive_part<R: EuclideanDomain>(p: &DensePoly<R>) -> DensePoly<R> {
     DensePoly::new(coeffs)
 }
 
+/// Extended polynomial GCD.
+///
+/// Computes (gcd, s, t) such that gcd = s*a + t*b.
+///
+/// # Example
+///
+/// ```ignore
+/// use tertius_poly::dense::DensePoly;
+/// use tertius_poly::algorithms::gcd::poly_extended_gcd;
+/// use tertius_rings::rationals::Q;
+///
+/// let a = DensePoly::new(vec![Q::from_integer(-1), Q::from_integer(0), Q::from_integer(1)]); // x² - 1
+/// let b = DensePoly::new(vec![Q::from_integer(-1), Q::from_integer(1)]); // x - 1
+///
+/// let (gcd, s, t) = poly_extended_gcd(&a, &b);
+/// // gcd = x - 1 (monic)
+/// // s*a + t*b = gcd
+/// ```
+pub fn poly_extended_gcd<F: Field>(
+    a: &DensePoly<F>,
+    b: &DensePoly<F>,
+) -> (DensePoly<F>, DensePoly<F>, DensePoly<F>) {
+    // Base cases
+    if a.is_zero() {
+        let g = make_monic(b);
+        if b.is_zero() {
+            return (DensePoly::zero(), DensePoly::one(), DensePoly::zero());
+        }
+        let scale = b.leading_coeff().inv().expect("field element should have inverse");
+        return (g, DensePoly::zero(), DensePoly::constant(scale));
+    }
+    if b.is_zero() {
+        let g = make_monic(a);
+        let scale = a.leading_coeff().inv().expect("field element should have inverse");
+        return (g, DensePoly::constant(scale), DensePoly::zero());
+    }
+
+    // Extended Euclidean algorithm
+    let mut old_r = a.clone();
+    let mut r = b.clone();
+    let mut old_s = DensePoly::one();
+    let mut s = DensePoly::zero();
+    let mut old_t = DensePoly::zero();
+    let mut t = DensePoly::one();
+
+    while !r.is_zero() {
+        let (q, rem) = poly_div_rem(&old_r, &r);
+
+        let new_r = rem;
+        let new_s = old_s.sub(&q.mul(&s));
+        let new_t = old_t.sub(&q.mul(&t));
+
+        old_r = r;
+        r = new_r;
+        old_s = s;
+        s = new_s;
+        old_t = t;
+        t = new_t;
+    }
+
+    // Make the gcd monic and adjust s, t accordingly
+    if old_r.is_zero() {
+        return (DensePoly::zero(), DensePoly::one(), DensePoly::zero());
+    }
+
+    let lead = old_r.leading_coeff().clone();
+    let lead_inv = lead.inv().expect("field element should have inverse");
+
+    let gcd = old_r.scale(&lead_inv);
+    let s_final = old_s.scale(&lead_inv);
+    let t_final = old_t.scale(&lead_inv);
+
+    (gcd, s_final, t_final)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -150,5 +225,64 @@ mod tests {
         // Should be monic, degree 1
         assert_eq!(g.degree(), 1);
         assert!(g.leading_coeff().is_one());
+    }
+
+    #[test]
+    fn test_poly_extended_gcd() {
+        // gcd(x^2 - 1, x - 1) = x - 1
+        let a = DensePoly::new(vec![
+            Q::from_integer(-1),
+            Q::from_integer(0),
+            Q::from_integer(1),
+        ]); // x^2 - 1
+        let b = DensePoly::new(vec![Q::from_integer(-1), Q::from_integer(1)]); // x - 1
+
+        let (gcd, s, t) = poly_extended_gcd(&a, &b);
+
+        // gcd should be x - 1 (monic)
+        assert_eq!(gcd.degree(), 1);
+        assert!(gcd.leading_coeff().is_one());
+        assert_eq!(gcd.coeff(0), Q::from_integer(-1));
+
+        // Verify Bézout identity: s*a + t*b = gcd
+        let check = s.mul(&a).add(&t.mul(&b));
+        assert_eq!(check, gcd);
+    }
+
+    #[test]
+    fn test_poly_extended_gcd_coprime() {
+        // gcd(x^2 + 1, x - 1) = 1 (coprime over Q)
+        let a = DensePoly::new(vec![
+            Q::from_integer(1),
+            Q::from_integer(0),
+            Q::from_integer(1),
+        ]); // x^2 + 1
+        let b = DensePoly::new(vec![Q::from_integer(-1), Q::from_integer(1)]); // x - 1
+
+        let (gcd, s, t) = poly_extended_gcd(&a, &b);
+
+        // gcd should be 1 (constant)
+        assert_eq!(gcd.degree(), 0);
+        assert!(gcd.leading_coeff().is_one());
+
+        // Verify Bézout identity: s*a + t*b = gcd = 1
+        let check = s.mul(&a).add(&t.mul(&b));
+        assert_eq!(check, gcd);
+    }
+
+    #[test]
+    fn test_poly_extended_gcd_zero() {
+        let a = DensePoly::new(vec![Q::from_integer(1), Q::from_integer(2)]); // 1 + 2x
+        let b = DensePoly::zero();
+
+        let (gcd, s, t) = poly_extended_gcd(&a, &b);
+
+        // gcd should be monic version of a
+        assert_eq!(gcd.degree(), 1);
+        assert!(gcd.leading_coeff().is_one());
+
+        // s*a + t*0 = gcd
+        let check = s.mul(&a);
+        assert_eq!(check, gcd);
     }
 }

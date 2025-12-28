@@ -126,8 +126,26 @@ impl<R: Field + Clone> IncrementalEchelon<R> {
 /// The Gröbner basis in lex ordering along with structural information.
 pub fn fglm_convert<R>(grevlex_basis: &[LabeledPoly<R>], num_vars: usize) -> FGLMResult<R>
 where
-    R: Field + Clone + Send + Sync + Neg<Output = R>,
+    R: Field + Clone + Send + Sync + Neg<Output = R> + std::fmt::Debug,
 {
+    #[cfg(test)]
+    {
+        eprintln!(
+            "fglm_convert: starting with {} basis elements, {} vars",
+            grevlex_basis.len(),
+            num_vars
+        );
+        for (i, p) in grevlex_basis.iter().enumerate() {
+            eprintln!("  basis[{}]: {} terms", i, p.num_terms());
+            if let Some(lm) = p.leading_monomial() {
+                eprintln!("    leading monomial: {:?}", lm);
+            }
+            for (c, m) in p.terms() {
+                eprintln!("    term: ({:?}, {:?})", c, m);
+            }
+        }
+    }
+
     if grevlex_basis.is_empty() || num_vars == 0 {
         return FGLMResult {
             lex_basis: vec![],
@@ -176,6 +194,11 @@ where
         // Skip if we've already processed this monomial
         if processed.contains_key(&current) {
             continue;
+        }
+
+        #[cfg(test)]
+        if iterations <= 10 {
+            eprintln!("fglm_convert: iteration {}, processing {:?}", iterations, current);
         }
 
         // Compute normal form of current monomial w.r.t. grevlex basis
@@ -420,12 +443,19 @@ pub fn solve_system<R>(
     num_vars: usize,
 ) -> FGLMResult<R>
 where
-    R: Field + Clone + Send + Sync + Neg<Output = R>,
+    R: Field + Clone + Send + Sync + Neg<Output = R> + std::fmt::Debug,
 {
     use tertius_groebner::m5gb::groebner_basis;
 
     // Compute grevlex Gröbner basis
+    #[cfg(test)]
+    eprintln!("solve_system: computing Gröbner basis...");
     let grevlex_basis = groebner_basis(generators);
+    #[cfg(test)]
+    eprintln!(
+        "solve_system: Gröbner basis has {} elements",
+        grevlex_basis.len()
+    );
 
     // Convert to lex
     fglm_convert(&grevlex_basis, num_vars)
@@ -448,14 +478,9 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "M5GB algorithm produces incomplete Gröbner basis for this input"]
     fn test_fglm_simple_linear() {
         // System: x + y - 2 = 0, x - y = 0 over GF(101)
         // Solution: x = 1, y = 1
-        //
-        // NOTE: This test is ignored because the M5GB Gröbner basis algorithm
-        // doesn't produce a complete basis for this input. The FGLM algorithm
-        // itself works correctly when given a complete basis (see test_fglm_with_complete_basis).
 
         // x + y + 99 (since 99 = -2 mod 101)
         let f = vec![
@@ -467,7 +492,9 @@ mod tests {
         // x - y = x + 100*y (since 100 = -1 mod 101)
         let g = vec![(ff(1), mono(&[1, 0])), (ff(100), mono(&[0, 1]))];
 
-        let result = solve_system(vec![f, g], 2);
+        // Compute GB directly and then fglm_convert
+        let gb = groebner_basis(vec![f, g]);
+        let result = fglm_convert(&gb, 2);
 
         // Should have dimension 1 (unique solution)
         assert_eq!(result.dimension, 1);
@@ -476,14 +503,9 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "M5GB algorithm produces incomplete Gröbner basis for this input"]
     fn test_fglm_quadratic() {
         // System: x^2 - 1 = 0, y - x = 0
         // Solutions: (1, 1) and (-1, -1) = (100, 100) in GF(101)
-        //
-        // NOTE: This test is ignored because the M5GB Gröbner basis algorithm
-        // doesn't produce a complete basis. The FGLM algorithm itself works
-        // correctly when given a complete basis (see test_fglm_with_complete_basis).
 
         // x^2 - 1 = x^2 + 100 (since 100 = -1 mod 101)
         let f = vec![(ff(1), mono(&[2, 0])), (ff(100), mono(&[0, 0]))];
@@ -491,7 +513,11 @@ mod tests {
         // y - x = y + 100*x
         let g = vec![(ff(1), mono(&[0, 1])), (ff(100), mono(&[1, 0]))];
 
-        let result = solve_system(vec![f, g], 2);
+        // First compute GB directly (like test_fglm_univariate does)
+        let gb = groebner_basis(vec![f, g]);
+
+        // Then call fglm_convert
+        let result = fglm_convert(&gb, 2);
 
         // Should have dimension 2 (two solutions)
         assert_eq!(result.dimension, 2);
@@ -598,14 +624,9 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "M5GB algorithm produces incomplete Gröbner basis for this input"]
     fn test_fglm_cyclic2() {
         // cyclic-2: x + y = 0, x*y - 1 = 0
         // Solutions: x = 1, y = -1 and x = -1, y = 1
-        //
-        // NOTE: This test is ignored because the M5GB Gröbner basis algorithm
-        // doesn't produce a complete basis. The FGLM algorithm itself works
-        // correctly when given a complete basis.
 
         // x + y
         let f1 = vec![(ff(1), mono(&[1, 0])), (ff(1), mono(&[0, 1]))];
@@ -613,10 +634,26 @@ mod tests {
         // xy - 1 = xy + 100
         let f2 = vec![(ff(1), mono(&[1, 1])), (ff(100), mono(&[0, 0]))];
 
-        let result = solve_system(vec![f1, f2], 2);
+        // Use direct groebner_basis + fglm_convert pattern
+        let gb = groebner_basis(vec![f1, f2]);
+        let result = fglm_convert(&gb, 2);
 
         // Should have dimension 2
         assert_eq!(result.dimension, 2);
         assert!(!result.lex_basis.is_empty());
+    }
+
+    /// Test just the groebner_basis call to isolate hanging issue
+    #[test]
+    fn test_groebner_only_bivariate() {
+        // x^2 - 1, y - x
+        let f = vec![(ff(1), mono(&[2, 0])), (ff(100), mono(&[0, 0]))];
+        let g = vec![(ff(1), mono(&[0, 1])), (ff(100), mono(&[1, 0]))];
+
+        eprintln!("About to call groebner_basis...");
+        let gb = groebner_basis(vec![f, g]);
+        eprintln!("groebner_basis returned {} elements", gb.len());
+
+        assert!(gb.len() >= 3);
     }
 }

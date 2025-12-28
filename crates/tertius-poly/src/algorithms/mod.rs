@@ -21,3 +21,4 @@ pub mod ben_or_tiwari;
 pub mod berlekamp_massey;
 pub mod resultant;
 pub mod sparse_gcd;
+pub mod squarefree;
