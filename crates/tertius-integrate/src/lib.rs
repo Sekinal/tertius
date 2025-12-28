@@ -26,6 +26,7 @@ pub mod rothstein_trager;
 pub mod polynomial;
 pub mod risch;
 pub mod proofs;
+pub mod special_forms;
 
 // Re-exports
 pub use rational::{
@@ -35,3 +36,4 @@ pub use rational::{
 pub use rothstein_trager::{AlgebraicLogarithmicPart, LogarithmicPart};
 pub use risch::{risch_integrate, IntegralExpression, RischResult};
 pub use proofs::{prove_non_elementary, NonIntegrabilityProof, NonIntegrabilityReason};
+pub use special_forms::{recognize_special_form, SpecialFormResult, SpecialFunction, SpecialIntegral};
