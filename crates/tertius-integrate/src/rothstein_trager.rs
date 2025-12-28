@@ -1068,6 +1068,136 @@ mod tests {
     }
 
     #[test]
+    fn test_rothstein_trager_x4_plus_1_debug() {
+        use std::time::Instant;
+
+        let a = poly(&[1]); // 1
+        let d = poly(&[1, 0, 0, 0, 1]); // x⁴ + 1
+
+        println!("Testing x^4 + 1 debug:");
+
+        // Step 1: Compute resultant polynomial
+        let start = Instant::now();
+        let r_poly = compute_resultant_poly(&a, &d);
+        println!("Step 1 - Resultant: {:?}", start.elapsed());
+        println!("  R(t) coefficients: {:?}", r_poly.coeffs());
+
+        // Step 2: Try rational roots
+        let start = Instant::now();
+        let rational_roots = find_rational_roots(&r_poly);
+        println!("Step 2 - Rational roots: {:?}", start.elapsed());
+        println!("  Found {} rational roots", rational_roots.len());
+
+        // Step 3: Factor R(t)
+        let start = Instant::now();
+        let r_coeffs: Vec<Q> = r_poly.coeffs().to_vec();
+        let factors = factor_squarefree_q(&r_coeffs);
+        println!("Step 3 - Factorization: {:?}", start.elapsed());
+        println!("  Found {} factors", factors.len());
+        for (i, f) in factors.iter().enumerate() {
+            println!("    Factor {}: degree {}", i, poly_degree_q(f));
+        }
+
+        // Don't proceed to GCD computation which is slow
+        assert!(!factors.is_empty());
+    }
+
+    #[test]
+    fn test_algebraic_gcd_timing() {
+        use std::time::Instant;
+        use crate::rothstein_trager::{poly_gcd_alg, poly_sub_alg, poly_scale_alg};
+        use tertius_rings::algebraic::{AlgebraicField, AlgebraicNumber};
+        use std::sync::Arc;
+
+        // Create field Q[α]/(α² + 1) for simpler testing
+        let field = Arc::new(AlgebraicField::new(vec![q(1), q(0), q(1)])); // α² + 1
+
+        // D(x) = x² + 1
+        let d_alg: Vec<AlgebraicNumber> = vec![
+            AlgebraicNumber::from_rational(q(1), Arc::clone(&field)),
+            AlgebraicNumber::zero(Arc::clone(&field)),
+            AlgebraicNumber::one(Arc::clone(&field)),
+        ];
+
+        // D'(x) = 2x
+        let dp_alg: Vec<AlgebraicNumber> = vec![
+            AlgebraicNumber::zero(Arc::clone(&field)),
+            AlgebraicNumber::from_rational(q(2), Arc::clone(&field)),
+        ];
+
+        // A(x) = 1
+        let a_alg: Vec<AlgebraicNumber> = vec![
+            AlgebraicNumber::one(Arc::clone(&field)),
+        ];
+
+        // α is a root of t² + 1, so α = i
+        let alpha = AlgebraicNumber::generator(Arc::clone(&field));
+
+        // A - α·D' = 1 - 2αx
+        let start = Instant::now();
+        let alpha_dp = poly_scale_alg(&dp_alg, &alpha);
+        let a_minus_alpha_dp = poly_sub_alg(&a_alg, &alpha_dp);
+        println!("Polynomial arithmetic: {:?}", start.elapsed());
+        println!("  a_minus_alpha_dp degree: {}", a_minus_alpha_dp.len() - 1);
+
+        // GCD(D, A - α·D')
+        let start = Instant::now();
+        let gcd = poly_gcd_alg(&d_alg, &a_minus_alpha_dp, &field);
+        println!("GCD computation: {:?}", start.elapsed());
+        println!("  GCD degree: {}", gcd.len() - 1);
+    }
+
+    #[test]
+    fn test_algebraic_gcd_timing_degree4() {
+        use std::time::Instant;
+        use crate::rothstein_trager::{poly_gcd_alg, poly_sub_alg, poly_scale_alg};
+        use tertius_rings::algebraic::{AlgebraicField, AlgebraicNumber};
+        use std::sync::Arc;
+
+        // Create field Q[α]/(α⁴ + 1) - this is the x⁴+1 case
+        let field = Arc::new(AlgebraicField::new(vec![q(1), q(0), q(0), q(0), q(1)])); // α⁴ + 1
+
+        println!("Testing degree-4 algebraic field Q[α]/(α⁴+1)");
+
+        // D(x) = x⁴ + 1
+        let d_alg: Vec<AlgebraicNumber> = vec![
+            AlgebraicNumber::from_rational(q(1), Arc::clone(&field)),
+            AlgebraicNumber::zero(Arc::clone(&field)),
+            AlgebraicNumber::zero(Arc::clone(&field)),
+            AlgebraicNumber::zero(Arc::clone(&field)),
+            AlgebraicNumber::one(Arc::clone(&field)),
+        ];
+
+        // D'(x) = 4x³
+        let dp_alg: Vec<AlgebraicNumber> = vec![
+            AlgebraicNumber::zero(Arc::clone(&field)),
+            AlgebraicNumber::zero(Arc::clone(&field)),
+            AlgebraicNumber::zero(Arc::clone(&field)),
+            AlgebraicNumber::from_rational(q(4), Arc::clone(&field)),
+        ];
+
+        // A(x) = 1
+        let a_alg: Vec<AlgebraicNumber> = vec![
+            AlgebraicNumber::one(Arc::clone(&field)),
+        ];
+
+        let alpha = AlgebraicNumber::generator(Arc::clone(&field));
+
+        // A - α·D' = 1 - 4αx³
+        let start = Instant::now();
+        let alpha_dp = poly_scale_alg(&dp_alg, &alpha);
+        let a_minus_alpha_dp = poly_sub_alg(&a_alg, &alpha_dp);
+        println!("Polynomial arithmetic: {:?}", start.elapsed());
+        println!("  a_minus_alpha_dp degree: {}", a_minus_alpha_dp.len() - 1);
+
+        // GCD(D, A - α·D')
+        let start = Instant::now();
+        let gcd = poly_gcd_alg(&d_alg, &a_minus_alpha_dp, &field);
+        println!("GCD computation: {:?}", start.elapsed());
+        println!("  GCD degree: {}", gcd.len() - 1);
+    }
+
+    #[test]
     fn test_factor_squarefree_q_simple() {
         // Test the factorization routine directly
         // R(t) = 1 - 4t^2 = -4(t - 1/2)(t + 1/2)

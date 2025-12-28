@@ -231,6 +231,38 @@ impl AlgebraicNumber {
 
         Self::new(result, Arc::clone(&self.field))
     }
+
+    /// Divides two algebraic numbers.
+    #[must_use]
+    pub fn div(a: &Self, b: &Self) -> Self {
+        let b_inv = b.inv().expect("division by zero");
+        Self::mul(a, &b_inv)
+    }
+
+    /// Computes self^n using binary exponentiation.
+    #[must_use]
+    pub fn pow(&self, n: u32) -> Self {
+        if n == 0 {
+            return Self::one(Arc::clone(&self.field));
+        }
+        if n == 1 {
+            return self.clone();
+        }
+
+        let mut result = Self::one(Arc::clone(&self.field));
+        let mut base = self.clone();
+        let mut exp = n;
+
+        while exp > 0 {
+            if exp & 1 == 1 {
+                result = Self::mul(&result, &base);
+            }
+            base = Self::mul(&base, &base);
+            exp >>= 1;
+        }
+
+        result
+    }
 }
 
 impl PartialEq for AlgebraicNumber {
