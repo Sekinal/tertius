@@ -22,7 +22,7 @@ use tertius_rings::traits::Field;
 
 use crate::polynomial::integrate_polynomial;
 use crate::rothstein_trager::{
-    rothstein_trager, rothstein_trager_algebraic, AlgebraicLogarithmicPart, LogarithmicPart,
+    rothstein_trager, rothstein_trager_algebraic, rothstein_trager_q, AlgebraicLogarithmicPart, LogarithmicPart,
 };
 
 /// Result of rational function integration.
@@ -104,6 +104,63 @@ pub fn integrate_rational<F: Field>(f: &RationalFunction<F>) -> RationalIntegrat
         Some(LogarithmicPart::empty())
     } else {
         rothstein_trager(reduced.numerator(), reduced.denominator())
+    };
+
+    let is_complete = logarithmic_part.is_some();
+
+    RationalIntegrationResult {
+        polynomial_part: poly_integral,
+        rational_part,
+        logarithmic_part,
+        is_complete,
+    }
+}
+
+/// Integrates a rational function over Q using the complete rational root theorem.
+///
+/// This is the preferred method for integrating rational functions over Q because
+/// it properly finds ALL rational roots of the resultant polynomial, including
+/// fractions like 1/720 that appear when integrating products of many linear factors.
+///
+/// # Example
+///
+/// ```ignore
+/// use tertius_integrate::integrate_rational_q;
+/// use tertius_rational_func::RationalFunction;
+///
+/// // ∫ 1/((x-1)(x-2)(x-3)) dx - has roots like 1/2, -1/2, etc.
+/// let rf = RationalFunction::new(num, den);
+/// let result = integrate_rational_q(&rf);
+/// ```
+pub fn integrate_rational_q(f: &RationalFunction<Q>) -> RationalIntegrationResult<Q> {
+    // Step 1: Extract polynomial part
+    let (poly_part, proper) = f.decompose_proper();
+
+    // Integrate polynomial part: ∫poly dx
+    let poly_integral = integrate_polynomial(&poly_part);
+
+    // If the proper part is zero, we're done
+    if proper.is_zero() {
+        return RationalIntegrationResult {
+            polynomial_part: poly_integral,
+            rational_part: RationalFunction::zero(),
+            logarithmic_part: Some(LogarithmicPart::empty()),
+            is_complete: true,
+        };
+    }
+
+    // Step 2: Apply Hermite reduction
+    let HermiteReductionResult {
+        rational_part,
+        reduced,
+    } = hermite_reduce(&proper);
+
+    // Step 3: Apply Rothstein-Trager with proper rational root theorem
+    let logarithmic_part = if reduced.is_zero() {
+        Some(LogarithmicPart::empty())
+    } else {
+        // Use the specialized Q version that finds ALL rational roots
+        rothstein_trager_q(reduced.numerator(), reduced.denominator())
     };
 
     let is_complete = logarithmic_part.is_some();
@@ -372,6 +429,59 @@ mod tests {
                 assert_eq!(power, 1);
             }
             _ => panic!("Expected rational term"),
+        }
+    }
+
+    #[test]
+    fn test_integrate_rational_q_7_linear_factors() {
+        // ∫ 1/((x-1)(x-2)(x-3)(x-4)(x-5)(x-6)(x-7)) dx
+        // The denominator is x⁷ - 28x⁶ + 322x⁵ - 1960x⁴ + 6769x³ - 13132x² + 13068x - 5040
+        //
+        // Due to symmetry, the resultant polynomial has repeated roots:
+        // - t = 1/720 (from k=1 and k=7)
+        // - t = -1/120 (from k=2 and k=6)
+        // - t = 1/48 (from k=3 and k=5)
+        // - t = -1/36 (from k=4 only)
+        //
+        // The result is:
+        // (1/720)log((x-1)(x-7)) + (-1/120)log((x-2)(x-6)) + (1/48)log((x-3)(x-5)) + (-1/36)log(x-4)
+        let f = rf(&[1], &[-5040, 13068, -13132, 6769, -1960, 322, -28, 1]);
+
+        use crate::integrate_rational_q;
+        let result = integrate_rational_q(&f);
+
+        assert!(result.is_complete, "Should be complete (all rational roots)");
+        assert!(
+            result.logarithmic_part.is_some(),
+            "Should have logarithmic part"
+        );
+
+        if let Some(ref log_part) = result.logarithmic_part {
+            assert!(
+                !log_part.is_empty(),
+                "Should have at least one log term, got empty"
+            );
+            println!(
+                "7 linear factors: {} log terms",
+                log_part.terms.len()
+            );
+
+            // Count total degree of all log arguments (should sum to 7)
+            let total_degree: usize = log_part.terms.iter().map(|t| t.argument.degree()).sum();
+            println!("Total degree of log arguments: {}", total_degree);
+            assert_eq!(
+                total_degree, 7,
+                "Total degree should equal number of factors (7)"
+            );
+
+            for (i, term) in log_part.terms.iter().enumerate() {
+                println!(
+                    "  Term {}: coeff={}, arg degree={}",
+                    i,
+                    term.coefficient,
+                    term.argument.degree()
+                );
+            }
         }
     }
 

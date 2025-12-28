@@ -16,7 +16,7 @@ use std::time::{Duration, Instant};
 use std::sync::mpsc;
 use std::thread;
 use tertius_integrate::{
-    integrate_rational, integrate_rational_with_algebraic, AlgebraicIntegrationResult,
+    integrate_rational, integrate_rational_q, integrate_rational_with_algebraic, AlgebraicIntegrationResult,
 };
 use tertius_integrate::risch::heuristic::check_known_non_elementary;
 use tertius_poly::dense::DensePoly;
@@ -403,11 +403,15 @@ fn test_tier6_mathematica_failures() {
         poly(&[-5040, 13068, -13132, 6769, -1960, 322, -28, 1])
     );
     let start = Instant::now();
-    let result = integrate_rational(&rf);
+    // Use integrate_rational_q which properly finds fractional roots like 1/720
+    let result = integrate_rational_q(&rf);
     println!("     Tertius time: {:?}", start.elapsed());
     println!("     Has log part: {}", result.logarithmic_part.is_some());
     if let Some(ref log) = result.logarithmic_part {
         println!("     Number of log terms: {}", log.terms.len());
+        // Total degree should be 7 (due to symmetry, some factors are combined)
+        let total_deg: usize = log.terms.iter().map(|t| t.argument.degree()).sum();
+        println!("     Total degree of log arguments: {}", total_deg);
     }
     println!();
 

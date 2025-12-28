@@ -279,6 +279,76 @@ pub fn rothstein_trager<F: Field>(
     Some(LogarithmicPart { terms })
 }
 
+/// Specialized Rothstein-Trager for Q that uses proper rational root theorem.
+///
+/// This version finds ALL rational roots of the resultant polynomial,
+/// including fractions like 1/720 that are missed by the generic version
+/// which only tries small integers.
+pub fn rothstein_trager_q(
+    a: &DensePoly<Q>,
+    d: &DensePoly<Q>,
+) -> Option<LogarithmicPart<Q>> {
+    // Handle trivial cases
+    if a.is_zero() {
+        return Some(LogarithmicPart::empty());
+    }
+
+    // For degree 1: ∫ a/(x - r) dx = a * log(x - r)
+    if d.degree() == 1 {
+        let a_const = a.coeff(0);
+        let d_lead = d.leading_coeff().clone();
+        let coeff = a_const.field_div(&d_lead);
+        let d_monic = d.scale(&d_lead.inv().unwrap());
+
+        return Some(LogarithmicPart {
+            terms: vec![LogTerm {
+                coefficient: coeff,
+                argument: d_monic,
+            }],
+        });
+    }
+
+    // Compute R(t) = Res_x(D, A - t·D')
+    let r_poly = compute_resultant_poly(a, d);
+
+    // Use proper rational root theorem to find ALL rational roots
+    let mut roots = find_rational_roots_q(&r_poly);
+
+    // Deduplicate roots (multiplicities are handled by the GCD structure)
+    roots.sort_by(|a, b| {
+        let (a_num, a_den) = a.num_den();
+        let (b_num, b_den) = b.num_den();
+        (a_num * b_den).cmp(&(b_num * a_den))
+    });
+    roots.dedup();
+
+    if roots.is_empty() && !r_poly.is_zero() && r_poly.degree() > 0 {
+        // R(t) has no rational roots - need algebraic extension
+        return None;
+    }
+
+    // For each root c, compute v = gcd(D, A - c·D')
+    let d_prime = d.derivative();
+    let mut terms = Vec::new();
+
+    for c in roots {
+        // Compute A - c·D'
+        let a_minus_c_dp = a.sub(&d_prime.scale(&c));
+
+        // Compute v = gcd(D, A - c·D')
+        let v = poly_gcd(d, &a_minus_c_dp);
+
+        if v.degree() > 0 {
+            terms.push(LogTerm {
+                coefficient: c,
+                argument: v,
+            });
+        }
+    }
+
+    Some(LogarithmicPart { terms })
+}
+
 /// Finds rational roots of a polynomial over a generic field by trying small integers.
 ///
 /// For polynomials over arbitrary fields, we try small integer values.

@@ -30,10 +30,10 @@ pub mod special_forms;
 
 // Re-exports
 pub use rational::{
-    integrate_rational, integrate_rational_with_algebraic, AlgebraicIntegrationResult,
+    integrate_rational, integrate_rational_q, integrate_rational_with_algebraic, AlgebraicIntegrationResult,
     RationalIntegrationResult,
 };
-pub use rothstein_trager::{AlgebraicLogarithmicPart, LogarithmicPart};
+pub use rothstein_trager::{AlgebraicLogarithmicPart, LogarithmicPart, rothstein_trager_q};
 pub use risch::{risch_integrate, IntegralExpression, RischResult};
 pub use proofs::{prove_non_elementary, NonIntegrabilityProof, NonIntegrabilityReason};
 pub use special_forms::{recognize_special_form, SpecialFormResult, SpecialFunction, SpecialIntegral};
