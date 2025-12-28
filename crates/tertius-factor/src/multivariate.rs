@@ -2,7 +2,7 @@
 //!
 //! This module provides multivariate factorization algorithms:
 //! - Evaluation/interpolation approach for bivariate polynomials
-//! - Lecerf's algorithm for general multivariate (future work)
+//! - Lecerf's algorithm for general multivariate polynomials (3+ variables)
 //!
 //! The algorithm works by:
 //! 1. Evaluating the polynomial at random points to get univariate specializations
@@ -14,12 +14,13 @@ use num_traits::{One, Zero};
 use rayon::prelude::*;
 use tertius_integers::Integer;
 use tertius_poly::dense::DensePoly;
-use tertius_poly::sparse::SparsePoly;
 use tertius_poly::monomial::PackedMonomial;
 use tertius_poly::ordering::MonomialOrder;
+use tertius_poly::sparse::SparsePoly;
 use tertius_rings::integers::Z;
 use tertius_rings::traits::Ring;
 
+use crate::lecerf::lecerf_factor_multivariate;
 use crate::univariate::van_hoeij_factor;
 
 // Helper functions
@@ -604,6 +605,70 @@ pub fn factor_bivariate_batch(polys: &[SparsePoly<Z>]) -> Vec<MultivariateFactor
     polys.par_iter().map(|p| factor_bivariate(p)).collect()
 }
 
+/// Factors a sparse multivariate polynomial over Z.
+///
+/// This is the main entry point for multivariate factorization.
+/// It dispatches to the appropriate algorithm based on the number of variables:
+/// - 1 variable: Uses Van Hoeij algorithm
+/// - 2 variables: Uses bivariate factorization with Hensel lifting
+/// - 3+ variables: Uses Lecerf's algorithm
+///
+/// # Arguments
+/// * `f` - The sparse polynomial to factor
+///
+/// # Returns
+/// A `MultivariateFactorResult` containing the irreducible factors.
+///
+/// # Example
+/// ```ignore
+/// let f = sparse_poly(&[(1, &[2,0,0]), (-1, &[0,2,0]), (1, &[0,0,2])], 3);
+/// let result = factor_multivariate(&f);
+/// ```
+pub fn factor_multivariate(f: &SparsePoly<Z>) -> MultivariateFactorResult {
+    let num_vars = f.num_vars();
+
+    match num_vars {
+        0 => {
+            // Constant polynomial
+            let content = if f.is_zero() {
+                z_zero()
+            } else {
+                f.terms().first().map(|(_, c)| c.clone()).unwrap_or(z_one())
+            };
+            MultivariateFactorResult {
+                factors: vec![],
+                content,
+                num_vars: 0,
+                stats: MultivariateFactorStats::default(),
+            }
+        }
+        1 => factor_as_univariate(f),
+        2 => factor_bivariate(f),
+        _ => {
+            // Use Lecerf's algorithm for 3+ variables
+            let lecerf_result = lecerf_factor_multivariate(f);
+            MultivariateFactorResult {
+                factors: lecerf_result.factors,
+                content: lecerf_result.content,
+                num_vars: lecerf_result.num_vars,
+                stats: MultivariateFactorStats {
+                    evaluation_point: vec![],
+                    num_univariate_factors: lecerf_result.stats.num_univariate_factors,
+                    lifting_success: lecerf_result.stats.lifting_success,
+                },
+            }
+        }
+    }
+}
+
+/// Parallel batch multivariate factorization.
+///
+/// Factors multiple polynomials in parallel using the appropriate algorithm
+/// for each polynomial based on its number of variables.
+pub fn factor_multivariate_batch(polys: &[SparsePoly<Z>]) -> Vec<MultivariateFactorResult> {
+    polys.par_iter().map(factor_multivariate).collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -677,5 +742,59 @@ mod tests {
 
         let f2 = sparse_poly(&[(1, &[2, 0]), (1, &[1, 1])], 2);
         assert!(!is_univariate_in_x(&f2));
+    }
+
+    // Integration tests for factor_multivariate dispatch
+
+    #[test]
+    fn test_factor_multivariate_univariate() {
+        // f = (x+1)(x+2) = x^2 + 3x + 2, one variable
+        let f = sparse_poly(&[(1, &[2]), (3, &[1]), (2, &[0])], 1);
+        let result = factor_multivariate(&f);
+
+        assert_eq!(result.num_vars, 1);
+        assert_eq!(result.factors.len(), 2);
+    }
+
+    #[test]
+    fn test_factor_multivariate_bivariate() {
+        // f = (x+1)(x+2) = x^2 + 3x + 2 in bivariate (no y dependence)
+        let f = sparse_poly(&[(1, &[2, 0]), (3, &[1, 0]), (2, &[0, 0])], 2);
+        let result = factor_multivariate(&f);
+
+        assert_eq!(result.num_vars, 2);
+        assert_eq!(result.factors.len(), 2);
+    }
+
+    #[test]
+    fn test_factor_multivariate_trivariate() {
+        // f = x^2 + 2x + 1 = (x+1)^2 in trivariate (no y,z dependence)
+        let f = sparse_poly(&[(1, &[2, 0, 0]), (2, &[1, 0, 0]), (1, &[0, 0, 0])], 3);
+        let result = factor_multivariate(&f);
+
+        assert_eq!(result.num_vars, 3);
+        // Should factor to (x+1)^2, so 2 factors (with multiplicity)
+        assert!(result.factors.len() >= 1);
+    }
+
+    #[test]
+    fn test_factor_multivariate_constant() {
+        // Constant polynomial
+        let f = sparse_poly(&[(5, &[0, 0])], 2);
+        let result = factor_multivariate(&f);
+
+        // Constants should have no factors (just content)
+        assert_eq!(result.factors.len(), 0);
+        assert!(!result.content.0.is_zero());
+    }
+
+    #[test]
+    fn test_factor_multivariate_irreducible() {
+        // f = x^2 + 1 is irreducible over Z
+        let f = sparse_poly(&[(1, &[2, 0]), (1, &[0, 0])], 2);
+        let result = factor_multivariate(&f);
+
+        // Should return single irreducible factor
+        assert_eq!(result.factors.len(), 1);
     }
 }
