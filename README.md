@@ -38,6 +38,7 @@ Tertius consistently outperforms SymPy across polynomial algebra operations. The
 - **Modular Arithmetic**: Compile-time and runtime prime fields (GF(p))
 - **Algebraic Number Fields**: Q(α) for algebraic extensions
 - **Symbolic Simplification**: Equality saturation via the `egg` library
+- **Symbolic Integration**: Risch algorithm for elementary function integration
 
 ### Advanced Algorithms
 
@@ -47,6 +48,8 @@ Tertius consistently outperforms SymPy across polynomial algebra operations. The
 - **Sparse Linear Algebra**: Block Wiedemann, Smith Normal Form
 - **Sparse Interpolation**: Ben-Or/Tiwari algorithm
 - **Sparse GCD**: Hu-Monagan parallel algorithm
+- **Risch Algorithm**: Complete rational function integration with Hermite reduction and Rothstein-Trager
+- **Special Functions**: Polylogarithms, elliptic integrals, hypergeometric functions
 
 ---
 
@@ -126,18 +129,25 @@ Euclidean algorithm over finite fields:
 ```
 tertius/
 ├── crates/
-│   ├── tertius-core/      # Arena, expressions, hash-consing
-│   ├── tertius-integers/  # Arbitrary precision (dashu wrapper)
-│   ├── tertius-rings/     # Ring/Field traits, Z, Q, Z_p
-│   ├── tertius-poly/      # Polynomial arithmetic + sparse algorithms
-│   ├── tertius-simplify/  # egg-based simplification + calculus
-│   ├── tertius-linalg/    # Sparse linear algebra (CSR, Wiedemann)
-│   ├── tertius-factor/    # Polynomial factorization (Van Hoeij, LLL)
-│   ├── tertius-groebner/  # Gröbner bases (M5GB algorithm)
-│   ├── tertius-solve/     # FGLM, triangular solving
-│   └── tertius/           # Facade crate
-├── benches/               # Criterion benchmarks
-└── scripts/               # SymPy comparison scripts
+│   ├── tertius-core/         # Arena, expressions, hash-consing
+│   ├── tertius-integers/     # Arbitrary precision (dashu wrapper)
+│   ├── tertius-rings/        # Ring/Field traits, Z, Q, Z_p
+│   ├── tertius-poly/         # Polynomial arithmetic + sparse algorithms
+│   ├── tertius-simplify/     # egg-based simplification + calculus
+│   ├── tertius-linalg/       # Sparse linear algebra (CSR, Wiedemann)
+│   ├── tertius-factor/       # Polynomial factorization (Van Hoeij, LLL)
+│   ├── tertius-groebner/     # Gröbner bases (M5GB algorithm)
+│   ├── tertius-solve/        # FGLM, triangular solving
+│   ├── tertius-rational-func/# Rational functions P(x)/Q(x)
+│   ├── tertius-diffalg/      # Differential algebra, transcendental towers
+│   ├── tertius-integrate/    # Risch algorithm, symbolic integration
+│   ├── tertius-special-func/ # Polylogarithms, elliptic, hypergeometric
+│   ├── tertius-series/       # Power series, Taylor expansion
+│   ├── tertius-limits/       # Limit computation via Gruntz
+│   └── tertius/              # Facade crate
+├── benches/                  # Criterion benchmarks
+├── examples/                 # Usage examples
+└── scripts/                  # SymPy comparison scripts
 ```
 
 ### Design Principles
@@ -212,6 +222,33 @@ Converts Gröbner bases from grevlex (fast to compute) to lex (triangular form):
 
 Complexity: O(nD³) where D is the dimension of K[x]/I.
 
+### Risch Algorithm (Symbolic Integration)
+
+The Risch algorithm is a complete decision procedure for elementary function integration:
+
+**Rational Function Integration:**
+1. **Hermite Reduction**: Decompose ∫(A/D) = g + ∫(C/S) where S is squarefree
+2. **Rothstein-Trager**: Compute logarithmic part using resultants
+   - res_t(A - t·D', D) gives the algebraic extension containing coefficients
+
+**Transcendental Extensions:**
+- **Logarithmic** (θ = log u): θ' = u'/u, integrate via polynomial reduction
+- **Exponential** (θ = exp u): θ' = u'·θ, integrate via ansatz matching
+
+**Non-Elementary Detection:**
+- Uses Liouville's theorem to prove when no elementary antiderivative exists
+- Recognizes canonical non-elementary forms: erf, Ei, li, Si, etc.
+
+### Special Functions
+
+| Function | Definition | Use Case |
+|----------|------------|----------|
+| Li_n(x) | Polylogarithm | ∫(log^n x)/x |
+| erf(x) | Error function | ∫exp(-x²) |
+| F(φ,k) | Elliptic integral 1st kind | ∫1/√(1-k²sin²θ) |
+| E(φ,k) | Elliptic integral 2nd kind | ∫√(1-k²sin²θ) |
+| ₂F₁(a,b;c;z) | Hypergeometric | General series solutions |
+
 ---
 
 ## Testing
@@ -253,6 +290,12 @@ Using `proptest`, Tertius verifies:
 | `tertius-factor` | Van Hoeij factorization, LLL, Berlekamp-Zassenhaus |
 | `tertius-groebner` | M5GB Gröbner basis algorithm |
 | `tertius-solve` | FGLM algorithm, triangular solving |
+| `tertius-rational-func` | Rational functions, partial fractions, Hermite reduction |
+| `tertius-diffalg` | Differential algebra, transcendental tower K(θ₁)(θ₂)... |
+| `tertius-integrate` | Risch algorithm, Rothstein-Trager, symbolic integration |
+| `tertius-special-func` | Polylogarithms, elliptic integrals, hypergeometric ₂F₁ |
+| `tertius-series` | Power series, Taylor expansion, asymptotic analysis |
+| `tertius-limits` | Limit computation via Gruntz algorithm |
 | `tertius` | Unified API facade |
 
 ---
@@ -265,10 +308,13 @@ Contributions are welcome! Areas of interest:
 - [x] FGLM algorithm (grevlex → lex conversion)
 - [x] Factorization algorithms (Van Hoeij, LLL, Berlekamp-Zassenhaus)
 - [x] Symbolic integration (differentiation/integration rules)
-- [ ] Risch algorithm (full elementary function integration)
+- [x] Risch algorithm (full elementary function integration)
+- [x] Special functions (polylogarithms, elliptic integrals, hypergeometric)
+- [x] Non-integrability proofs (Liouville's theorem)
 - [ ] Python bindings (PyO3)
 - [ ] WASM target
 - [ ] Multivariate factorization (Lecerf's algorithm)
+- [ ] Differential equations (symbolic ODE solver)
 
 ---
 
