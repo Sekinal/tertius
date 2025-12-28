@@ -66,20 +66,19 @@ Tertius is a high-performance, modular CAS designed for speed and correctness. I
 
 #### Polynomial Factorization (over Z)
 
-| Polynomial | SymPy | Algorithm |
-|------------|-------|-----------|
-| x⁴ - 1 | 329 µs | Van Hoeij + LLL |
-| x⁶ - 1 | 345 µs | Van Hoeij + LLL |
-| x⁴ + 4 (Sophie Germain) | 507 µs | Van Hoeij + LLL |
-| (x+1)⁵ | 629 µs | Van Hoeij + LLL |
+| Polynomial | Tertius | SymPy | Speedup |
+|------------|---------|-------|---------|
+| x⁴ - 1 | 24 µs | 329 µs | **13.7x** |
+| x⁶ - 1 | 59 µs | 345 µs | **5.9x** |
+| x⁴ + 4 (Sophie Germain) | 37 µs | 507 µs | **13.7x** |
+| (x+1)⁵ | 3.8 µs | 629 µs | **166x** |
 
 #### Gröbner Basis (grevlex order)
 
-| System | SymPy | Basis Size | Algorithm |
-|--------|-------|------------|-----------|
-| cyclic-3 | 0.4 ms | 3 | M5GB |
-| katsura-3 | 0.9 ms | 4 | M5GB |
-| cyclic-4 | 2.3 ms | 7 | M5GB |
+| System | Tertius | SymPy | Speedup |
+|--------|---------|-------|---------|
+| cyclic-3 | 65 µs | 400 µs | **6.1x** |
+| katsura-3 | 108 µs | 900 µs | **8.3x** |
 
 #### Sparse Linear Algebra
 
