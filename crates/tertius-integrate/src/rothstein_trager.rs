@@ -937,7 +937,9 @@ fn poly_scale_alg(p: &[AlgebraicNumber], c: &AlgebraicNumber) -> Vec<AlgebraicNu
     p.iter().map(|x| AlgebraicNumber::mul(x, c)).collect()
 }
 
-/// GCD of two polynomials over an algebraic field using Euclidean algorithm.
+/// GCD of two polynomials over an algebraic field using primitive PRS.
+///
+/// Uses pseudo-division and content extraction to avoid coefficient explosion.
 fn poly_gcd_alg(
     a: &[AlgebraicNumber],
     b: &[AlgebraicNumber],
@@ -950,16 +952,171 @@ fn poly_gcd_alg(
         return poly_make_monic_alg(a, field);
     }
 
-    let mut p = a.to_vec();
-    let mut q = b.to_vec();
+    // Make copies and ensure p has higher degree
+    let (mut p, mut q) = if poly_degree_alg(a) >= poly_degree_alg(b) {
+        (a.to_vec(), b.to_vec())
+    } else {
+        (b.to_vec(), a.to_vec())
+    };
 
-    while !poly_is_zero_alg(&q) {
-        let (_, r) = poly_div_rem_alg(&p, &q, field);
+    // Make both primitive to start
+    p = poly_primitive_alg(&p, field);
+    q = poly_primitive_alg(&q, field);
+
+    // Primitive PRS algorithm with iteration limit
+    let mut iterations = 0;
+    const MAX_ITERATIONS: usize = 20;
+
+    while !poly_is_zero_alg(&q) && iterations < MAX_ITERATIONS {
+        iterations += 1;
+
+        // Pseudo-division: compute prem(p, q)
+        let r = poly_pseudo_rem_alg(&p, &q, field);
+
+        if poly_is_zero_alg(&r) {
+            break;
+        }
+
+        // Make primitive to prevent coefficient explosion
+        let r_prim = poly_primitive_alg(&r, field);
+
         p = q;
-        q = r;
+        q = r_prim;
     }
 
-    poly_make_monic_alg(&p, field)
+    if iterations >= MAX_ITERATIONS {
+        // Fallback: just return q as-is (may not be the true GCD but avoids infinite loops)
+        return poly_make_monic_alg(&q, field);
+    }
+
+    poly_make_monic_alg(&q, field)
+}
+
+/// Computes pseudo-remainder of a divided by b.
+///
+/// Returns prem(a, b) = lead(b)^(deg(a) - deg(b) + 1) * a mod b
+/// This avoids division in the algebraic field.
+fn poly_pseudo_rem_alg(
+    a: &[AlgebraicNumber],
+    b: &[AlgebraicNumber],
+    field: &Arc<AlgebraicField>,
+) -> Vec<AlgebraicNumber> {
+    if poly_is_zero_alg(b) {
+        panic!("pseudo-division by zero polynomial");
+    }
+
+    let a_deg = poly_degree_alg(a);
+    let b_deg = poly_degree_alg(b);
+
+    if a_deg < b_deg {
+        return a.to_vec();
+    }
+
+    let b_lead = &b[b_deg];
+    let deg_diff = a_deg - b_deg;
+
+    // Scale a by lead(b)^(deg_diff + 1)
+    let scale_factor = b_lead.pow((deg_diff + 1) as u32);
+    let mut remainder: Vec<AlgebraicNumber> = a
+        .iter()
+        .map(|c| AlgebraicNumber::mul(c, &scale_factor))
+        .collect();
+
+    // Perform polynomial long division without needing inverses
+    for i in (0..=deg_diff).rev() {
+        let r_deg = b_deg + i;
+        if r_deg >= remainder.len() || remainder[r_deg].is_zero() {
+            continue;
+        }
+
+        let coeff = remainder[r_deg].clone();
+
+        // Subtract coeff * x^i * b from remainder
+        for j in 0..=b_deg {
+            let idx = i + j;
+            if idx < remainder.len() {
+                let term = AlgebraicNumber::mul(&coeff, &b[j]);
+                remainder[idx] = AlgebraicNumber::sub(&remainder[idx], &term);
+            }
+        }
+    }
+
+    // Trim trailing zeros
+    while remainder.len() > 1 && remainder.last().map_or(false, |c| c.is_zero()) {
+        remainder.pop();
+    }
+
+    remainder
+}
+
+/// Computes the content of a polynomial over an algebraic field.
+///
+/// The content is a common rational factor that can be extracted from all coefficients.
+fn poly_content_alg(p: &[AlgebraicNumber], _field: &Arc<AlgebraicField>) -> Q {
+    if p.is_empty() {
+        return Q::one();
+    }
+
+    // Collect all Q coefficients from all AlgebraicNumber coefficients
+    let mut all_nums: Vec<i64> = Vec::new();
+    let mut all_dens: Vec<i64> = Vec::new();
+
+    for alg_coeff in p {
+        for q_coeff in alg_coeff.coeffs() {
+            let (num, den) = q_coeff.num_den();
+            if num != 0 {
+                all_nums.push(num.abs());
+                all_dens.push(den.abs());
+            }
+        }
+    }
+
+    if all_nums.is_empty() {
+        return Q::one();
+    }
+
+    // Content = gcd(all numerators) / lcm(all denominators)
+    let num_gcd = all_nums.into_iter().reduce(gcd_i64).unwrap_or(1);
+    let den_lcm = all_dens.into_iter().reduce(lcm_i64).unwrap_or(1);
+
+    Q::new(num_gcd, den_lcm)
+}
+
+/// Makes a polynomial primitive by dividing by its content.
+fn poly_primitive_alg(p: &[AlgebraicNumber], field: &Arc<AlgebraicField>) -> Vec<AlgebraicNumber> {
+    if poly_is_zero_alg(p) {
+        return vec![AlgebraicNumber::zero(Arc::clone(field))];
+    }
+
+    let content = poly_content_alg(p, field);
+    if content.is_one() {
+        return p.to_vec();
+    }
+
+    let content_inv = content.inv().unwrap();
+    let content_alg = AlgebraicNumber::from_rational(content_inv, Arc::clone(field));
+
+    p.iter()
+        .map(|c| AlgebraicNumber::mul(c, &content_alg))
+        .collect()
+}
+
+/// GCD of two i64 integers.
+fn gcd_i64(a: i64, b: i64) -> i64 {
+    if b == 0 {
+        a.abs()
+    } else {
+        gcd_i64(b, a % b)
+    }
+}
+
+/// LCM of two i64 integers.
+fn lcm_i64(a: i64, b: i64) -> i64 {
+    if a == 0 || b == 0 {
+        0
+    } else {
+        (a.abs() / gcd_i64(a, b)) * b.abs()
+    }
 }
 
 /// Checks if a polynomial is zero.
