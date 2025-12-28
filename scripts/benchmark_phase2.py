@@ -15,8 +15,8 @@ import subprocess
 import json
 from typing import List, Tuple, Dict, Any
 
-from sympy import symbols, Poly, ZZ, QQ, factor, gcd, groebner
-from sympy.polys.orderings import grevlex
+from sympy import symbols, Poly, ZZ, QQ, GF, factor, gcd, groebner, solve
+from sympy.polys.orderings import grevlex, lex
 
 
 def random_poly_coeffs(degree: int, max_coeff: int = 100) -> List[int]:
@@ -254,6 +254,50 @@ def benchmark_groebner():
 
 
 # ============================================================================
+# 5. Polynomial System Solving (FGLM) Benchmark
+# ============================================================================
+
+def benchmark_solve():
+    print_header("Polynomial System Solving (Gröbner → Lex via FGLM)")
+
+    x, y, z = symbols('x y z')
+
+    # Test cases matching Tertius FGLM benchmarks
+    test_cases = [
+        ("linear 2-var (unique)", [x + y - 2, x - y], 1),
+        ("quadratic 2-var (2 solutions)", [x**2 - 1, y - x], 2),
+        ("cyclic-2 (2 solutions)", [x + y, x*y - 1], 2),
+    ]
+
+    rows = []
+    for name, system, expected_solutions in test_cases:
+        try:
+            # Use groebner with lex order (similar to FGLM output)
+            mean, std = benchmark(lambda: groebner(system, order=lex), iterations=20, warmup=3)
+            result = groebner(system, order=lex)
+            rows.append({
+                "System": name,
+                "SymPy groebner(lex) (ms)": f"{mean:.3f}",
+                "Basis Size": len(result),
+            })
+        except Exception as e:
+            rows.append({
+                "System": name,
+                "SymPy groebner(lex) (ms)": f"Error: {str(e)[:15]}",
+                "Basis Size": "N/A",
+            })
+
+    print_comparison_table(rows, ["System", "SymPy groebner(lex) (ms)", "Basis Size"])
+    print()
+    print("Tertius FGLM times (from Criterion benchmarks):")
+    print("  linear_2var:    1.57 µs")
+    print("  quadratic_2var: 2.51 µs")
+    print("  cyclic2:        2.96 µs")
+    print()
+    print("Note: Tertius uses M5GB + FGLM for grevlex→lex conversion.")
+
+
+# ============================================================================
 # 5. Run Tertius benchmarks (if available)
 # ============================================================================
 
@@ -308,6 +352,9 @@ def main():
     benchmark_factorization()
     benchmark_groebner()
 
+    # FGLM/Solve benchmark
+    benchmark_solve()
+
     # Summary
     print_header("Summary")
     print("""
@@ -315,13 +362,12 @@ Tertius Phase 2 implements:
 
   ✓ Polynomial Factorization (Van Hoeij + LLL)
   ✓ Gröbner Bases (M5GB algorithm)
+  ✓ FGLM (Gröbner basis conversion for solving)
   ✓ Sparse Linear Algebra (Block Wiedemann, Smith Normal Form)
   ✓ Sparse Polynomial Algorithms (Ben-Or/Tiwari, Hu-Monagan GCD)
   ✓ Symbolic Integration (differentiation/integration rules)
 
 All algorithms use rayon-based parallelism for multi-core performance.
-
-Test suite: 217 tests passing
 """)
 
 

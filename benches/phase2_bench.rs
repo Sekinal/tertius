@@ -9,15 +9,17 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 
 use tertius_factor::van_hoeij_factor;
+use tertius_groebner::m5gb::groebner_basis;
+use tertius_groebner::m5gb::M5GBConfig;
 use tertius_groebner::monomial::PackedMonomial;
 use tertius_groebner::M5GB;
-use tertius_groebner::m5gb::M5GBConfig;
 use tertius_integers::Integer;
 use tertius_linalg::sparse_matrix::CsrMatrix;
 use tertius_poly::algorithms::sparse_gcd::sparse_gcd_univariate;
 use tertius_poly::dense::DensePoly;
 use tertius_rings::finite_field::FiniteField;
 use tertius_rings::integers::Z;
+use tertius_solve::fglm::fglm_convert;
 
 type GF101 = FiniteField<101>;
 
@@ -187,12 +189,63 @@ fn bench_groebner(c: &mut Criterion) {
     group.finish();
 }
 
+/// Benchmark FGLM algorithm for Gröbner basis conversion.
+fn bench_fglm(c: &mut Criterion) {
+    let mut group = c.benchmark_group("fglm");
+
+    // Simple linear system: x + y - 2, x - y (solution: x=1, y=1)
+    let linear_2var = vec![
+        vec![
+            (ff(1), mono(&[1, 0])),
+            (ff(1), mono(&[0, 1])),
+            (ff(99), mono(&[0, 0])),
+        ],
+        vec![(ff(1), mono(&[1, 0])), (ff(100), mono(&[0, 1]))],
+    ];
+
+    group.bench_function("linear_2var", |b| {
+        b.iter(|| {
+            let gb = groebner_basis(linear_2var.clone());
+            black_box(fglm_convert(&gb, 2))
+        })
+    });
+
+    // Quadratic system: x^2 - 1, y - x (solutions: (1,1), (-1,-1))
+    let quadratic_2var = vec![
+        vec![(ff(1), mono(&[2, 0])), (ff(100), mono(&[0, 0]))],
+        vec![(ff(1), mono(&[0, 1])), (ff(100), mono(&[1, 0]))],
+    ];
+
+    group.bench_function("quadratic_2var", |b| {
+        b.iter(|| {
+            let gb = groebner_basis(quadratic_2var.clone());
+            black_box(fglm_convert(&gb, 2))
+        })
+    });
+
+    // cyclic-2: x + y, xy - 1
+    let cyclic2 = vec![
+        vec![(ff(1), mono(&[1, 0])), (ff(1), mono(&[0, 1]))],
+        vec![(ff(1), mono(&[1, 1])), (ff(100), mono(&[0, 0]))],
+    ];
+
+    group.bench_function("cyclic2", |b| {
+        b.iter(|| {
+            let gb = groebner_basis(cyclic2.clone());
+            black_box(fglm_convert(&gb, 2))
+        })
+    });
+
+    group.finish();
+}
+
 criterion_group!(
     phase2_benches,
     bench_sparse_gcd,
     bench_sparse_matrix,
     bench_factorization,
     bench_groebner,
+    bench_fglm,
 );
 
 criterion_main!(phase2_benches);

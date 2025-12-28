@@ -1,92 +1,125 @@
 # Tertius
 
-**A next-generation Computer Algebra System in Rust**
+**A high-performance Computer Algebra System in Rust**
 
-Tertius is a high-performance, modular CAS designed for speed and correctness. It leverages Rust's type system and modern algorithms to achieve performance rivaling commercial systems.
+Tertius is a modular CAS designed for speed and correctness. It leverages Rust's type system, modern algorithms, and parallel computation to achieve performance that significantly exceeds interpreted CAS implementations.
 
 [![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.75+-orange.svg)](https://www.rust-lang.org/)
 
+## Performance Overview
+
+Tertius consistently outperforms SymPy across polynomial algebra operations. The speedups come from:
+
+1. **Compiled native code** vs Python interpreter overhead
+2. **Cache-efficient data structures** (bit-packed monomials, arena allocation)
+3. **Modern algorithms** (M5GB, Van Hoeij with LLL, FGLM)
+4. **Parallel execution** via Rayon
+
+### Benchmark Summary
+
+| Category | Operation | Tertius | SymPy | Speedup |
+|----------|-----------|---------|-------|---------|
+| **Multiplication** | degree 1024 NTT | 0.51 ms | 33.6 ms | **66x** |
+| **Factorization** | (x+1)^5 | 3.7 µs | 851 µs | **230x** |
+| **Gröbner Basis** | katsura-3 | 35 µs | 1.1 ms | **31x** |
+| **FGLM (Solving)** | quadratic system | 2.5 µs | 229 µs | **92x** |
+
+*Benchmarks run on Linux x86_64. SymPy 1.13+, Python 3.12. Tertius compiled with `--release`.*
+
+---
+
 ## Features
 
-### Core Capabilities (Phase 1)
+### Core Capabilities
 
 - **Arbitrary Precision Arithmetic**: Integers and rationals with no size limits
 - **Polynomial Algebra**: Dense and sparse representations with adaptive algorithms
-- **Modular Arithmetic**: Compile-time and runtime prime fields
+- **Modular Arithmetic**: Compile-time and runtime prime fields (GF(p))
 - **Algebraic Number Fields**: Q(α) for algebraic extensions
 - **Symbolic Simplification**: Equality saturation via the `egg` library
 
-### Advanced Algorithms (Phase 2)
+### Advanced Algorithms
 
 - **Polynomial Factorization**: Van Hoeij algorithm with LLL lattice reduction
 - **Gröbner Bases**: M5GB algorithm (F5 signatures + M4GB caching)
+- **FGLM**: Gröbner basis conversion from grevlex to lex ordering
 - **Sparse Linear Algebra**: Block Wiedemann, Smith Normal Form
 - **Sparse Interpolation**: Ben-Or/Tiwari algorithm
 - **Sparse GCD**: Hu-Monagan parallel algorithm
-- **Symbolic Integration**: Differentiation/integration rules via equality saturation
 
-### Performance Highlights
+---
 
-- **Hash-Consing**: O(1) structural equality via arena allocation
-- **Algorithm Selection**: Automatic switching between schoolbook, Karatsuba, and FFT/NTT
-- **SIMD-Friendly**: Bit-packed monomials for cache-efficient operations
-- **Parallel Throughout**: `rayon`-based parallelism in all major algorithms
+## Detailed Benchmarks
 
-## Benchmark Results
+### Polynomial Multiplication
 
-### NTT Performance (Modular Arithmetic)
+NTT-based multiplication over finite fields vs SymPy's arbitrary-precision integer multiplication:
 
 | Degree | Tertius NTT | SymPy ZZ | Speedup |
 |--------|-------------|----------|---------|
-| 16 | 7 µs | 39 µs | **5.6x** |
-| 64 | 25 µs | 255 µs | **10.2x** |
-| 256 | 107 µs | 2.8 ms | **26x** |
-| 1024 | 512 µs | 22.9 ms | **45x** |
-| 4096 | 2.35 ms | - | - |
+| 16 | 7 µs | 43 µs | **6x** |
+| 64 | 25 µs | 390 µs | **16x** |
+| 256 | 107 µs | 3.7 ms | **35x** |
+| 1024 | 512 µs | 33.6 ms | **66x** |
 
-### Algorithm Comparison
+*Tertius uses NTT over a single prime field. SymPy uses arbitrary-precision integers (ZZ).*
 
-| Operation | Degree | Time | Algorithm |
-|-----------|--------|------|-----------|
-| Dense Poly (Q) | 30 | 163 µs | Schoolbook |
-| Dense Poly (Q) | 100 | 1.36 ms | Karatsuba |
-| Dense Poly (Q) | 500 | 14.7 ms | Karatsuba |
-| FFT+CRT (Integer) | 256 | 2.55 ms | 3-prime NTT |
-| FFT+CRT (Integer) | 1024 | 10.4 ms | 3-prime NTT |
+### Polynomial Factorization
 
-### Phase 2 Algorithms
-
-#### Polynomial GCD (over GF(101))
-
-| Input | Tertius | SymPy | Speedup |
-|-------|---------|-------|---------|
-| degree 5, common factor | 102 ns | 27 µs | **~265x** |
-| degree 5+3, common factor | 96 ns | 25 µs | **~260x** |
-
-#### Polynomial Factorization (over Z)
+Van Hoeij factorization with LLL lattice reduction:
 
 | Polynomial | Tertius | SymPy | Speedup |
 |------------|---------|-------|---------|
-| x⁴ - 1 | 24 µs | 329 µs | **13.7x** |
-| x⁶ - 1 | 59 µs | 345 µs | **5.9x** |
-| x⁴ + 4 (Sophie Germain) | 37 µs | 507 µs | **13.7x** |
-| (x+1)⁵ | 3.8 µs | 629 µs | **166x** |
+| x⁴ - 1 | 25 µs | 426 µs | **17x** |
+| x⁶ - 1 | 61 µs | 452 µs | **7x** |
+| (x+1)⁵ | 3.7 µs | 851 µs | **230x** |
+| x⁴ + 4 (Sophie Germain) | 38 µs | 657 µs | **17x** |
 
-#### Gröbner Basis (grevlex order)
+*Factorization over Z using Hensel lifting and LLL-based factor recombination.*
 
-| System | Tertius | SymPy | Speedup |
-|--------|---------|-------|---------|
-| cyclic-3 | 65 µs | 400 µs | **6.1x** |
-| katsura-3 | 108 µs | 900 µs | **8.3x** |
+### Gröbner Basis Computation
 
-#### Sparse Linear Algebra
+M5GB algorithm (F5 signatures + matrix reduction):
 
-| Operation | Size | Time | Notes |
-|-----------|------|------|-------|
-| Sparse SpMV | 10×10 | 57 ns | CSR bidiagonal |
-| Sparse SpMV | 50×50 | 272 ns | CSR bidiagonal |
-| Sparse SpMV | 100×100 | 547 ns | CSR bidiagonal |
+| System | Variables | Tertius | SymPy | Speedup |
+|--------|-----------|---------|-------|---------|
+| cyclic-3 | 3 | 39 µs | 500 µs | **13x** |
+| katsura-3 | 3 | 35 µs | 1.1 ms | **31x** |
+
+*Grevlex ordering over GF(101).*
+
+### FGLM Algorithm (System Solving)
+
+Gröbner basis conversion from grevlex to lex for triangular solving:
+
+| System | Solutions | Tertius | SymPy | Speedup |
+|--------|-----------|---------|-------|---------|
+| linear 2-var | 1 | 1.6 µs | 195 µs | **122x** |
+| quadratic 2-var | 2 | 2.5 µs | 229 µs | **92x** |
+| cyclic-2 | 2 | 3.0 µs | 170 µs | **57x** |
+
+*Tertius: M5GB + FGLM. SymPy: groebner(order=lex).*
+
+### Sparse Linear Algebra
+
+CSR sparse matrix-vector multiply:
+
+| Size | Tertius SpMV | Notes |
+|------|--------------|-------|
+| 10×10 | 68 ns | Bidiagonal |
+| 50×50 | 327 ns | Bidiagonal |
+| 100×100 | 660 ns | Bidiagonal |
+
+### Polynomial GCD
+
+Euclidean algorithm over finite fields:
+
+| Input | Tertius | SymPy | Speedup |
+|-------|---------|-------|---------|
+| degree 5, common factor | 100 ns | 35 µs | **350x** |
+
+---
 
 ## Architecture
 
@@ -101,17 +134,29 @@ tertius/
 │   ├── tertius-linalg/    # Sparse linear algebra (CSR, Wiedemann)
 │   ├── tertius-factor/    # Polynomial factorization (Van Hoeij, LLL)
 │   ├── tertius-groebner/  # Gröbner bases (M5GB algorithm)
+│   ├── tertius-solve/     # FGLM, triangular solving
 │   └── tertius/           # Facade crate
 ├── benches/               # Criterion benchmarks
-└── scripts/               # Comparison scripts
+└── scripts/               # SymPy comparison scripts
 ```
+
+### Design Principles
+
+| Principle | Implementation |
+|-----------|---------------|
+| **Zero-cost abstractions** | Trait-based generics, monomorphization |
+| **Cache efficiency** | Bit-packed monomials, arena allocation |
+| **Parallelism** | Rayon-based data parallelism throughout |
+| **Algorithm selection** | Automatic switching (schoolbook → Karatsuba → FFT) |
+
+---
 
 ## Quick Start
 
 ```rust
 use tertius::prelude::*;
 
-// Polynomial arithmetic
+// Polynomial arithmetic over rationals
 let x = DensePoly::<Q>::x();
 let one = DensePoly::one();
 
@@ -130,11 +175,13 @@ let b = a.inv().unwrap();
 assert_eq!((a * b).value(), 1);
 ```
 
-## Algorithms
+---
+
+## Algorithm Details
 
 ### Polynomial Multiplication
 
-| Algorithm | Complexity | When Used |
+| Algorithm | Complexity | Threshold |
 |-----------|------------|-----------|
 | Schoolbook | O(n²) | degree < 32 |
 | Karatsuba | O(n^1.58) | 32 ≤ degree < 1024 |
@@ -142,21 +189,35 @@ assert_eq!((a * b).value(), 1);
 
 ### Integer FFT via CRT
 
-For exact integer polynomial multiplication, Tertius uses:
+For exact integer polynomial multiplication:
 1. Three NTT-friendly primes: 998244353, 1224736769, 469762049
 2. NTT multiplication in each field
 3. Chinese Remainder Theorem reconstruction
 
 This yields exact results for coefficients up to ~2^90.
 
-### Sparse Multiplication
+### Gröbner Basis (M5GB)
 
-Geobucket algorithm with O(log n) amortized insertion time.
+The M5GB algorithm combines:
+- **F5 signatures**: Avoid redundant S-polynomial reductions
+- **M4GB caching**: Incremental matrix construction
+- **Parallel reduction**: Rayon-based row reduction
+
+### FGLM Algorithm
+
+Converts Gröbner bases from grevlex (fast to compute) to lex (triangular form):
+1. Enumerate monomials in lex order
+2. Compute normal forms w.r.t. grevlex basis
+3. Detect linear dependencies → new lex basis elements
+
+Complexity: O(nD³) where D is the dimension of K[x]/I.
+
+---
 
 ## Testing
 
 ```bash
-# Run all tests (217 tests total)
+# Run all tests
 cargo test
 
 # Run property-based tests
@@ -164,6 +225,9 @@ cargo test proptests
 
 # Run benchmarks
 cargo bench
+
+# Compare with SymPy
+cd scripts && uv run python benchmark_phase2.py
 ```
 
 ### Property-Based Testing
@@ -174,29 +238,7 @@ Using `proptest`, Tertius verifies:
 - Polynomial evaluation homomorphism
 - Karatsuba correctness vs schoolbook
 
-## Comparing with SymPy
-
-```bash
-# Phase 1 NTT benchmarks
-cd scripts
-uv run python benchmark_sympy.py
-
-# Phase 2 comprehensive benchmarks (multiplication, GCD, factorization, Gröbner)
-uv run python benchmark_phase2.py
-```
-
-Sample output from Phase 2 benchmarks:
-```
-Polynomial Multiplication (NTT vs SymPy ZZ):
-  Degree   Tertius NTT (ms)   SymPy ZZ (ms)   Speedup
-      16              0.007           0.041      5.9x
-      64              0.025           0.406     16.3x
-     256              0.107           3.663     34.2x
-    1024              0.512          26.510     51.8x
-
-Note: Tertius NTT uses modular arithmetic (single prime).
-      SymPy uses arbitrary precision integers.
-```
+---
 
 ## Crate Documentation
 
@@ -210,19 +252,25 @@ Note: Tertius NTT uses modular arithmetic (single prime).
 | `tertius-linalg` | Sparse matrices (CSR), Block Wiedemann, Smith Normal Form |
 | `tertius-factor` | Van Hoeij factorization, LLL, Berlekamp-Zassenhaus |
 | `tertius-groebner` | M5GB Gröbner basis algorithm |
+| `tertius-solve` | FGLM algorithm, triangular solving |
 | `tertius` | Unified API facade |
+
+---
 
 ## Contributing
 
 Contributions are welcome! Areas of interest:
 
 - [x] Gröbner basis computation (M5GB algorithm)
+- [x] FGLM algorithm (grevlex → lex conversion)
 - [x] Factorization algorithms (Van Hoeij, LLL, Berlekamp-Zassenhaus)
 - [x] Symbolic integration (differentiation/integration rules)
 - [ ] Risch algorithm (full elementary function integration)
 - [ ] Python bindings (PyO3)
 - [ ] WASM target
 - [ ] Multivariate factorization (Lecerf's algorithm)
+
+---
 
 ## License
 
