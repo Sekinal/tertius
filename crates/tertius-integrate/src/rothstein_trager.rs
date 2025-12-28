@@ -74,6 +74,42 @@ impl<F: Field> LogarithmicPart<F> {
     }
 }
 
+impl LogarithmicPart<Q> {
+    /// Converts a rational logarithmic part to an algebraic one.
+    ///
+    /// This allows uniform handling of both rational and algebraic results.
+    pub fn into_algebraic(self) -> AlgebraicLogarithmicPart {
+        if self.terms.is_empty() {
+            return AlgebraicLogarithmicPart::empty();
+        }
+
+        // Create a trivial field for embedding Q (use x - 1 as minimal polynomial)
+        let trivial_field = Arc::new(AlgebraicField::new(vec![Q::from_integer(-1), Q::one()]));
+
+        let terms = self
+            .terms
+            .into_iter()
+            .map(|t| AlgebraicLogTerm {
+                coefficient: AlgebraicNumber::from_rational(
+                    t.coefficient,
+                    Arc::clone(&trivial_field),
+                ),
+                argument: t
+                    .argument
+                    .coeffs()
+                    .iter()
+                    .map(|c| AlgebraicNumber::from_rational(c.clone(), Arc::clone(&trivial_field)))
+                    .collect(),
+            })
+            .collect();
+
+        AlgebraicLogarithmicPart {
+            terms,
+            field: Some(trivial_field),
+        }
+    }
+}
+
 /// Computes the resultant polynomial R(t) = Res_x(D, A - t·D').
 ///
 /// This resultant is computed symbolically with t as a formal variable.

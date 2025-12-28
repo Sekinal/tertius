@@ -17,10 +17,13 @@
 use tertius_poly::dense::DensePoly;
 use tertius_rational_func::hermite::{hermite_reduce, HermiteReductionResult};
 use tertius_rational_func::RationalFunction;
+use tertius_rings::rationals::Q;
 use tertius_rings::traits::Field;
 
 use crate::polynomial::integrate_polynomial;
-use crate::rothstein_trager::{rothstein_trager, LogarithmicPart};
+use crate::rothstein_trager::{
+    rothstein_trager, rothstein_trager_algebraic, AlgebraicLogarithmicPart, LogarithmicPart,
+};
 
 /// Result of rational function integration.
 #[derive(Clone, Debug)]
@@ -155,6 +158,79 @@ pub enum SimplePoleTerm<F: Field> {
     Rational { coefficient: F, pole: F, power: u32 },
 }
 
+/// Result of rational function integration with algebraic coefficients.
+///
+/// Used when the resultant polynomial has algebraic roots.
+#[derive(Clone, Debug)]
+pub struct AlgebraicIntegrationResult {
+    /// The polynomial part of the integral.
+    pub polynomial_part: DensePoly<Q>,
+    /// The rational part from Hermite reduction.
+    pub rational_part: RationalFunction<Q>,
+    /// The logarithmic part with algebraic coefficients.
+    pub algebraic_log_part: Option<AlgebraicLogarithmicPart>,
+    /// Whether the integration was complete.
+    pub is_complete: bool,
+}
+
+/// Integrates a rational function over Q with algebraic extension support.
+///
+/// This version can handle integrals like ∫1/(x⁴+1)dx that require
+/// algebraic number field extensions for the logarithmic part.
+pub fn integrate_rational_with_algebraic(f: &RationalFunction<Q>) -> AlgebraicIntegrationResult {
+    // Step 1: Extract polynomial part
+    let (poly_part, proper) = f.decompose_proper();
+    let poly_integral = integrate_polynomial(&poly_part);
+
+    // If the proper part is zero, we're done
+    if proper.is_zero() {
+        return AlgebraicIntegrationResult {
+            polynomial_part: poly_integral,
+            rational_part: RationalFunction::zero(),
+            algebraic_log_part: Some(AlgebraicLogarithmicPart::empty()),
+            is_complete: true,
+        };
+    }
+
+    // Step 2: Apply Hermite reduction
+    let HermiteReductionResult {
+        rational_part,
+        reduced,
+    } = hermite_reduce(&proper);
+
+    // Step 3: Try standard Rothstein-Trager first
+    if reduced.is_zero() {
+        return AlgebraicIntegrationResult {
+            polynomial_part: poly_integral,
+            rational_part,
+            algebraic_log_part: Some(AlgebraicLogarithmicPart::empty()),
+            is_complete: true,
+        };
+    }
+
+    // Try rational root finding first (fast path)
+    if let Some(log_part) = rothstein_trager(reduced.numerator(), reduced.denominator()) {
+        // Convert rational LogarithmicPart to AlgebraicLogarithmicPart
+        return AlgebraicIntegrationResult {
+            polynomial_part: poly_integral,
+            rational_part,
+            algebraic_log_part: Some(log_part.into_algebraic()),
+            is_complete: true,
+        };
+    }
+
+    // Fallback to algebraic root finding
+    let alg_log_part = rothstein_trager_algebraic(reduced.numerator(), reduced.denominator());
+    let is_complete = !alg_log_part.is_empty();
+
+    AlgebraicIntegrationResult {
+        polynomial_part: poly_integral,
+        rational_part,
+        algebraic_log_part: Some(alg_log_part),
+        is_complete,
+    }
+}
+
 /// Verifies an integration result by differentiation.
 ///
 /// Checks that d/dx(result) = original.
@@ -193,7 +269,6 @@ mod tests {
     use super::*;
     use tertius_poly::dense::DensePoly;
     use tertius_rings::rationals::Q;
-    use tertius_rings::traits::Ring;
 
     fn q(n: i64) -> Q {
         Q::from_integer(n)
@@ -298,5 +373,65 @@ mod tests {
             }
             _ => panic!("Expected rational term"),
         }
+    }
+
+    // Tests for algebraic integration
+
+    #[test]
+    fn test_integrate_algebraic_x2_minus_1() {
+        // ∫ 1/(x² - 1) dx = (1/2)log((x-1)/(x+1))
+        // This has rational roots ±1
+        let f = rf(&[1], &[-1, 0, 1]);
+
+        let result = integrate_rational_with_algebraic(&f);
+
+        assert!(result.is_complete);
+        let has_log = result
+            .algebraic_log_part
+            .as_ref()
+            .map_or(false, |p| !p.is_empty());
+        assert!(has_log, "Should have logarithmic part");
+
+        if let Some(ref log_part) = result.algebraic_log_part {
+            println!("x² - 1: {} log terms", log_part.terms.len());
+            assert!(log_part.terms.len() >= 2, "Should have 2 log terms");
+        }
+    }
+
+    #[test]
+    fn test_integrate_algebraic_x2_plus_1() {
+        // ∫ 1/(x² + 1) dx = arctan(x) = (1/2i)log((x-i)/(x+i))
+        // This needs algebraic roots ±i
+        let f = rf(&[1], &[1, 0, 1]);
+
+        let result = integrate_rational_with_algebraic(&f);
+
+        assert!(result.is_complete);
+        let has_log = result
+            .algebraic_log_part
+            .as_ref()
+            .map_or(false, |p| !p.is_empty());
+        assert!(has_log, "Should have algebraic logarithmic part");
+
+        if let Some(ref log_part) = result.algebraic_log_part {
+            println!("x² + 1: {} log terms", log_part.terms.len());
+            assert!(!log_part.terms.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_integrate_algebraic_linear() {
+        // ∫ 1/(x - 1) dx = log(x - 1)
+        // Simple case to ensure algebraic version works for rational roots
+        let f = rf(&[1], &[-1, 1]);
+
+        let result = integrate_rational_with_algebraic(&f);
+
+        assert!(result.is_complete);
+        let has_log = result
+            .algebraic_log_part
+            .as_ref()
+            .map_or(false, |p| !p.is_empty());
+        assert!(has_log, "Should have logarithmic part");
     }
 }

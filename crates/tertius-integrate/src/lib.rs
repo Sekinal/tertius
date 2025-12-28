@@ -28,7 +28,10 @@ pub mod risch;
 pub mod proofs;
 
 // Re-exports
-pub use rational::{integrate_rational, RationalIntegrationResult};
-pub use rothstein_trager::LogarithmicPart;
-pub use risch::{RischResult, IntegralExpression, risch_integrate};
-pub use proofs::{NonIntegrabilityProof, NonIntegrabilityReason, prove_non_elementary};
+pub use rational::{
+    integrate_rational, integrate_rational_with_algebraic, AlgebraicIntegrationResult,
+    RationalIntegrationResult,
+};
+pub use rothstein_trager::{AlgebraicLogarithmicPart, LogarithmicPart};
+pub use risch::{risch_integrate, IntegralExpression, RischResult};
+pub use proofs::{prove_non_elementary, NonIntegrabilityProof, NonIntegrabilityReason};

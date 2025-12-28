@@ -12,9 +12,12 @@
 //! - Symbolic Integration Tutorial (Moses, 1971)
 //! - "The Integration of Algebraic Functions" (Davenport, 1981)
 
-use std::time::Instant;
-use tertius_integrate::{integrate_rational, RationalIntegrationResult};
-use tertius_integrate::polynomial::integrate_polynomial;
+use std::time::{Duration, Instant};
+use std::sync::mpsc;
+use std::thread;
+use tertius_integrate::{
+    integrate_rational, integrate_rational_with_algebraic, AlgebraicIntegrationResult,
+};
 use tertius_integrate::risch::heuristic::check_known_non_elementary;
 use tertius_poly::dense::DensePoly;
 use tertius_rational_func::RationalFunction;
@@ -30,6 +33,21 @@ fn q_frac(num: i64, den: i64) -> Q {
 
 fn poly(coeffs: &[i64]) -> DensePoly<Q> {
     DensePoly::new(coeffs.iter().map(|&n| q(n)).collect())
+}
+
+/// Run algebraic integration with a timeout (in seconds).
+fn integrate_with_timeout(rf: RationalFunction<Q>, timeout_secs: u64) -> Option<AlgebraicIntegrationResult> {
+    let (tx, rx) = mpsc::channel();
+
+    thread::spawn(move || {
+        let result = integrate_rational_with_algebraic(&rf);
+        let _ = tx.send(result);
+    });
+
+    match rx.recv_timeout(Duration::from_secs(timeout_secs)) {
+        Ok(result) => Some(result),
+        Err(_) => None,
+    }
 }
 
 fn main() {
@@ -123,6 +141,8 @@ fn main() {
 }
 
 fn test_tier1_deceptive() {
+    const TIMEOUT_SECS: u64 = 5;
+
     // 1.1: ∫ 1/(x⁴ + 1) dx
     // Looks simple, but factors over Q(√2, i) and has a very complex answer
     println!("1.1: ∫ 1/(x⁴ + 1) dx");
@@ -130,10 +150,17 @@ fn test_tier1_deceptive() {
     println!("     Answer involves: arctan and log with √2 coefficients");
     let rf = RationalFunction::new(poly(&[1]), poly(&[1, 0, 0, 0, 1]));
     let start = Instant::now();
-    let result = integrate_rational(&rf);
-    println!("     Tertius time: {:?}", start.elapsed());
-    println!("     Has log part: {}", result.logarithmic_part.is_some());
-    println!("     Status: {}\n", status_str(result.logarithmic_part.is_some()));
+    // Use algebraic integration with timeout for x^4+1
+    if let Some(result) = integrate_with_timeout(rf, TIMEOUT_SECS) {
+        println!("     Tertius time: {:?}", start.elapsed());
+        let has_log = result.algebraic_log_part.as_ref().map_or(false, |p| !p.is_empty());
+        println!("     Has algebraic log part: {}", has_log);
+        println!("     Is complete: {}", result.is_complete);
+        println!("     Status: {}\n", if has_log || result.is_complete { "COMPUTED" } else { "NEEDS WORK" });
+    } else {
+        println!("     Tertius time: TIMEOUT (>{}s)", TIMEOUT_SECS);
+        println!("     Status: TIMEOUT (needs optimization)\n");
+    }
 
     // 1.2: ∫ 1/(x⁶ + 1) dx
     // Even worse - factors into cyclotomic components
@@ -163,6 +190,38 @@ fn test_tier1_deceptive() {
     let result = integrate_rational(&rf);
     println!("     Tertius time: {:?}", start.elapsed());
     println!("     Status: {}\n", status_str(result.logarithmic_part.is_some()));
+
+    // 1.5: ∫ 1/(x² + 1) dx - simpler algebraic case (should work!)
+    println!("1.5: ∫ 1/(x² + 1) dx");
+    println!("     Should be: arctan(x) or (1/2i)log((x-i)/(x+i))");
+    let rf = RationalFunction::new(poly(&[1]), poly(&[1, 0, 1]));
+    let start = Instant::now();
+    let result = integrate_rational_with_algebraic(&rf);
+    println!("     Tertius time: {:?}", start.elapsed());
+    let has_log = result.algebraic_log_part.as_ref().map_or(false, |p| !p.is_empty());
+    println!("     Has algebraic log part: {}", has_log);
+    if has_log {
+        if let Some(ref log_part) = result.algebraic_log_part {
+            println!("     Number of log terms: {}", log_part.terms.len());
+        }
+    }
+    println!("     Status: {}\n", if has_log { "COMPUTED" } else { "NEEDS WORK" });
+
+    // 1.6: ∫ 1/(x² - 1) dx - rational roots case
+    println!("1.6: ∫ 1/(x² - 1) dx");
+    println!("     Should be: (1/2)log((x-1)/(x+1))");
+    let rf = RationalFunction::new(poly(&[1]), poly(&[-1, 0, 1]));
+    let start = Instant::now();
+    let result = integrate_rational_with_algebraic(&rf);
+    println!("     Tertius time: {:?}", start.elapsed());
+    let has_log = result.algebraic_log_part.as_ref().map_or(false, |p| !p.is_empty());
+    println!("     Has algebraic log part: {}", has_log);
+    if has_log {
+        if let Some(ref log_part) = result.algebraic_log_part {
+            println!("     Number of log terms: {}", log_part.terms.len());
+        }
+    }
+    println!("     Status: {}\n", if has_log { "COMPUTED" } else { "NEEDS WORK" });
 }
 
 fn test_tier2_elliptic() {
