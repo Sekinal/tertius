@@ -27,6 +27,8 @@ pub mod polynomial;
 pub mod risch;
 pub mod proofs;
 pub mod special_forms;
+pub mod numerical;
+pub mod definite;
 
 // Re-exports
 pub use rational::{
