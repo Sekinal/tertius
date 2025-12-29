@@ -70,6 +70,7 @@ tertius-rational-func = { path = "crates/tertius-rational-func" }
 tertius-integrate = { path = "crates/tertius-integrate" }
 tertius-diffalg = { path = "crates/tertius-diffalg" }
 tertius-special-func = { path = "crates/tertius-special-func" }
+tertius-numtheory = { path = "crates/tertius-numtheory" }
 
 [profile.release]
 lto = "thin"

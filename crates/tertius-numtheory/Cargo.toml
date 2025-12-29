@@ -1,0 +1,23 @@
+[package]
+name = "tertius-numtheory"
+description = "Number theory algorithms for Tertius CAS: primality testing, factorization, and arithmetic functions"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+tertius-integers = { path = "../tertius-integers" }
+tertius-linalg = { path = "../tertius-linalg" }
+num-traits.workspace = true
+thiserror.workspace = true
+rand.workspace = true
+rand_chacha.workspace = true
+rayon.workspace = true
+smallvec.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+criterion.workspace = true
+
