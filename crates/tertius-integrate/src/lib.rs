@@ -30,6 +30,7 @@ pub mod special_forms;
 pub mod numerical;
 pub mod definite;
 pub mod algebraic;
+pub mod special_definite;
 
 // Re-exports
 pub use rational::{
