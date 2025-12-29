@@ -1,0 +1,15 @@
+[package]
+name = "tertius-diff"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+description = "Symbolic differentiation for the Tertius CAS"
+
+[dependencies]
+tertius-core = { path = "../tertius-core" }
+smallvec.workspace = true
+
+[dev-dependencies]
