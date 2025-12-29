@@ -13,6 +13,7 @@ tertius-rings.workspace = true
 tertius-integers.workspace = true
 tertius-rational-func.workspace = true
 tertius-diffalg.workspace = true
+tertius-factor.workspace = true
 tertius-core.workspace = true
 thiserror.workspace = true
 

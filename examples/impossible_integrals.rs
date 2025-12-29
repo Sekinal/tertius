@@ -168,9 +168,17 @@ fn test_tier1_deceptive() {
     println!("     Involves: 6th roots of -1, extremely complex partial fractions");
     let rf = RationalFunction::new(poly(&[1]), poly(&[1, 0, 0, 0, 0, 0, 1]));
     let start = Instant::now();
-    let result = integrate_rational(&rf);
+    // Use algebraic integration
+    let result = integrate_rational_with_algebraic(&rf);
     println!("     Tertius time: {:?}", start.elapsed());
-    println!("     Status: {}\n", status_str(result.logarithmic_part.is_some()));
+    let has_log = result.algebraic_log_part.as_ref().map_or(false, |p| !p.is_empty());
+    println!("     Has algebraic log part: {}", has_log);
+    if has_log {
+        if let Some(ref log_part) = result.algebraic_log_part {
+            println!("     Number of log terms: {}", log_part.terms.len());
+        }
+    }
+    println!("     Status: {}\n", if has_log || result.is_complete { "COMPUTED" } else { "NEEDS WORK" });
 
     // 1.3: ∫ 1/(x⁸ + 1) dx
     // 8th roots of unity - Galois theory nightmare
@@ -178,18 +186,34 @@ fn test_tier1_deceptive() {
     println!("     Requires: 8th roots of -1, degree 4 algebraic extension");
     let rf = RationalFunction::new(poly(&[1]), poly(&[1, 0, 0, 0, 0, 0, 0, 0, 1]));
     let start = Instant::now();
-    let result = integrate_rational(&rf);
+    // Use algebraic integration
+    let result = integrate_rational_with_algebraic(&rf);
     println!("     Tertius time: {:?}", start.elapsed());
-    println!("     Status: {}\n", status_str(result.logarithmic_part.is_some()));
+    let has_log = result.algebraic_log_part.as_ref().map_or(false, |p| !p.is_empty());
+    println!("     Has algebraic log part: {}", has_log);
+    if has_log {
+        if let Some(ref log_part) = result.algebraic_log_part {
+            println!("     Number of log terms: {}", log_part.terms.len());
+        }
+    }
+    println!("     Status: {}\n", if has_log || result.is_complete { "COMPUTED" } else { "NEEDS WORK" });
 
     // 1.4: ∫ x²/(x⁴ + 1) dx
     println!("1.4: ∫ x²/(x⁴ + 1) dx");
     println!("     Related to 1.1 but different partial fraction decomposition");
     let rf = RationalFunction::new(poly(&[0, 0, 1]), poly(&[1, 0, 0, 0, 1]));
     let start = Instant::now();
-    let result = integrate_rational(&rf);
+    // Use algebraic integration
+    let result = integrate_rational_with_algebraic(&rf);
     println!("     Tertius time: {:?}", start.elapsed());
-    println!("     Status: {}\n", status_str(result.logarithmic_part.is_some()));
+    let has_log = result.algebraic_log_part.as_ref().map_or(false, |p| !p.is_empty());
+    println!("     Has algebraic log part: {}", has_log);
+    if has_log {
+        if let Some(ref log_part) = result.algebraic_log_part {
+            println!("     Number of log terms: {}", log_part.terms.len());
+        }
+    }
+    println!("     Status: {}\n", if has_log || result.is_complete { "COMPUTED" } else { "NEEDS WORK" });
 
     // 1.5: ∫ 1/(x² + 1) dx - simpler algebraic case (should work!)
     println!("1.5: ∫ 1/(x² + 1) dx");
@@ -263,9 +287,17 @@ fn test_tier3_rational_nightmares() {
     coeffs[12] = 1;
     let rf = RationalFunction::new(poly(&[1]), poly(&coeffs));
     let start = Instant::now();
-    let result = integrate_rational(&rf);
+    // Use algebraic integration
+    let result = integrate_rational_with_algebraic(&rf);
     println!("     Tertius time: {:?}", start.elapsed());
-    println!("     Status: {}\n", status_str(result.logarithmic_part.is_some()));
+    let has_log = result.algebraic_log_part.as_ref().map_or(false, |p| !p.is_empty());
+    println!("     Has algebraic log part: {}", has_log);
+    if has_log {
+        if let Some(ref log_part) = result.algebraic_log_part {
+            println!("     Number of log terms: {}", log_part.terms.len());
+        }
+    }
+    println!("     Status: {}\n", if has_log || result.is_complete { "COMPUTED" } else { "NEEDS WORK" });
 
     // 3.2: Repeated irreducible factors
     println!("3.2: ∫ 1/(x² + 1)³ dx");

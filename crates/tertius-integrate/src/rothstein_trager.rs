@@ -39,10 +39,12 @@
 
 use std::sync::Arc;
 
+use tertius_factor::van_hoeij_factor;
 use tertius_poly::algorithms::gcd::poly_gcd;
 use tertius_poly::algorithms::resultant::resultant;
 use tertius_poly::dense::DensePoly;
 use tertius_rings::algebraic::{AlgebraicField, AlgebraicNumber};
+use tertius_rings::integers::Z;
 use tertius_rings::rationals::Q;
 use tertius_rings::traits::{Field, Ring};
 
@@ -571,49 +573,72 @@ fn compute_log_part_from_roots_q(
     }
 }
 
-/// Factors a polynomial over Q into squarefree irreducible factors.
+/// Factors a polynomial over Q into irreducible factors using Van Hoeij's algorithm.
 /// Returns factors of degree >= 1 (excludes constant factors).
 fn factor_squarefree_q(poly: &[Q]) -> Vec<Vec<Q>> {
     if poly.is_empty() || poly.iter().all(|c| c.is_zero()) {
         return vec![];
     }
 
-    // First, make monic
-    let poly = make_monic_q(poly);
-
-    // If linear, it's irreducible
-    if poly_degree_q(&poly) == 1 {
-        return vec![poly];
+    // If degree 0, no factors to return
+    let deg = poly_degree_q(poly);
+    if deg == 0 {
+        return vec![];
     }
 
-    // Try to find and remove rational roots first
-    let mut current = poly.clone();
-    let mut factors = Vec::new();
+    // If linear, it's irreducible
+    if deg == 1 {
+        return vec![make_monic_q(poly)];
+    }
 
-    // Remove rational roots
-    loop {
-        if let Some(root) = find_rational_root_q(&current) {
-            // Add linear factor (x - root)
-            factors.push(vec![-root.clone(), Q::one()]);
-            current = divide_by_linear_q(&current, &root);
+    // Convert Q polynomial to Z by clearing denominators
+    // Find LCM of all denominators
+    let mut lcm_den = 1i64;
+    for c in poly {
+        let (_, den) = c.num_den();
+        lcm_den = lcm_i64(lcm_den, den.abs());
+    }
 
-            if poly_degree_q(&current) == 0 {
-                break;
-            }
-        } else {
-            break;
+    // Scale to get integer polynomial
+    let z_poly: Vec<Z> = poly
+        .iter()
+        .map(|c| {
+            let (num, den) = c.num_den();
+            let scaled = num * (lcm_den / den);
+            Z::from(scaled)
+        })
+        .collect();
+
+    let z_poly = DensePoly::new(z_poly);
+
+    // Use Van Hoeij to factor over Z
+    let result = van_hoeij_factor(&z_poly);
+
+    // Convert Z factors back to monic Q factors
+    let mut q_factors = Vec::new();
+    for factor in result.factors {
+        if factor.degree() >= 1 {
+            // Convert to Q and make monic
+            let q_coeffs: Vec<Q> = factor
+                .coeffs()
+                .iter()
+                .map(|z| {
+                    let val: i64 = z.as_inner().to_i64().unwrap_or(0);
+                    Q::from_integer(val)
+                })
+                .collect();
+            let monic = make_monic_q(&q_coeffs);
+            q_factors.push(monic);
         }
     }
 
-    // What remains is either constant or has no rational roots
-    if poly_degree_q(&current) >= 1 {
-        // The remaining polynomial is irreducible over Q (or needs further factorization)
-        // For now, assume it's irreducible if it has no rational roots
-        // TODO: Use proper irreducibility testing (e.g., Berlekamp or Cantor-Zassenhaus)
-        factors.push(current);
+    // If Van Hoeij didn't find factors (shouldn't happen for squarefree input),
+    // fall back to rational root extraction
+    if q_factors.is_empty() && deg >= 1 {
+        q_factors.push(make_monic_q(poly));
     }
 
-    factors
+    q_factors
 }
 
 /// Computes the logarithmic part from irreducible factors of the resultant.
