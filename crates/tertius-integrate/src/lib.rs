@@ -29,6 +29,7 @@ pub mod proofs;
 pub mod special_forms;
 pub mod numerical;
 pub mod definite;
+pub mod algebraic;
 
 // Re-exports
 pub use rational::{
