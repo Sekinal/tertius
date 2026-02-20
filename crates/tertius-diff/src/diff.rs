@@ -3,6 +3,7 @@
 //! Provides the main `diff` function for computing derivatives of expressions.
 
 use smallvec::SmallVec;
+use tertius_core::assumptions::AssumptionSet;
 use tertius_core::arena::ExprArena;
 use tertius_core::expr::{functions, ExprNode, SymbolId};
 use tertius_core::handle::ExprHandle;
@@ -49,6 +50,22 @@ pub fn diff(arena: &mut ExprArena, expr: ExprHandle, var: ExprHandle) -> ExprHan
     };
 
     diff_internal(arena, expr, var_id)
+}
+
+/// Differentiates with explicit assumptions.
+///
+/// Current differentiation rules are assumption-independent for supported
+/// elementary operations, so this delegates to [`diff`]. The assumption-aware
+/// entry point is provided so callers can keep a uniform API across symbolic
+/// subsystems.
+#[allow(clippy::unused_self)]
+pub fn diff_with_assumptions(
+    arena: &mut ExprArena,
+    expr: ExprHandle,
+    var: ExprHandle,
+    _assumptions: &AssumptionSet,
+) -> ExprHandle {
+    diff(arena, expr, var)
 }
 
 /// Computes the nth derivative of an expression.

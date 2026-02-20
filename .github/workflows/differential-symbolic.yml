@@ -1,0 +1,39 @@
+name: Differential Symbolic Checks
+
+on:
+  pull_request:
+    paths:
+      - "src/bin/symbolic_cli.rs"
+      - "crates/tertius-core/src/assumptions.rs"
+      - "crates/tertius-simplify/**"
+      - "crates/tertius-diff/**"
+      - "crates/tertius-integrate/**"
+      - "scripts/differential_symbolic_sympy.py"
+      - "scripts/corpus/physics_undergrad_core.json"
+      - "scripts/pyproject.toml"
+      - ".github/workflows/differential-symbolic.yml"
+  workflow_dispatch:
+
+jobs:
+  symbolic-differential:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Build symbolic CLI
+        run: cargo build --release --bin symbolic_cli
+
+      - name: Differential symbolic checks vs SymPy
+        run: |
+          uv run --project scripts \
+            python scripts/differential_symbolic_sympy.py \
+            --cases 100 \
+            --seed 123 \
+            --timeout 0.8

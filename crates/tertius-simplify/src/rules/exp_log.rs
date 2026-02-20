@@ -4,8 +4,8 @@ use egg::{rewrite, Rewrite};
 
 use crate::language::TertiusLang;
 
-/// Returns exponential and logarithmic rewrite rules.
-pub fn rules() -> Vec<Rewrite<TertiusLang, ()>> {
+/// Returns branch-safe exponential and logarithmic rules.
+pub fn rules_branch_safe() -> Vec<Rewrite<TertiusLang, ()>> {
     vec![
         // exp(0) = 1
         rewrite!("exp-zero"; "(exp 0)" => "1"),
@@ -15,20 +15,6 @@ pub fn rules() -> Vec<Rewrite<TertiusLang, ()>> {
 
         // exp(ln(x)) = x
         rewrite!("exp-ln"; "(exp (ln ?x))" => "?x"),
-
-        // ln(exp(x)) = x
-        rewrite!("ln-exp"; "(ln (exp ?x))" => "?x"),
-
-        // ln(x*y) = ln(x) + ln(y)
-        rewrite!("ln-mul"; "(ln (* ?x ?y))" => "(+ (ln ?x) (ln ?y))"),
-        rewrite!("ln-mul-fold"; "(+ (ln ?x) (ln ?y))" => "(ln (* ?x ?y))"),
-
-        // ln(x/y) = ln(x) - ln(y)
-        rewrite!("ln-div"; "(ln (/ ?x ?y))" => "(- (ln ?x) (ln ?y))"),
-
-        // ln(x^n) = n*ln(x)
-        rewrite!("ln-pow"; "(ln (^ ?x ?n))" => "(* ?n (ln ?x))"),
-        rewrite!("ln-pow-fold"; "(* ?n (ln ?x))" => "(ln (^ ?x ?n))"),
 
         // exp(a + b) = exp(a) * exp(b)
         rewrite!("exp-add"; "(exp (+ ?a ?b))" => "(* (exp ?a) (exp ?b))"),
@@ -55,7 +41,27 @@ pub fn rules() -> Vec<Rewrite<TertiusLang, ()>> {
         rewrite!("sqrt-mul"; "(sqrt (* ?x ?y))" => "(* (sqrt ?x) (sqrt ?y))"),
         rewrite!("sqrt-mul-fold"; "(* (sqrt ?x) (sqrt ?y))" => "(sqrt (* ?x ?y))"),
 
-        // ln(sqrt(x)) = ln(x)/2
+    ]
+}
+
+/// Returns domain-sensitive rules that require real/positive assumptions.
+pub fn rules_real_domain() -> Vec<Rewrite<TertiusLang, ()>> {
+    vec![
+        // ln(exp(x)) = x for real x
+        rewrite!("ln-exp"; "(ln (exp ?x))" => "?x"),
+
+        // ln(x*y) = ln(x) + ln(y)
+        rewrite!("ln-mul"; "(ln (* ?x ?y))" => "(+ (ln ?x) (ln ?y))"),
+        rewrite!("ln-mul-fold"; "(+ (ln ?x) (ln ?y))" => "(ln (* ?x ?y))"),
+
+        // ln(x/y) = ln(x) - ln(y)
+        rewrite!("ln-div"; "(ln (/ ?x ?y))" => "(- (ln ?x) (ln ?y))"),
+
+        // ln(x^n) = n*ln(x)
+        rewrite!("ln-pow"; "(ln (^ ?x ?n))" => "(* ?n (ln ?x))"),
+        rewrite!("ln-pow-fold"; "(* ?n (ln ?x))" => "(ln (^ ?x ?n))"),
+
+        // ln(sqrt(x)) = ln(x)/2 for x > 0
         rewrite!("ln-sqrt"; "(ln (sqrt ?x))" => "(/ (ln ?x) 2)"),
     ]
 }
@@ -67,7 +73,7 @@ mod tests {
 
     #[test]
     fn test_exp_ln() {
-        let rules = rules();
+        let rules = rules_branch_safe();
         let start = "(exp (ln x))".parse().unwrap();
         let runner = Runner::default().with_expr(&start).run(&rules);
         let extractor = egg::Extractor::new(&runner.egraph, egg::AstSize);
@@ -77,7 +83,7 @@ mod tests {
 
     #[test]
     fn test_ln_exp() {
-        let rules = rules();
+        let rules = rules_real_domain();
         let start = "(ln (exp x))".parse().unwrap();
         let runner = Runner::default().with_expr(&start).run(&rules);
         let extractor = egg::Extractor::new(&runner.egraph, egg::AstSize);

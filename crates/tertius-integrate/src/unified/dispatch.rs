@@ -5,6 +5,7 @@
 use smallvec::smallvec;
 
 use tertius_core::arena::ExprArena;
+use tertius_core::assumptions::{Assumption, AssumptionSet};
 use tertius_core::expr::{functions, ExprNode, SymbolId};
 use tertius_core::handle::ExprHandle;
 use tertius_rings::rationals::Q;
@@ -36,6 +37,8 @@ pub struct IntegrationOptions {
     pub verify: bool,
     /// Attempt simplification of result.
     pub simplify_result: bool,
+    /// Optional symbolic assumptions (domains/sign constraints).
+    pub assumptions: Option<AssumptionSet>,
 }
 
 impl Default for IntegrationOptions {
@@ -47,6 +50,7 @@ impl Default for IntegrationOptions {
             heuristics_first: true,
             verify: false,
             simplify_result: true,
+            assumptions: None,
         }
     }
 }
@@ -133,6 +137,10 @@ impl<'a> IntegrationDispatcher<'a> {
             IntegrandClass::Rational {
                 needs_algebraic, ..
             } => {
+                // Fast-path common textbook forms before full rational pipeline.
+                if let Some(result) = self.try_table_lookup(expr, var, var_id) {
+                    return result;
+                }
                 if needs_algebraic {
                     self.integrate_rational_algebraic(expr, var, var_id)
                 } else {
@@ -335,7 +343,7 @@ impl<'a> IntegrationDispatcher<'a> {
         &mut self,
         expr: ExprHandle,
         var: ExprHandle,
-        _var_id: SymbolId,
+        var_id: SymbolId,
     ) -> Option<IntegrationResult> {
         let node = self.arena.get(expr);
 
@@ -383,13 +391,26 @@ impl<'a> IntegrationDispatcher<'a> {
             ExprNode::Div { num, den } => {
                 let num_node = self.arena.get(*num);
                 if matches!(num_node, ExprNode::Integer(1)) && *den == var {
+                    let log_arg = if self.is_variable_assumed_positive(var_id) {
+                        var
+                    } else {
+                        self.arena.intern(ExprNode::Function {
+                            id: functions::ABS,
+                            args: smallvec![var],
+                        })
+                    };
                     let ln_x = self.arena.intern(ExprNode::Function {
                         id: functions::LN,
-                        args: smallvec![var],
+                        args: smallvec![log_arg],
                     });
+                    let display = if self.is_variable_assumed_positive(var_id) {
+                        "ln(x)".to_string()
+                    } else {
+                        "ln(abs(x))".to_string()
+                    };
                     return Some(IntegrationResult::Symbolic(
                         SymbolicAntiderivative::new(ln_x, IntegrationMethod::TableLookup)
-                            .with_display("ln(x)".to_string()),
+                            .with_display(display),
                     ));
                 }
             }
@@ -543,11 +564,22 @@ impl<'a> IntegrationDispatcher<'a> {
             _ => None,
         }
     }
+
+    fn is_variable_assumed_positive(&self, var_id: SymbolId) -> bool {
+        let Some(assumptions) = self.options.assumptions.as_ref() else {
+            return false;
+        };
+        let Some(name) = self.arena.symbol_name(var_id) else {
+            return false;
+        };
+        assumptions.has(name, Assumption::Positive)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tertius_core::assumptions::{Assumption, AssumptionSet};
 
     #[test]
     fn test_integrate_constant() {
@@ -612,5 +644,47 @@ mod tests {
         let result = dispatcher.integrate(exp_neg_x_sq, x);
 
         assert!(result.is_special_function());
+    }
+
+    #[test]
+    fn test_integrate_one_over_x_defaults_to_log_abs() {
+        let mut arena = ExprArena::new();
+        let x = arena.symbol("x");
+        let one = arena.integer(1);
+        let one_over_x = arena.intern(ExprNode::Div { num: one, den: x });
+
+        let mut dispatcher = IntegrationDispatcher::new(&mut arena);
+        let result = dispatcher.integrate(one_over_x, x);
+
+        let display = match result {
+            IntegrationResult::Symbolic(s) => s.display,
+            other => panic!("expected symbolic result, got {other:?}"),
+        };
+        assert_eq!(display, "ln(abs(x))");
+    }
+
+    #[test]
+    fn test_integrate_one_over_x_with_positive_assumption() {
+        let mut arena = ExprArena::new();
+        let x = arena.symbol("x");
+        let one = arena.integer(1);
+        let one_over_x = arena.intern(ExprNode::Div { num: one, den: x });
+
+        let mut assumptions = AssumptionSet::new();
+        assumptions.assume("x", Assumption::Positive);
+        assumptions.assume("x", Assumption::Real);
+
+        let options = IntegrationOptions {
+            assumptions: Some(assumptions),
+            ..IntegrationOptions::default()
+        };
+        let mut dispatcher = IntegrationDispatcher::with_options(&mut arena, options);
+        let result = dispatcher.integrate(one_over_x, x);
+
+        let display = match result {
+            IntegrationResult::Symbolic(s) => s.display,
+            other => panic!("expected symbolic result, got {other:?}"),
+        };
+        assert_eq!(display, "ln(x)");
     }
 }

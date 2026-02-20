@@ -18,10 +18,12 @@
 #![warn(clippy::pedantic)]
 
 pub mod arena;
+pub mod assumptions;
 pub mod expr;
 pub mod handle;
 pub mod intern;
 
 pub use arena::ExprArena;
+pub use assumptions::{Assumption, AssumptionSet};
 pub use expr::{ExprNode, FunctionId, SymbolId};
 pub use handle::ExprHandle;

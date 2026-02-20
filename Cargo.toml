@@ -13,6 +13,7 @@ tertius-core = { path = "crates/tertius-core" }
 tertius-integers = { path = "crates/tertius-integers" }
 tertius-rings = { path = "crates/tertius-rings" }
 tertius-poly = { path = "crates/tertius-poly" }
+tertius-simplify = { path = "crates/tertius-simplify" }
 tertius-linalg = { path = "crates/tertius-linalg" }
 tertius-factor = { path = "crates/tertius-factor" }
 tertius-groebner = { path = "crates/tertius-groebner" }
@@ -21,8 +22,10 @@ tertius-limits = { path = "crates/tertius-limits" }
 tertius-solve = { path = "crates/tertius-solve" }
 tertius-rational-func = { path = "crates/tertius-rational-func" }
 tertius-integrate = { path = "crates/tertius-integrate" }
+tertius-diff = { path = "crates/tertius-diff" }
 tertius-diffalg = { path = "crates/tertius-diffalg" }
 tertius-special-func = { path = "crates/tertius-special-func" }
+tertius-units = { path = "crates/tertius-units" }
 criterion = { version = "0.5", features = ["html_reports"] }
 smallvec.workspace = true
 
@@ -73,6 +76,7 @@ tertius-special-func = { path = "crates/tertius-special-func" }
 tertius-numtheory = { path = "crates/tertius-numtheory" }
 tertius-diff = { path = "crates/tertius-diff" }
 tertius-combinatorics = { path = "crates/tertius-combinatorics" }
+tertius-units = { path = "crates/tertius-units" }
 
 [profile.release]
 lto = "thin"

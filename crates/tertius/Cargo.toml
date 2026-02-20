@@ -13,6 +13,7 @@ tertius-integers.workspace = true
 tertius-rings.workspace = true
 tertius-poly.workspace = true
 tertius-simplify.workspace = true
+tertius-units.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true

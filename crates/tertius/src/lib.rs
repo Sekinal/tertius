@@ -33,10 +33,11 @@ pub use tertius_integers as integers;
 pub use tertius_poly as poly;
 pub use tertius_rings as rings;
 pub use tertius_simplify as simplify;
+pub use tertius_units as units;
 
 /// Prelude module for convenient imports.
 pub mod prelude {
-    pub use tertius_core::{ExprArena, ExprHandle, ExprNode};
+    pub use tertius_core::{Assumption, AssumptionSet, ExprArena, ExprHandle, ExprNode};
     pub use tertius_integers::{Integer, Rational};
     pub use tertius_poly::{DensePoly, SparsePoly};
     pub use tertius_rings::{Field, Ring, Q, Z};

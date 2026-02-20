@@ -202,6 +202,12 @@ For randomized cross-checks against SymPy (currently univariate factorization):
 uv run --project scripts python scripts/differential_sympy.py --build-binary --cases 500
 ```
 
+For symbolic simplify/diff/integrate checks:
+
+```bash
+uv run --project scripts python scripts/differential_symbolic_sympy.py --build-binary --cases 200
+```
+
 ---
 
 ## Algorithm Details

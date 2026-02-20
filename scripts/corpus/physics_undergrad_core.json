@@ -1,0 +1,29 @@
+[
+  {"mode": "simplify", "label": "identity_add_zero", "expr": "(+ x 0)"},
+  {"mode": "simplify", "label": "identity_mul_one", "expr": "(* x 1)"},
+  {"mode": "simplify", "label": "trig_pythagorean", "expr": "(+ (^ (sin x) 2) (^ (cos x) 2))"},
+  {"mode": "simplify", "label": "exp_log_branch_safe", "expr": "(exp (ln x))"},
+  {"mode": "simplify", "label": "ln_exp_real", "expr": "(ln (exp x))", "assume": "x:real"},
+  {"mode": "simplify", "label": "sqrt_square", "expr": "(sqrt (^ x 2))"},
+  {"mode": "simplify", "label": "exp_add", "expr": "(exp (+ x y))"},
+
+  {"mode": "diff", "label": "poly_quadratic", "expr": "(+ (^ x 2) (* 3 x) 5)", "var": "x"},
+  {"mode": "diff", "label": "poly_cubic", "expr": "(+ (^ x 3) (^ x 2) x)", "var": "x"},
+  {"mode": "diff", "label": "sin", "expr": "(sin x)", "var": "x"},
+  {"mode": "diff", "label": "cos", "expr": "(cos x)", "var": "x"},
+  {"mode": "diff", "label": "exp", "expr": "(exp x)", "var": "x"},
+  {"mode": "diff", "label": "log", "expr": "(ln x)", "var": "x", "assume": "x:positive"},
+  {"mode": "diff", "label": "quotient", "expr": "(/ (sin x) x)", "var": "x", "assume": "x:nonzero"},
+  {"mode": "diff", "label": "product_rule", "expr": "(* (exp x) (sin x))", "var": "x"},
+
+  {"mode": "integrate", "label": "constant", "expr": "5", "var": "x"},
+  {"mode": "integrate", "label": "linear", "expr": "x", "var": "x"},
+  {"mode": "integrate", "label": "quadratic", "expr": "(^ x 2)", "var": "x"},
+  {"mode": "integrate", "label": "quartic", "expr": "(^ x 4)", "var": "x"},
+  {"mode": "integrate", "label": "sine", "expr": "(sin x)", "var": "x"},
+  {"mode": "integrate", "label": "cosine", "expr": "(cos x)", "var": "x"},
+  {"mode": "integrate", "label": "exp", "expr": "(exp x)", "var": "x"},
+  {"mode": "integrate", "label": "one_over_x_positive", "expr": "(/ 1 x)", "var": "x", "assume": "x:positive,x:real"},
+  {"mode": "integrate", "label": "one_over_x_generic", "expr": "(/ 1 x)", "var": "x", "assume": "x:real,x:nonzero"},
+  {"mode": "integrate", "label": "scaled_poly", "expr": "(* 3 (^ x 2))", "var": "x"}
+]
