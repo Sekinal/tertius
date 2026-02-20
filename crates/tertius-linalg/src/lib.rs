@@ -35,7 +35,7 @@ mod smith_normal_form;
 pub use berlekamp_massey::berlekamp_massey;
 pub use block_wiedemann::{BlockWiedemann, BlockWiedemannConfig};
 pub use dense_matrix::DenseMatrix;
-pub use physics_matrix2::Matrix2;
+pub use physics_matrix2::{Matrix2, RealEigenDecomposition2};
 pub use simd::{Gf2x64, GfPx64};
 pub use smith_normal_form::{smith_normal_form, SmithNormalForm};
 pub use sparse_matrix::CsrMatrix;

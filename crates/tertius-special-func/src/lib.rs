@@ -29,5 +29,8 @@ pub use catalog::{recognize_special_function, SpecialFunction};
 pub use elliptic::{EllipticE, EllipticF, EllipticPi};
 pub use error_func::{error_func_series, ErrorFunction};
 pub use hypergeometric::{hypergeometric_series, Hypergeometric2F1};
-pub use physics::{bessel_j, hermite_h, laguerre_l, legendre_p, spherical_harmonic_y_00};
+pub use physics::{
+    bessel_j, derivative_rule, hermite_h, integral_rule, laguerre_l, legendre_p, simplify_rule,
+    spherical_harmonic_y_00, PhysicsSpecialExpr,
+};
 pub use polylog::{dilog, trilog, Polylogarithm};
