@@ -22,7 +22,7 @@
 //! ```
 
 use std::ops::{Add, Mul, Neg, Sub};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use crate::rationals::Q;
 use crate::traits::{CommutativeRing, EuclideanDomain, Field, IntegralDomain, Ring};
@@ -182,21 +182,65 @@ impl AlgebraicNumber {
         self.coeffs.iter().all(|c| c.is_zero())
     }
 
+    /// Returns true if this value is a rational constant (degree-0 element).
+    #[must_use]
+    fn is_rational_constant(&self) -> bool {
+        self.coeffs
+            .iter()
+            .enumerate()
+            .all(|(i, c)| i == 0 || c.is_zero())
+    }
+
+    /// Returns the rational constant value when this is degree-0.
+    #[must_use]
+    fn as_rational_constant(&self) -> Option<Q> {
+        if self.is_rational_constant() {
+            Some(self.coeffs.first().cloned().unwrap_or_else(Q::zero))
+        } else {
+            None
+        }
+    }
+
+    /// Aligns fields for binary operations.
+    ///
+    /// If fields differ, we only allow coercion of rational constants.
+    fn align_fields(lhs: &Self, rhs: &Self) -> (Self, Self) {
+        if Arc::ptr_eq(&lhs.field, &rhs.field) {
+            return (lhs.clone(), rhs.clone());
+        }
+
+        if let Some(c) = lhs.as_rational_constant() {
+            return (
+                Self::from_rational(c, Arc::clone(&rhs.field)),
+                rhs.clone(),
+            );
+        }
+
+        if let Some(c) = rhs.as_rational_constant() {
+            return (
+                lhs.clone(),
+                Self::from_rational(c, Arc::clone(&lhs.field)),
+            );
+        }
+
+        panic!("fields must match")
+    }
+
     /// Adds two algebraic numbers.
     #[must_use]
     pub fn add(&self, other: &Self) -> Self {
-        assert!(Arc::ptr_eq(&self.field, &other.field), "fields must match");
+        let (lhs, rhs) = Self::align_fields(self, other);
 
-        let len = self.coeffs.len().max(other.coeffs.len());
+        let len = lhs.coeffs.len().max(rhs.coeffs.len());
         let mut result = Vec::with_capacity(len);
 
         for i in 0..len {
-            let a = self.coeffs.get(i).cloned().unwrap_or_else(Q::zero);
-            let b = other.coeffs.get(i).cloned().unwrap_or_else(Q::zero);
+            let a = lhs.coeffs.get(i).cloned().unwrap_or_else(Q::zero);
+            let b = rhs.coeffs.get(i).cloned().unwrap_or_else(Q::zero);
             result.push(a + b);
         }
 
-        Self::new(result, Arc::clone(&self.field))
+        Self::new(result, Arc::clone(&lhs.field))
     }
 
     /// Negates an algebraic number.
@@ -217,19 +261,19 @@ impl AlgebraicNumber {
     /// Multiplies two algebraic numbers.
     #[must_use]
     pub fn mul(&self, other: &Self) -> Self {
-        assert!(Arc::ptr_eq(&self.field, &other.field), "fields must match");
+        let (lhs, rhs) = Self::align_fields(self, other);
 
-        let n = self.coeffs.len();
-        let m = other.coeffs.len();
+        let n = lhs.coeffs.len();
+        let m = rhs.coeffs.len();
         let mut result = vec![Q::zero(); n + m - 1];
 
         for i in 0..n {
             for j in 0..m {
-                result[i + j] = result[i + j].clone() + self.coeffs[i].clone() * other.coeffs[j].clone();
+                result[i + j] = result[i + j].clone() + lhs.coeffs[i].clone() * rhs.coeffs[j].clone();
             }
         }
 
-        Self::new(result, Arc::clone(&self.field))
+        Self::new(result, Arc::clone(&lhs.field))
     }
 
     /// Divides two algebraic numbers.
@@ -268,7 +312,10 @@ impl AlgebraicNumber {
 impl PartialEq for AlgebraicNumber {
     fn eq(&self, other: &Self) -> bool {
         if !Arc::ptr_eq(&self.field, &other.field) {
-            return false;
+            return match (self.as_rational_constant(), other.as_rational_constant()) {
+                (Some(a), Some(b)) => a == b,
+                _ => false,
+            };
         }
 
         let max_len = self.coeffs.len().max(other.coeffs.len());
@@ -542,11 +589,11 @@ impl Neg for AlgebraicNumber {
 
 impl Ring for AlgebraicNumber {
     fn zero() -> Self {
-        panic!("AlgebraicNumber::zero() requires a field context; use AlgebraicNumber::zero(field) instead")
+        AlgebraicNumber::from_rational(Q::zero(), default_rational_field())
     }
 
     fn one() -> Self {
-        panic!("AlgebraicNumber::one() requires a field context; use AlgebraicNumber::one(field) instead")
+        AlgebraicNumber::from_rational(Q::one(), default_rational_field())
     }
 
     fn is_zero(&self) -> bool {
@@ -617,6 +664,13 @@ impl Field for AlgebraicNumber {
     }
 }
 
+fn default_rational_field() -> Arc<AlgebraicField> {
+    static DEFAULT_FIELD: OnceLock<Arc<AlgebraicField>> = OnceLock::new();
+    DEFAULT_FIELD
+        .get_or_init(|| Arc::new(AlgebraicField::new(vec![Q::zero(), Q::one()])))
+        .clone()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -652,6 +706,38 @@ mod tests {
         let sum = AlgebraicNumber::add(&a, &b);
         assert_eq!(sum.coeffs[0], Q::from_integer(4));
         assert_eq!(sum.coeffs[1], Q::from_integer(1));
+    }
+
+    #[test]
+    fn test_ring_zero_one_do_not_panic() {
+        let z = <AlgebraicNumber as Ring>::zero();
+        let o = <AlgebraicNumber as Ring>::one();
+        assert!(z.is_zero());
+        assert!(o.is_one());
+    }
+
+    #[test]
+    fn test_cross_field_constant_coercion() {
+        let field = Arc::new(AlgebraicField::quadratic(2));
+        let sqrt2 = AlgebraicNumber::generator(Arc::clone(&field));
+        let one = <AlgebraicNumber as Ring>::one();
+
+        let sum = AlgebraicNumber::add(&sqrt2, &one);
+        let expected = AlgebraicNumber::new(vec![Q::one(), Q::one()], Arc::clone(&field));
+        assert_eq!(sum, expected);
+    }
+
+    #[test]
+    fn test_cross_field_non_constant_panics() {
+        let f1 = Arc::new(AlgebraicField::quadratic(2));
+        let f2 = Arc::new(AlgebraicField::quadratic(3));
+        let a = AlgebraicNumber::generator(f1);
+        let b = AlgebraicNumber::generator(f2);
+
+        let panicked = std::panic::catch_unwind(|| {
+            let _ = AlgebraicNumber::add(&a, &b);
+        });
+        assert!(panicked.is_err());
     }
 
     #[test]

@@ -19,6 +19,8 @@ fn z_one() -> Z {
     <Z as Ring>::one()
 }
 
+const EDF_MAX_ROUNDS: usize = 128;
+
 use crate::hensel::{hensel_lift, HenselLiftResult};
 use crate::squarefree::squarefree_factorization;
 
@@ -144,7 +146,7 @@ fn choose_prime(f: &DensePoly<Z>) -> u64 {
 
     let primes: [u64; 10] = [
         1009, 10007, 100003, 1000003, 10000019, 100000007, 1000000007, 1000000009, 2147483647,
-        2305843009213693951u64 >> 32,
+        4294967291,
     ];
 
     for &p in &primes {
@@ -223,10 +225,7 @@ fn poly_mod_mod(a: &DensePoly<Z>, b: &DensePoly<Z>, p: u64) -> DensePoly<Z> {
 
     let mut remainder = a.coeffs().to_vec();
     let divisor = b.coeffs();
-    let lead_inv = mod_inv(
-        divisor.last().unwrap().0.to_i64().unwrap() as u64 % p,
-        p,
-    );
+    let lead_inv = mod_inv(divisor.last().unwrap().0.to_i64().unwrap() as u64 % p, p);
 
     for i in (0..=(a.degree() - b.degree())).rev() {
         let idx = i + divisor.len() - 1;
@@ -342,8 +341,11 @@ fn equal_degree_factor(f: &DensePoly<Z>, d: usize, p: u64) -> Vec<DensePoly<Z>> 
     let num_factors = n / d;
     let mut factors = vec![f.clone()];
     let mut seed = 42u64;
+    let exp = equal_degree_exponent(p, d);
+    let mut rounds = 0usize;
 
-    while factors.len() < num_factors {
+    while factors.len() < num_factors && rounds < EDF_MAX_ROUNDS {
+        let mut split_happened = false;
         let mut new_factors = Vec::new();
 
         for factor in &factors {
@@ -355,8 +357,7 @@ fn equal_degree_factor(f: &DensePoly<Z>, d: usize, p: u64) -> Vec<DensePoly<Z>> 
             seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1);
             let a = random_poly(factor.degree(), p, seed);
 
-            let exp = (p - 1) / 2;
-            let a_pow = pow_mod_p(&a, exp, factor, p);
+            let a_pow = pow_mod_p_integer_exp(&a, &exp, factor, p);
             let a_pow_minus_1 = poly_sub_mod_p(&a_pow, &DensePoly::new(vec![z_one()]), p);
 
             let g = poly_gcd_mod(factor, &a_pow_minus_1, p);
@@ -365,12 +366,18 @@ fn equal_degree_factor(f: &DensePoly<Z>, d: usize, p: u64) -> Vec<DensePoly<Z>> 
                 let other = poly_div_mod_p(factor, &g, p);
                 new_factors.push(g);
                 new_factors.push(other);
+                split_happened = true;
             } else {
                 new_factors.push(factor.clone());
             }
         }
 
         factors = new_factors;
+        rounds += 1;
+        if !split_happened {
+            // Avoid pathological non-termination when random choices do not split.
+            continue;
+        }
     }
 
     factors
@@ -405,6 +412,41 @@ fn pow_mod_p(a: &DensePoly<Z>, mut exp: u64, f: &DensePoly<Z>, p: u64) -> DenseP
     }
 
     result
+}
+
+fn pow_mod_p_integer_exp(
+    a: &DensePoly<Z>,
+    exp: &Integer,
+    f: &DensePoly<Z>,
+    p: u64,
+) -> DensePoly<Z> {
+    if exp.is_zero() {
+        return DensePoly::new(vec![z_one()]);
+    }
+
+    let two = Integer::new(2);
+    let mut result = DensePoly::new(vec![z_one()]);
+    let mut base = poly_mod_p(a, f, p);
+    let mut e = exp.clone();
+
+    while !e.is_zero() {
+        if !(e.clone() % two.clone()).is_zero() {
+            result = poly_mod_p(&poly_mul_mod_p(&result, &base, p), f, p);
+        }
+        base = poly_mod_p(&poly_mul_mod_p(&base, &base, p), f, p);
+        e = e / two.clone();
+    }
+
+    result
+}
+
+fn equal_degree_exponent(p: u64, d: usize) -> Integer {
+    let p_int = Integer::new(p as i64);
+    let mut p_pow_d = Integer::new(1);
+    for _ in 0..d {
+        p_pow_d = p_pow_d * p_int.clone();
+    }
+    (p_pow_d - Integer::new(1)) / Integer::new(2)
 }
 
 fn poly_mul_mod_p(a: &DensePoly<Z>, b: &DensePoly<Z>, p: u64) -> DensePoly<Z> {
@@ -471,7 +513,13 @@ fn poly_div_mod_p(a: &DensePoly<Z>, b: &DensePoly<Z>, p: u64) -> DensePoly<Z> {
     let mut remainder = a.coeffs().to_vec();
     let divisor = b.coeffs();
     let lead_inv = mod_inv(
-        divisor.last().unwrap().0.to_i64().unwrap().rem_euclid(p as i64) as u64,
+        divisor
+            .last()
+            .unwrap()
+            .0
+            .to_i64()
+            .unwrap()
+            .rem_euclid(p as i64) as u64,
         p,
     );
     let deg_diff = a.degree() - b.degree();
@@ -489,8 +537,9 @@ fn poly_div_mod_p(a: &DensePoly<Z>, b: &DensePoly<Z>, p: u64) -> DensePoly<Z> {
                 let d_val = d.0.to_i64().unwrap().rem_euclid(p as i64) as u64;
                 let sub = (q * d_val as u128) % p as u128;
                 let cur = remainder[ridx].0.to_i64().unwrap().rem_euclid(p as i64) as u64;
-                remainder[ridx] =
-                    Z(Integer::new(((cur as u128 + p as u128 - sub) % p as u128) as i64));
+                remainder[ridx] = Z(Integer::new(
+                    ((cur as u128 + p as u128 - sub) % p as u128) as i64,
+                ));
             }
         }
     }
@@ -544,58 +593,22 @@ fn combine_factors(f: &DensePoly<Z>, lifted: &HenselLiftResult) -> Vec<DensePoly
 
     let mut remaining = f.clone();
     let mut found_factors = Vec::new();
-    let mut used = vec![false; r];
+    let mut available: Vec<usize> = (0..r).collect();
 
-    // Try single modular factors
-    for i in 0..r {
-        if used[i] {
-            continue;
+    while remaining.degree() > 0 && !available.is_empty() {
+        let search = find_factor_subset(&remaining, &available, lifted);
+        let Some((true_factor, used_subset)) = search else {
+            break;
+        };
+
+        found_factors.push(true_factor.clone());
+        remaining = poly_div_exact(&remaining, &true_factor);
+
+        let mut used = vec![false; r];
+        for idx in used_subset {
+            used[idx] = true;
         }
-
-        let candidate = &lifted.factors[i];
-        if let Some(true_factor) = try_factor(&remaining, candidate, &lifted.modulus) {
-            found_factors.push(true_factor.clone());
-            remaining = poly_div_exact(&remaining, &true_factor);
-            used[i] = true;
-
-            if remaining.degree() == 0 {
-                break;
-            }
-        }
-    }
-
-    // Try pairs if needed
-    if remaining.degree() > 0 && found_factors.len() + 2 <= r {
-        for i in 0..r {
-            if used[i] || remaining.degree() == 0 {
-                continue;
-            }
-            for j in i + 1..r {
-                if used[j] {
-                    continue;
-                }
-
-                let product = poly_mul_mod_z(
-                    &lifted.factors[i],
-                    &lifted.factors[j],
-                    &lifted.modulus,
-                );
-
-                if let Some(true_factor) = try_factor(&remaining, &product, &lifted.modulus) {
-                    found_factors.push(true_factor.clone());
-                    remaining = poly_div_exact(&remaining, &true_factor);
-                    used[i] = true;
-                    used[j] = true;
-
-                    if remaining.degree() == 0 {
-                        break;
-                    }
-                }
-            }
-            if remaining.degree() == 0 {
-                break;
-            }
-        }
+        available.retain(|idx| !used[*idx]);
     }
 
     if remaining.degree() > 0 {
@@ -605,13 +618,89 @@ fn combine_factors(f: &DensePoly<Z>, lifted: &HenselLiftResult) -> Vec<DensePoly
     found_factors
 }
 
+fn find_factor_subset(
+    remaining: &DensePoly<Z>,
+    available: &[usize],
+    lifted: &HenselLiftResult,
+) -> Option<(DensePoly<Z>, Vec<usize>)> {
+    let max_subset_size = (available.len() / 2).max(1);
+    for subset_size in 1..=max_subset_size {
+        let mut current = Vec::with_capacity(subset_size);
+        if let Some(found) =
+            search_subset_for_factor(remaining, available, lifted, subset_size, 0, &mut current)
+        {
+            return Some(found);
+        }
+    }
+    None
+}
+
+fn search_subset_for_factor(
+    remaining: &DensePoly<Z>,
+    available: &[usize],
+    lifted: &HenselLiftResult,
+    subset_size: usize,
+    start: usize,
+    current: &mut Vec<usize>,
+) -> Option<(DensePoly<Z>, Vec<usize>)> {
+    if current.len() == subset_size {
+        let mut product = DensePoly::new(vec![z_one()]);
+        for &idx in current.iter() {
+            product = poly_mul_mod_z(&product, &lifted.factors[idx], &lifted.modulus);
+        }
+        if let Some(true_factor) = try_factor(remaining, &product, &lifted.modulus) {
+            return Some((true_factor, current.clone()));
+        }
+        return None;
+    }
+
+    let needed = subset_size - current.len();
+    if available.len().saturating_sub(start) < needed {
+        return None;
+    }
+
+    for pos in start..available.len() {
+        current.push(available[pos]);
+        if let Some(found) =
+            search_subset_for_factor(remaining, available, lifted, subset_size, pos + 1, current)
+        {
+            return Some(found);
+        }
+        current.pop();
+    }
+
+    None
+}
+
 fn try_factor(
     f: &DensePoly<Z>,
     mod_factor: &DensePoly<Z>,
     modulus: &Integer,
 ) -> Option<DensePoly<Z>> {
+    let targets = leading_coefficient_targets(f);
+
+    for target in targets {
+        let Some(rescaled) = rescale_mod_factor_to_lead(mod_factor, &target, modulus) else {
+            continue;
+        };
+        let candidate = make_primitive(&centered_coefficients(&rescaled, modulus));
+
+        if candidate.degree() == 0 || candidate.degree() >= f.degree() {
+            continue;
+        }
+
+        let (_, r) = poly_div_z(f, &candidate);
+        if r.is_zero() || r.coeffs().iter().all(|c| c.0.is_zero()) {
+            return Some(candidate);
+        }
+    }
+
+    None
+}
+
+fn centered_coefficients(mod_factor: &DensePoly<Z>, modulus: &Integer) -> DensePoly<Z> {
     let half = modulus.clone() / Integer::new(2);
-    let candidate: Vec<Z> = mod_factor
+    let coeffs: Vec<Z> = mod_factor
         .coeffs()
         .iter()
         .map(|c| {
@@ -628,19 +717,83 @@ fn try_factor(
             }
         })
         .collect();
+    DensePoly::new(coeffs)
+}
 
-    let candidate = make_primitive(&DensePoly::new(candidate));
+fn leading_coefficient_targets(f: &DensePoly<Z>) -> Vec<Integer> {
+    let mut targets = vec![Integer::new(1), Integer::new(-1)];
+    let lead_abs = f.coeffs().last().unwrap().0.clone().abs();
 
-    if candidate.degree() == 0 || candidate.degree() >= f.degree() {
+    if let Some(n) = lead_abs.to_i64() {
+        let n = n.abs();
+        if n > 1 && n <= 1_000_000 {
+            let mut divisors = Vec::new();
+            let mut d = 1i64;
+            while d * d <= n {
+                if n % d == 0 {
+                    divisors.push(d);
+                    if d != n / d {
+                        divisors.push(n / d);
+                    }
+                }
+                d += 1;
+            }
+            divisors.sort_unstable();
+            divisors.dedup();
+
+            for d in divisors {
+                targets.push(Integer::new(d));
+                targets.push(Integer::new(-d));
+            }
+        }
+    }
+
+    targets.sort();
+    targets.dedup();
+    targets
+}
+
+fn rescale_mod_factor_to_lead(
+    mod_factor: &DensePoly<Z>,
+    target_lead: &Integer,
+    modulus: &Integer,
+) -> Option<DensePoly<Z>> {
+    let lead = mod_factor.coeffs().last()?.0.clone();
+    let lead_mod = ((lead % modulus.clone()) + modulus.clone()) % modulus.clone();
+    let lead_inv = mod_inv_integer(&lead_mod, modulus)?;
+    let target_mod = ((target_lead.clone() % modulus.clone()) + modulus.clone()) % modulus.clone();
+    let scale = (target_mod * lead_inv) % modulus.clone();
+
+    let coeffs: Vec<Z> = mod_factor
+        .coeffs()
+        .iter()
+        .map(|c| Z((c.0.clone() * scale.clone()) % modulus.clone()))
+        .collect();
+    Some(DensePoly::new(coeffs))
+}
+
+fn mod_inv_integer(a: &Integer, modulus: &Integer) -> Option<Integer> {
+    let mut old_r = a.clone();
+    let mut r = modulus.clone();
+    let mut old_s = Integer::new(1);
+    let mut s = Integer::new(0);
+
+    while !r.is_zero() {
+        let q = old_r.clone() / r.clone();
+        let new_r = old_r.clone() - q.clone() * r.clone();
+        old_r = r;
+        r = new_r;
+
+        let new_s = old_s.clone() - q * s.clone();
+        old_s = s;
+        s = new_s;
+    }
+
+    if !old_r.is_one() {
         return None;
     }
 
-    let (q, r) = poly_div_z(f, &candidate);
-    if r.is_zero() || r.coeffs().iter().all(|c| c.0.is_zero()) {
-        Some(candidate)
-    } else {
-        None
-    }
+    Some(((old_s % modulus.clone()) + modulus.clone()) % modulus.clone())
 }
 
 fn poly_mul_mod_z(a: &DensePoly<Z>, b: &DensePoly<Z>, m: &Integer) -> DensePoly<Z> {
@@ -744,14 +897,12 @@ fn make_primitive(f: &DensePoly<Z>) -> DensePoly<Z> {
 
     let mut result = DensePoly::new(coeffs);
 
-    if result.coeffs().last().map_or(false, |c| c.0 < Integer::new(0)) {
-        result = DensePoly::new(
-            result
-                .coeffs()
-                .iter()
-                .map(|c| Z(-c.0.clone()))
-                .collect(),
-        );
+    if result
+        .coeffs()
+        .last()
+        .map_or(false, |c| c.0 < Integer::new(0))
+    {
+        result = DensePoly::new(result.coeffs().iter().map(|c| Z(-c.0.clone())).collect());
     }
 
     result
@@ -775,6 +926,20 @@ mod tests {
 
     fn poly(coeffs: &[i64]) -> DensePoly<Z> {
         DensePoly::new(coeffs.iter().map(|&n| z(n)).collect())
+    }
+
+    fn degree_multiset(result: &VanHoeijResult) -> Vec<usize> {
+        let mut degrees: Vec<usize> = result.factors.iter().map(DensePoly::degree).collect();
+        degrees.sort_unstable();
+        degrees
+    }
+
+    fn reconstruct(result: &VanHoeijResult) -> DensePoly<Z> {
+        let mut acc = DensePoly::new(vec![result.content.clone()]);
+        for factor in &result.factors {
+            acc = acc.mul(factor);
+        }
+        acc
     }
 
     #[test]
@@ -809,5 +974,55 @@ mod tests {
     fn test_mod_inv() {
         assert_eq!(mod_inv(3, 7), 5);
         assert_eq!(mod_inv(2, 11), 6);
+    }
+
+    #[test]
+    fn test_regression_non_monic_quadratic_split() {
+        // 1 - 2x - 8x^2 = (2x + 1)(4x - 1)
+        let f = poly(&[1, -2, -8]);
+        let result = van_hoeij_factor(&f);
+
+        assert_eq!(degree_multiset(&result), vec![1, 1]);
+        assert_eq!(reconstruct(&result), f);
+    }
+
+    #[test]
+    fn test_regression_cubic_three_linear_factors() {
+        // -3 - 7x + 4x^3 = (x + 1)(2x - 3)(2x + 1)
+        let f = poly(&[-3, -7, 0, 4]);
+        let result = van_hoeij_factor(&f);
+
+        assert_eq!(degree_multiset(&result), vec![1, 1, 1]);
+        assert_eq!(reconstruct(&result), f);
+    }
+
+    #[test]
+    fn test_regression_linear_times_degree_six() {
+        // SymPy factors this as a linear times an irreducible degree-6 factor.
+        let f = poly(&[-1, 1, 4, -8, -5, 8, 8, 8]);
+        let result = van_hoeij_factor(&f);
+
+        assert_eq!(degree_multiset(&result), vec![1, 6]);
+        assert_eq!(reconstruct(&result), f);
+    }
+
+    #[test]
+    fn test_regression_timeout_case_degree_seven_irreducible() {
+        // Previously hit non-termination in equal-degree factorization.
+        let f = poly(&[-1, 0, 4, -2, -4, 2, 5, -6]);
+        let result = van_hoeij_factor(&f);
+
+        assert_eq!(degree_multiset(&result), vec![7]);
+        assert_eq!(reconstruct(&result), f);
+    }
+
+    #[test]
+    fn test_regression_timeout_case_degree_six_irreducible() {
+        // Previously hit non-termination in equal-degree factorization.
+        let f = poly(&[2, -6, -1, -2, 4, 4, -8]);
+        let result = van_hoeij_factor(&f);
+
+        assert_eq!(degree_multiset(&result), vec![6]);
+        assert_eq!(reconstruct(&result), f);
     }
 }
