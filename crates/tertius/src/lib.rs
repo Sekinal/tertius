@@ -30,6 +30,7 @@
 
 pub use tertius_core as core;
 pub use tertius_integers as integers;
+pub use tertius_physics as physics;
 pub use tertius_poly as poly;
 pub use tertius_rings as rings;
 pub use tertius_simplify as simplify;

@@ -14,6 +14,7 @@ tertius-rings.workspace = true
 tertius-poly.workspace = true
 tertius-simplify.workspace = true
 tertius-units.workspace = true
+tertius-physics.workspace = true
 
 [dev-dependencies]
 proptest.workspace = true

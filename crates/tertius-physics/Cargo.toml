@@ -1,0 +1,17 @@
+[package]
+name = "tertius-physics"
+description = "Physics-focused UX facade for Tertius CAS"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+tertius-core.workspace = true
+tertius-solve.workspace = true
+tertius-units.workspace = true
+smallvec.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
