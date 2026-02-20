@@ -91,7 +91,10 @@ pub fn lll_reduce(basis: &DenseMatrix<Q>, delta: &Q) -> LllResult {
         }
     }
 
-    LllResult { basis: b, iterations }
+    LllResult {
+        basis: b,
+        iterations,
+    }
 }
 
 /// Gram-Schmidt coefficients storage.
@@ -136,11 +139,20 @@ fn compute_gram_schmidt(b: &DenseMatrix<Q>) -> GramSchmidt {
         b_star_norms_sq[i] = norm_sq;
     }
 
-    GramSchmidt { mu, b_star_norms_sq }
+    GramSchmidt {
+        mu,
+        b_star_norms_sq,
+    }
 }
 
 /// Computes <b[row_a], b[row_b]>.
-fn dot_product(a: &DenseMatrix<Q>, row_a: usize, b: &DenseMatrix<Q>, row_b: usize, cols: usize) -> Q {
+fn dot_product(
+    a: &DenseMatrix<Q>,
+    row_a: usize,
+    b: &DenseMatrix<Q>,
+    row_b: usize,
+    cols: usize,
+) -> Q {
     let mut sum = q_zero();
     for col in 0..cols {
         sum = sum + a[(row_a, col)].clone() * b[(row_b, col)].clone();
@@ -243,7 +255,8 @@ fn update_gram_schmidt_after_swap(gs: &mut GramSchmidt, k: usize) {
     let b_star_k = gs.b_star_norms_sq[k].clone();
 
     // New ||b*_{k-1}||^2
-    let new_b_star_km1 = b_star_k.clone() + mu_k_km1.clone() * mu_k_km1.clone() * b_star_km1.clone();
+    let new_b_star_km1 =
+        b_star_k.clone() + mu_k_km1.clone() * mu_k_km1.clone() * b_star_km1.clone();
 
     if q_is_zero(&new_b_star_km1) {
         return;
@@ -275,7 +288,8 @@ fn update_gram_schmidt_after_swap(gs: &mut GramSchmidt, k: usize) {
         let old_mu_i_k = gs.mu[(i, k)].clone();
 
         gs.mu[(i, k - 1)] = old_mu_i_k.clone() + mu_k_km1.clone() * old_mu_i_km1.clone();
-        gs.mu[(i, k)] = old_mu_i_km1 + (mu_prime.clone() * gs.mu[(i, k - 1)].clone()).neg()
+        gs.mu[(i, k)] = old_mu_i_km1
+            + (mu_prime.clone() * gs.mu[(i, k - 1)].clone()).neg()
             + (mu_prime.clone() * mu_k_km1.clone() * old_mu_i_k).neg();
     }
 }
@@ -283,7 +297,8 @@ fn update_gram_schmidt_after_swap(gs: &mut GramSchmidt, k: usize) {
 /// Computes the Euclidean norm of a lattice vector (for debugging/testing).
 #[must_use]
 pub fn vector_norm_squared(v: &[Q]) -> Q {
-    v.iter().fold(q_zero(), |acc, x| acc + x.clone() * x.clone())
+    v.iter()
+        .fold(q_zero(), |acc, x| acc + x.clone() * x.clone())
 }
 
 #[cfg(test)]

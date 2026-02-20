@@ -95,7 +95,9 @@ pub fn integrate_exp_polynomial<F: Field>(
         result_coeffs.push((i as i32, bi));
     }
 
-    ExpExtIntegrationResult::Success { coeffs: result_coeffs }
+    ExpExtIntegrationResult::Success {
+        coeffs: result_coeffs,
+    }
 }
 
 /// Integrates θⁿ where θ = exp(x).
@@ -267,10 +269,13 @@ mod tests {
         assert_eq!(integrate_exp_power(0), ExpPowerIntegral::Linear);
 
         let result = integrate_exp_power(2);
-        assert_eq!(result, ExpPowerIntegral::ExpTerm {
-            exp_coeff: 2,
-            scalar: (1, 2),
-        });
+        assert_eq!(
+            result,
+            ExpPowerIntegral::ExpTerm {
+                exp_coeff: 2,
+                scalar: (1, 2),
+            }
+        );
     }
 
     #[test]

@@ -202,11 +202,7 @@ pub fn geobucket_multiply<R: Ring>(
     }
 
     // Choose the smaller polynomial to iterate over
-    let (smaller, larger) = if a.len() <= b.len() {
-        (a, b)
-    } else {
-        (b, a)
-    };
+    let (smaller, larger) = if a.len() <= b.len() { (a, b) } else { (b, a) };
 
     let mut bucket = Geobucket::new(num_vars, order);
 
@@ -269,7 +265,10 @@ mod tests {
         // Monomials: 1 = exp(0,0,0), x = exp(1,0,0)
         let a = vec![
             (PackedMonomial::one(3), Q::from_integer(1)),
-            (PackedMonomial::from_exponents(&[1, 0, 0]), Q::from_integer(1)),
+            (
+                PackedMonomial::from_exponents(&[1, 0, 0]),
+                Q::from_integer(1),
+            ),
         ];
 
         let result = geobucket_multiply(&a, &a, 3, MonomialOrder::Grevlex);
@@ -289,12 +288,24 @@ mod tests {
     fn test_geobucket_vs_naive() {
         // Compare geobucket result with naive multiplication
         let a = vec![
-            (PackedMonomial::from_exponents(&[1, 0, 0]), Q::from_integer(2)),
-            (PackedMonomial::from_exponents(&[0, 1, 0]), Q::from_integer(3)),
+            (
+                PackedMonomial::from_exponents(&[1, 0, 0]),
+                Q::from_integer(2),
+            ),
+            (
+                PackedMonomial::from_exponents(&[0, 1, 0]),
+                Q::from_integer(3),
+            ),
         ];
         let b = vec![
-            (PackedMonomial::from_exponents(&[1, 0, 0]), Q::from_integer(1)),
-            (PackedMonomial::from_exponents(&[0, 0, 1]), Q::from_integer(4)),
+            (
+                PackedMonomial::from_exponents(&[1, 0, 0]),
+                Q::from_integer(1),
+            ),
+            (
+                PackedMonomial::from_exponents(&[0, 0, 1]),
+                Q::from_integer(4),
+            ),
         ];
 
         let result = geobucket_multiply(&a, &b, 3, MonomialOrder::Grevlex);
@@ -308,7 +319,10 @@ mod tests {
     fn test_heap_multiply() {
         let a = vec![
             (PackedMonomial::one(3), Q::from_integer(1)),
-            (PackedMonomial::from_exponents(&[1, 0, 0]), Q::from_integer(1)),
+            (
+                PackedMonomial::from_exponents(&[1, 0, 0]),
+                Q::from_integer(1),
+            ),
         ];
 
         let result = heap_multiply(&a, &a, 3, MonomialOrder::Grevlex);

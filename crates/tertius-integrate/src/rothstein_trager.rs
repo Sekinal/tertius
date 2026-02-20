@@ -126,10 +126,7 @@ impl LogarithmicPart<Q> {
 /// # Returns
 ///
 /// The coefficients of R(t) as a polynomial in t.
-pub fn compute_resultant_poly<F: Field>(
-    a: &DensePoly<F>,
-    d: &DensePoly<F>,
-) -> DensePoly<F> {
+pub fn compute_resultant_poly<F: Field>(a: &DensePoly<F>, d: &DensePoly<F>) -> DensePoly<F> {
     let d_prime = d.derivative();
 
     // R(t) = Res_x(D, A - t·D')
@@ -286,10 +283,7 @@ pub fn rothstein_trager<F: Field>(
 /// This version finds ALL rational roots of the resultant polynomial,
 /// including fractions like 1/720 that are missed by the generic version
 /// which only tries small integers.
-pub fn rothstein_trager_q(
-    a: &DensePoly<Q>,
-    d: &DensePoly<Q>,
-) -> Option<LogarithmicPart<Q>> {
+pub fn rothstein_trager_q(a: &DensePoly<Q>, d: &DensePoly<Q>) -> Option<LogarithmicPart<Q>> {
     // Handle trivial cases
     if a.is_zero() {
         return Some(LogarithmicPart::empty());
@@ -460,10 +454,7 @@ impl AlgebraicLogarithmicPart {
 /// # Returns
 ///
 /// The logarithmic part with algebraic coefficients.
-pub fn rothstein_trager_algebraic(
-    a: &DensePoly<Q>,
-    d: &DensePoly<Q>,
-) -> AlgebraicLogarithmicPart {
+pub fn rothstein_trager_algebraic(a: &DensePoly<Q>, d: &DensePoly<Q>) -> AlgebraicLogarithmicPart {
     // Handle trivial cases
     if a.is_zero() {
         return AlgebraicLogarithmicPart::empty();
@@ -757,7 +748,9 @@ fn make_monic_q(p: &[Q]) -> Vec<Q> {
     if p[deg].is_one() {
         return p.to_vec();
     }
-    let lead_inv = p[deg].inv().expect("leading coefficient should be non-zero");
+    let lead_inv = p[deg]
+        .inv()
+        .expect("leading coefficient should be non-zero");
     p.iter().map(|c| c.clone() * lead_inv.clone()).collect()
 }
 
@@ -1004,7 +997,9 @@ fn poly_sub_alg(a: &[AlgebraicNumber], b: &[AlgebraicNumber]) -> Vec<AlgebraicNu
     }
 
     let len = a.len().max(b.len());
-    let field = a.first().map(|x| x.field().clone())
+    let field = a
+        .first()
+        .map(|x| x.field().clone())
         .or_else(|| b.first().map(|x| x.field().clone()));
 
     let field = match field {
@@ -1014,8 +1009,14 @@ fn poly_sub_alg(a: &[AlgebraicNumber], b: &[AlgebraicNumber]) -> Vec<AlgebraicNu
 
     let mut result = Vec::with_capacity(len);
     for i in 0..len {
-        let ai = a.get(i).cloned().unwrap_or_else(|| AlgebraicNumber::zero(Arc::clone(&field)));
-        let bi = b.get(i).cloned().unwrap_or_else(|| AlgebraicNumber::zero(Arc::clone(&field)));
+        let ai = a
+            .get(i)
+            .cloned()
+            .unwrap_or_else(|| AlgebraicNumber::zero(Arc::clone(&field)));
+        let bi = b
+            .get(i)
+            .cloned()
+            .unwrap_or_else(|| AlgebraicNumber::zero(Arc::clone(&field)));
         result.push(AlgebraicNumber::sub(&ai, &bi));
     }
 
@@ -1232,8 +1233,12 @@ fn poly_make_monic_alg(p: &[AlgebraicNumber], field: &Arc<AlgebraicField>) -> Ve
         return vec![AlgebraicNumber::zero(Arc::clone(field))];
     }
 
-    let lead_inv = lead.inv().expect("leading coefficient should be invertible");
-    p.iter().map(|c| AlgebraicNumber::mul(c, &lead_inv)).collect()
+    let lead_inv = lead
+        .inv()
+        .expect("leading coefficient should be invertible");
+    p.iter()
+        .map(|c| AlgebraicNumber::mul(c, &lead_inv))
+        .collect()
 }
 
 /// Polynomial division with remainder over an algebraic field.
@@ -1250,14 +1255,13 @@ fn poly_div_rem_alg(
     let b_deg = poly_degree_alg(b);
 
     if a_deg < b_deg {
-        return (
-            vec![AlgebraicNumber::zero(Arc::clone(field))],
-            a.to_vec(),
-        );
+        return (vec![AlgebraicNumber::zero(Arc::clone(field))], a.to_vec());
     }
 
     let b_lead = &b[b_deg];
-    let b_lead_inv = b_lead.inv().expect("leading coefficient must be invertible");
+    let b_lead_inv = b_lead
+        .inv()
+        .expect("leading coefficient must be invertible");
 
     let mut quotient = vec![AlgebraicNumber::zero(Arc::clone(field)); a_deg - b_deg + 1];
     let mut remainder = a.to_vec();
@@ -1464,10 +1468,10 @@ mod tests {
 
     #[test]
     fn test_algebraic_gcd_timing() {
-        use std::time::Instant;
-        use crate::rothstein_trager::{poly_gcd_alg, poly_sub_alg, poly_scale_alg};
-        use tertius_rings::algebraic::{AlgebraicField, AlgebraicNumber};
+        use crate::rothstein_trager::{poly_gcd_alg, poly_scale_alg, poly_sub_alg};
         use std::sync::Arc;
+        use std::time::Instant;
+        use tertius_rings::algebraic::{AlgebraicField, AlgebraicNumber};
 
         // Create field Q[α]/(α² + 1) for simpler testing
         let field = Arc::new(AlgebraicField::new(vec![q(1), q(0), q(1)])); // α² + 1
@@ -1486,9 +1490,7 @@ mod tests {
         ];
 
         // A(x) = 1
-        let a_alg: Vec<AlgebraicNumber> = vec![
-            AlgebraicNumber::one(Arc::clone(&field)),
-        ];
+        let a_alg: Vec<AlgebraicNumber> = vec![AlgebraicNumber::one(Arc::clone(&field))];
 
         // α is a root of t² + 1, so α = i
         let alpha = AlgebraicNumber::generator(Arc::clone(&field));
@@ -1509,10 +1511,10 @@ mod tests {
 
     #[test]
     fn test_algebraic_gcd_timing_degree4() {
-        use std::time::Instant;
-        use crate::rothstein_trager::{poly_gcd_alg, poly_sub_alg, poly_scale_alg};
-        use tertius_rings::algebraic::{AlgebraicField, AlgebraicNumber};
+        use crate::rothstein_trager::{poly_gcd_alg, poly_scale_alg, poly_sub_alg};
         use std::sync::Arc;
+        use std::time::Instant;
+        use tertius_rings::algebraic::{AlgebraicField, AlgebraicNumber};
 
         // Create field Q[α]/(α⁴ + 1) - this is the x⁴+1 case
         let field = Arc::new(AlgebraicField::new(vec![q(1), q(0), q(0), q(0), q(1)])); // α⁴ + 1
@@ -1537,9 +1539,7 @@ mod tests {
         ];
 
         // A(x) = 1
-        let a_alg: Vec<AlgebraicNumber> = vec![
-            AlgebraicNumber::one(Arc::clone(&field)),
-        ];
+        let a_alg: Vec<AlgebraicNumber> = vec![AlgebraicNumber::one(Arc::clone(&field))];
 
         let alpha = AlgebraicNumber::generator(Arc::clone(&field));
 
@@ -1580,7 +1580,11 @@ mod tests {
         let start = Instant::now();
         let rational_roots = find_rational_roots_q(&r_poly);
         println!("Step 2 - Rational roots: {:?}", start.elapsed());
-        println!("  Found {} rational roots: {:?}", rational_roots.len(), rational_roots);
+        println!(
+            "  Found {} rational roots: {:?}",
+            rational_roots.len(),
+            rational_roots
+        );
 
         // For 7 distinct linear factors (x-1)(x-2)...(x-7), the resultant polynomial has degree 7
         // and should have 7 rational roots (possibly with multiplicities)
@@ -1607,7 +1611,12 @@ mod tests {
         println!("Found {} factors", factors.len());
 
         for (i, f) in factors.iter().enumerate() {
-            println!("  Factor {}: degree {}, coeffs: {:?}", i, poly_degree_q(f), f);
+            println!(
+                "  Factor {}: degree {}, coeffs: {:?}",
+                i,
+                poly_degree_q(f),
+                f
+            );
         }
 
         assert_eq!(factors.len(), 2); // Should have two linear factors
@@ -1645,7 +1654,11 @@ mod tests {
         println!("Result: {} terms", result.len());
 
         for (i, term) in result.terms.iter().enumerate() {
-            println!("  Term {}: coeff degree {}", i, term.coefficient.coeffs().len());
+            println!(
+                "  Term {}: coeff degree {}",
+                i,
+                term.coefficient.coeffs().len()
+            );
         }
     }
 

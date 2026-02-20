@@ -11,8 +11,8 @@
 
 use crate::comparison::ComparisonClass;
 use crate::mrv::{find_mrv, MrvContext};
-use tertius_core::{ExprArena, ExprHandle, ExprNode};
 use tertius_core::expr::functions;
+use tertius_core::{ExprArena, ExprHandle, ExprNode};
 use thiserror::Error;
 
 /// The direction of a limit.
@@ -245,7 +245,14 @@ fn limit_add(
     }
 
     // Compute limit of dominant term
-    gruntz_impl(arena, args[dominant_idx], variable, limit, depth + 1, max_depth)
+    gruntz_impl(
+        arena,
+        args[dominant_idx],
+        variable,
+        limit,
+        depth + 1,
+        max_depth,
+    )
 }
 
 /// Limit of a product.

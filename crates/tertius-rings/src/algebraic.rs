@@ -52,7 +52,10 @@ impl AlgebraicField {
     /// Panics if the polynomial has degree < 1.
     #[must_use]
     pub fn new(min_poly: Vec<Q>) -> Self {
-        assert!(min_poly.len() >= 2, "minimal polynomial must have degree >= 1");
+        assert!(
+            min_poly.len() >= 2,
+            "minimal polynomial must have degree >= 1"
+        );
 
         let degree = min_poly.len() - 1;
         let lead_inv = min_poly.last().unwrap().inv().unwrap();
@@ -210,17 +213,11 @@ impl AlgebraicNumber {
         }
 
         if let Some(c) = lhs.as_rational_constant() {
-            return (
-                Self::from_rational(c, Arc::clone(&rhs.field)),
-                rhs.clone(),
-            );
+            return (Self::from_rational(c, Arc::clone(&rhs.field)), rhs.clone());
         }
 
         if let Some(c) = rhs.as_rational_constant() {
-            return (
-                lhs.clone(),
-                Self::from_rational(c, Arc::clone(&lhs.field)),
-            );
+            return (lhs.clone(), Self::from_rational(c, Arc::clone(&lhs.field)));
         }
 
         panic!("fields must match")
@@ -269,7 +266,8 @@ impl AlgebraicNumber {
 
         for i in 0..n {
             for j in 0..m {
-                result[i + j] = result[i + j].clone() + lhs.coeffs[i].clone() * rhs.coeffs[j].clone();
+                result[i + j] =
+                    result[i + j].clone() + lhs.coeffs[i].clone() * rhs.coeffs[j].clone();
             }
         }
 
@@ -390,7 +388,9 @@ fn poly_div_rem_q(a: &[Q], b: &[Q]) -> (Vec<Q>, Vec<Q>) {
         return (vec![Q::zero()], a.to_vec());
     }
 
-    let b_lead_inv = b[b_deg].inv().expect("leading coefficient must be invertible");
+    let b_lead_inv = b[b_deg]
+        .inv()
+        .expect("leading coefficient must be invertible");
 
     let mut quotient = vec![Q::zero(); a_deg - b_deg + 1];
     let mut remainder = a.to_vec();
@@ -404,7 +404,8 @@ fn poly_div_rem_q(a: &[Q], b: &[Q]) -> (Vec<Q>, Vec<Q>) {
 
         for (i, bc) in b.iter().enumerate().take(b_deg + 1) {
             if deg_diff + i < remainder.len() {
-                remainder[deg_diff + i] = remainder[deg_diff + i].clone() - coeff.clone() * bc.clone();
+                remainder[deg_diff + i] =
+                    remainder[deg_diff + i].clone() - coeff.clone() * bc.clone();
             }
         }
 
@@ -426,12 +427,16 @@ fn poly_extended_gcd_q(a: &[Q], b: &[Q]) -> (Vec<Q>, Vec<Q>, Vec<Q>) {
             return (vec![Q::zero()], vec![Q::one()], vec![Q::zero()]);
         }
         let g = poly_make_monic(b);
-        let scale = b[poly_degree(b)].inv().expect("leading coeff should have inverse");
+        let scale = b[poly_degree(b)]
+            .inv()
+            .expect("leading coeff should have inverse");
         return (g, vec![Q::zero()], vec![scale]);
     }
     if poly_is_zero(b) {
         let g = poly_make_monic(a);
-        let scale = a[poly_degree(a)].inv().expect("leading coeff should have inverse");
+        let scale = a[poly_degree(a)]
+            .inv()
+            .expect("leading coeff should have inverse");
         return (g, vec![scale], vec![Q::zero()]);
     }
 
@@ -751,7 +756,11 @@ mod tests {
 
         // Verify: √2 * (√2)^(-1) = 1
         let product = AlgebraicNumber::mul(&sqrt2, &inv);
-        assert!(product.is_one(), "√2 * (√2)^(-1) should be 1, got {:?}", product);
+        assert!(
+            product.is_one(),
+            "√2 * (√2)^(-1) should be 1, got {:?}",
+            product
+        );
 
         // The inverse should be (1/2)√2
         assert_eq!(inv.coeffs.len(), 2);
@@ -850,7 +859,11 @@ mod tests {
         // (∛2)^(-1) should satisfy ∛2 * (∛2)^(-1) = 1
         let inv = cbrt2.inv().expect("∛2 should have an inverse");
         let product = AlgebraicNumber::mul(&cbrt2, &inv);
-        assert!(product.is_one(), "∛2 * (∛2)^(-1) should be 1, got {}", product);
+        assert!(
+            product.is_one(),
+            "∛2 * (∛2)^(-1) should be 1, got {}",
+            product
+        );
     }
 
     #[test]
@@ -905,7 +918,11 @@ mod tests {
         // ζ^(-1) should satisfy ζ * ζ^(-1) = 1
         let inv = zeta.inv().expect("ζ₈ should have an inverse");
         let product = AlgebraicNumber::mul(&zeta, &inv);
-        assert!(product.is_one(), "ζ₈ * ζ₈^(-1) should be 1, got {}", product);
+        assert!(
+            product.is_one(),
+            "ζ₈ * ζ₈^(-1) should be 1, got {}",
+            product
+        );
 
         // ζ^(-1) = ζ⁷ = -ζ³ (since ζ⁸ = 1, ζ⁴ = -1)
         let expected = AlgebraicNumber::neg(&zeta3);

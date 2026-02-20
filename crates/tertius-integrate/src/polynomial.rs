@@ -43,7 +43,10 @@ pub fn integrate_polynomial<F: Field>(p: &DensePoly<F>) -> DensePoly<F> {
 /// Verifies that the integral is correct by differentiating.
 ///
 /// Returns true if d/dx(integral) == original.
-pub fn verify_polynomial_integral<F: Field>(original: &DensePoly<F>, integral: &DensePoly<F>) -> bool {
+pub fn verify_polynomial_integral<F: Field>(
+    original: &DensePoly<F>,
+    integral: &DensePoly<F>,
+) -> bool {
     let derivative = integral.derivative();
 
     // Compare coefficients

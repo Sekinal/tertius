@@ -54,10 +54,7 @@ impl EllipticF {
     /// Returns the derivative with respect to amplitude.
     /// dF/dφ = 1/√(1 - k²sin²φ)
     pub fn deriv_amplitude(&self) -> String {
-        format!(
-            "1/√(1 - {}² * sin²({}))",
-            self.modulus, self.amplitude
-        )
+        format!("1/√(1 - {}² * sin²({}))", self.modulus, self.amplitude)
     }
 
     /// Returns the derivative with respect to modulus.
@@ -112,10 +109,7 @@ impl EllipticE {
     /// Returns the derivative with respect to amplitude.
     /// dE/dφ = √(1 - k²sin²φ)
     pub fn deriv_amplitude(&self) -> String {
-        format!(
-            "√(1 - {}² * sin²({}))",
-            self.modulus, self.amplitude
-        )
+        format!("√(1 - {}² * sin²({}))", self.modulus, self.amplitude)
     }
 }
 
@@ -170,7 +164,8 @@ impl std::fmt::Display for EllipticPi {
             write!(f, "Π({}; {})", self.characteristic, self.modulus)
         } else {
             write!(
-                f, "Π({}; {}, {})",
+                f,
+                "Π({}; {}, {})",
                 self.characteristic, self.amplitude, self.modulus
             )
         }

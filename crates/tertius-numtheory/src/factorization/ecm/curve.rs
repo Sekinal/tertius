@@ -65,7 +65,12 @@ impl MontgomeryCurve {
     ///
     /// For Montgomery curves, we can compute P + R given P, R, and P - R.
     /// This is the Montgomery ladder primitive.
-    pub fn add(&self, p: &ProjectivePoint, r: &ProjectivePoint, diff: &ProjectivePoint) -> Option<ProjectivePoint> {
+    pub fn add(
+        &self,
+        p: &ProjectivePoint,
+        r: &ProjectivePoint,
+        diff: &ProjectivePoint,
+    ) -> Option<ProjectivePoint> {
         // u = (Xₚ - Zₚ)(Xᵣ + Zᵣ)
         let p_diff = mod_sub(&p.x, &p.z, &self.n);
         let r_sum = mod_add(&r.x, &r.z, &self.n);
@@ -92,7 +97,12 @@ impl MontgomeryCurve {
     /// Scalar multiplication using Montgomery ladder.
     ///
     /// Computes [k]P for scalar k.
-    pub fn scalar_mul(&self, p: &ProjectivePoint, k: &Integer, n: &Integer) -> Option<ProjectivePoint> {
+    pub fn scalar_mul(
+        &self,
+        p: &ProjectivePoint,
+        k: &Integer,
+        n: &Integer,
+    ) -> Option<ProjectivePoint> {
         if k.is_zero() {
             return Some(ProjectivePoint::identity());
         }

@@ -13,8 +13,8 @@ fn parse_coefficients(arg: &str) -> Result<Vec<Z>, String> {
         if trimmed.is_empty() {
             continue;
         }
-        let value =
-            Integer::from_str_radix(trimmed, 10).map_err(|e| format!("invalid integer '{trimmed}': {e}"))?;
+        let value = Integer::from_str_radix(trimmed, 10)
+            .map_err(|e| format!("invalid integer '{trimmed}': {e}"))?;
         coeffs.push(Z(value));
     }
 

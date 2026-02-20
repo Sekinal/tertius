@@ -22,7 +22,8 @@ use tertius_rings::traits::Field;
 
 use crate::polynomial::integrate_polynomial;
 use crate::rothstein_trager::{
-    rothstein_trager, rothstein_trager_algebraic, rothstein_trager_q, AlgebraicLogarithmicPart, LogarithmicPart,
+    rothstein_trager, rothstein_trager_algebraic, rothstein_trager_q, AlgebraicLogarithmicPart,
+    LogarithmicPart,
 };
 
 /// Result of rational function integration.
@@ -43,7 +44,10 @@ impl<F: Field> RationalIntegrationResult<F> {
     pub fn is_zero(&self) -> bool {
         self.polynomial_part.is_zero()
             && self.rational_part.is_zero()
-            && self.logarithmic_part.as_ref().map_or(true, |l| l.is_empty())
+            && self
+                .logarithmic_part
+                .as_ref()
+                .map_or(true, |l| l.is_empty())
     }
 }
 
@@ -179,11 +183,7 @@ pub fn integrate_rational_q(f: &RationalFunction<Q>) -> RationalIntegrationResul
 ///
 /// - n = 1: ∫ A/(x-a) dx = A·log(x-a)
 /// - n > 1: ∫ A/(x-a)^n dx = -A/((n-1)(x-a)^(n-1))
-pub fn integrate_simple_pole<F: Field>(
-    a_coeff: &F,
-    pole: &F,
-    power: u32,
-) -> SimplePoleTerm<F> {
+pub fn integrate_simple_pole<F: Field>(a_coeff: &F, pole: &F, power: u32) -> SimplePoleTerm<F> {
     if power == 1 {
         // Logarithmic case
         SimplePoleTerm::Logarithmic {
@@ -421,9 +421,7 @@ mod tests {
 
         match term {
             SimplePoleTerm::Rational {
-                coefficient,
-                power,
-                ..
+                coefficient, power, ..
             } => {
                 assert_eq!(coefficient, q(-1));
                 assert_eq!(power, 1);
@@ -450,7 +448,10 @@ mod tests {
         use crate::integrate_rational_q;
         let result = integrate_rational_q(&f);
 
-        assert!(result.is_complete, "Should be complete (all rational roots)");
+        assert!(
+            result.is_complete,
+            "Should be complete (all rational roots)"
+        );
         assert!(
             result.logarithmic_part.is_some(),
             "Should have logarithmic part"
@@ -461,10 +462,7 @@ mod tests {
                 !log_part.is_empty(),
                 "Should have at least one log term, got empty"
             );
-            println!(
-                "7 linear factors: {} log terms",
-                log_part.terms.len()
-            );
+            println!("7 linear factors: {} log terms", log_part.terms.len());
 
             // Count total degree of all log arguments (should sum to 7)
             let total_degree: usize = log_part.terms.iter().map(|t| t.argument.degree()).sum();

@@ -26,4 +26,4 @@ pub mod mrv;
 
 pub use comparison::ComparisonClass;
 pub use gruntz::{compute_limit, Limit, LimitResult};
-pub use mrv::{MrvSet, find_mrv};
+pub use mrv::{find_mrv, MrvSet};

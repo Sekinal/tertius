@@ -8,8 +8,8 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use smallvec::smallvec;
 
-use tertius_core::{ExprArena, ExprNode};
 use tertius_core::expr::functions;
+use tertius_core::{ExprArena, ExprNode};
 use tertius_limits::{compute_limit, Limit};
 use tertius_rings::rationals::Q;
 use tertius_series::PowerSeries;
@@ -202,44 +202,32 @@ fn bench_standard_series(c: &mut Criterion) {
     let mut group = c.benchmark_group("standard_series");
 
     for precision in [10, 50, 100] {
-        group.bench_with_input(
-            BenchmarkId::new("exp", precision),
-            &precision,
-            |b, &p| {
-                b.iter(|| {
-                    let exp: PowerSeries<Q> = PowerSeries::exp(p);
-                    for i in 0..5 {
-                        black_box(exp.coeff(i));
-                    }
-                })
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("exp", precision), &precision, |b, &p| {
+            b.iter(|| {
+                let exp: PowerSeries<Q> = PowerSeries::exp(p);
+                for i in 0..5 {
+                    black_box(exp.coeff(i));
+                }
+            })
+        });
 
-        group.bench_with_input(
-            BenchmarkId::new("sin", precision),
-            &precision,
-            |b, &p| {
-                b.iter(|| {
-                    let sin: PowerSeries<Q> = PowerSeries::sin(p);
-                    for i in 0..5 {
-                        black_box(sin.coeff(i));
-                    }
-                })
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("sin", precision), &precision, |b, &p| {
+            b.iter(|| {
+                let sin: PowerSeries<Q> = PowerSeries::sin(p);
+                for i in 0..5 {
+                    black_box(sin.coeff(i));
+                }
+            })
+        });
 
-        group.bench_with_input(
-            BenchmarkId::new("cos", precision),
-            &precision,
-            |b, &p| {
-                b.iter(|| {
-                    let cos: PowerSeries<Q> = PowerSeries::cos(p);
-                    for i in 0..5 {
-                        black_box(cos.coeff(i));
-                    }
-                })
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("cos", precision), &precision, |b, &p| {
+            b.iter(|| {
+                let cos: PowerSeries<Q> = PowerSeries::cos(p);
+                for i in 0..5 {
+                    black_box(cos.coeff(i));
+                }
+            })
+        });
     }
 
     group.finish();

@@ -8,15 +8,15 @@
 //!
 //! The main entry point is [`is_prime`] which uses Baillie-PSW.
 
-mod trial_division;
-mod miller_rabin;
-mod lucas;
 mod baillie_psw;
+mod lucas;
+mod miller_rabin;
+mod trial_division;
 
-pub use trial_division::trial_division;
-pub use miller_rabin::{miller_rabin, miller_rabin_deterministic};
-pub use lucas::{lucas_test, strong_lucas_test};
 pub use baillie_psw::baillie_psw;
+pub use lucas::{lucas_test, strong_lucas_test};
+pub use miller_rabin::{miller_rabin, miller_rabin_deterministic};
+pub use trial_division::trial_division;
 
 use tertius_integers::Integer;
 
@@ -34,7 +34,10 @@ pub enum PrimalityResult {
 impl PrimalityResult {
     /// Returns true if the result indicates the number is (probably) prime.
     pub fn is_prime(self) -> bool {
-        matches!(self, PrimalityResult::Prime | PrimalityResult::ProbablyPrime)
+        matches!(
+            self,
+            PrimalityResult::Prime | PrimalityResult::ProbablyPrime
+        )
     }
 }
 
@@ -91,7 +94,11 @@ mod tests {
     fn test_small_composites() {
         let composites = [4, 6, 8, 9, 10, 12, 14, 15, 16, 18, 20, 21, 22, 24, 25];
         for &n in &composites {
-            assert!(!is_prime(&Integer::from(n as i64)), "{} should be composite", n);
+            assert!(
+                !is_prime(&Integer::from(n as i64)),
+                "{} should be composite",
+                n
+            );
         }
     }
 
@@ -118,8 +125,11 @@ mod tests {
         // Carmichael numbers fool Fermat's test but not Miller-Rabin
         let carmichael = [561, 1105, 1729, 2465, 2821, 6601, 8911];
         for &n in &carmichael {
-            assert!(!is_prime(&Integer::from(n as i64)),
-                    "Carmichael number {} should be detected as composite", n);
+            assert!(
+                !is_prime(&Integer::from(n as i64)),
+                "Carmichael number {} should be detected as composite",
+                n
+            );
         }
     }
 }

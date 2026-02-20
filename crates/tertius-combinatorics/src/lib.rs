@@ -28,18 +28,18 @@
 //! assert_eq!(bell(5), Integer::from(52i64));
 //! ```
 
-mod factorial;
-mod binomial;
-mod stirling;
 mod bell;
-mod catalan;
 mod bernoulli;
+mod binomial;
+mod catalan;
+mod factorial;
 mod partitions;
+mod stirling;
 
-pub use factorial::{factorial, falling_factorial, rising_factorial, double_factorial};
-pub use binomial::binomial;
-pub use stirling::{stirling1, stirling2};
 pub use bell::bell;
-pub use catalan::catalan;
 pub use bernoulli::bernoulli;
+pub use binomial::binomial;
+pub use catalan::catalan;
+pub use factorial::{double_factorial, factorial, falling_factorial, rising_factorial};
 pub use partitions::{partition_count, partitions};
+pub use stirling::{stirling1, stirling2};

@@ -11,7 +11,7 @@ use crate::macaulay::{MacaulayMatrix, MonomialKey};
 use crate::monomial::PackedMonomial;
 use crate::parallel_reduce::{reduce_matrix, ReducedRow};
 use crate::reductor_store::ReductorStore;
-use crate::signature::{SignedPair, Signature};
+use crate::signature::{Signature, SignedPair};
 use num_traits::Zero;
 use rayon::prelude::*;
 use rustc_hash::FxHashMap;

@@ -217,10 +217,7 @@ impl<R: Ring + Clone> LaurentSeries<R> {
         }
 
         // Filter zeros and convert
-        let terms: Vec<_> = result
-            .into_iter()
-            .filter(|(_, c)| !c.is_zero())
-            .collect();
+        let terms: Vec<_> = result.into_iter().filter(|(_, c)| !c.is_zero()).collect();
 
         Self::new(terms)
     }
@@ -394,7 +391,12 @@ mod tests {
 
     #[test]
     fn test_principal_part() {
-        let s = LaurentSeries::new(vec![(-2, q(1, 1)), (-1, q(2, 1)), (0, q(3, 1)), (1, q(4, 1))]);
+        let s = LaurentSeries::new(vec![
+            (-2, q(1, 1)),
+            (-1, q(2, 1)),
+            (0, q(3, 1)),
+            (1, q(4, 1)),
+        ]);
         let pp = s.principal_part();
 
         assert_eq!(pp.coeff(-2), q(1, 1));

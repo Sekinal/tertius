@@ -3,9 +3,9 @@
 //! Implements adaptive subdivision using Gauss-Kronrod rules for
 //! automatic error control.
 
-use super::gauss_kronrod::{GaussKronrodRule, GKResult};
-use std::collections::BinaryHeap;
+use super::gauss_kronrod::{GKResult, GaussKronrodRule};
 use std::cmp::Ordering;
+use std::collections::BinaryHeap;
 
 /// Result of adaptive integration.
 #[derive(Clone, Debug)]
@@ -48,7 +48,9 @@ impl PartialOrd for Interval {
 impl Ord for Interval {
     fn cmp(&self, other: &Self) -> Ordering {
         // Max-heap by error (largest error first)
-        self.error.partial_cmp(&other.error).unwrap_or(Ordering::Equal)
+        self.error
+            .partial_cmp(&other.error)
+            .unwrap_or(Ordering::Equal)
     }
 }
 
@@ -264,7 +266,14 @@ pub fn adaptive_integrate_to_infinity<F: Fn(f64) -> f64>(
     };
 
     // Integrate over [0, 1-ε] to avoid singularity at t=1
-    adaptive_integrate(&transformed, 0.0, 1.0 - 1e-10, abs_tol, rel_tol, max_subdivisions)
+    adaptive_integrate(
+        &transformed,
+        0.0,
+        1.0 - 1e-10,
+        abs_tol,
+        rel_tol,
+        max_subdivisions,
+    )
 }
 
 /// Integrates over (-∞, b].
@@ -287,8 +296,10 @@ pub fn adaptive_integrate_full_line<F: Fn(f64) -> f64>(
     max_subdivisions: usize,
 ) -> AdaptiveResult {
     // Split at 0: ∫_{-∞}^∞ = ∫_{-∞}^0 + ∫_0^∞
-    let left = adaptive_integrate_from_neg_infinity(f, 0.0, abs_tol / 2.0, rel_tol, max_subdivisions / 2);
-    let right = adaptive_integrate_to_infinity(f, 0.0, abs_tol / 2.0, rel_tol, max_subdivisions / 2);
+    let left =
+        adaptive_integrate_from_neg_infinity(f, 0.0, abs_tol / 2.0, rel_tol, max_subdivisions / 2);
+    let right =
+        adaptive_integrate_to_infinity(f, 0.0, abs_tol / 2.0, rel_tol, max_subdivisions / 2);
 
     AdaptiveResult {
         value: left.value + right.value,

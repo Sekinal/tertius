@@ -19,9 +19,7 @@
 //! ## Type III: Oscillatory
 //! - ∫_0^∞ sin(x)/x dx (Dirichlet integral)
 
-use crate::numerical::{
-    adaptive_integrate, AdaptiveResult,
-};
+use crate::numerical::{adaptive_integrate, AdaptiveResult};
 
 /// Classification of singularity behavior.
 #[derive(Clone, Debug, PartialEq)]
@@ -189,7 +187,14 @@ pub fn integrate_imt<F: Fn(f64) -> f64>(
 
     // Integrate over [ε, 1-ε] to avoid exact endpoints
     let eps = 1e-12;
-    adaptive_integrate(&transformed, eps, 1.0 - eps, tolerance, tolerance, max_subdivisions)
+    adaptive_integrate(
+        &transformed,
+        eps,
+        1.0 - eps,
+        tolerance,
+        tolerance,
+        max_subdivisions,
+    )
 }
 
 /// Integrates using double exponential (tanh-sinh) transformation.
@@ -238,7 +243,14 @@ pub fn integrate_tanh_sinh<F: Fn(f64) -> f64>(
     };
 
     // The transformed integral is over (-∞, ∞) but most contribution is in [-5, 5]
-    adaptive_integrate(&transformed, -5.0, 5.0, tolerance, tolerance, max_subdivisions)
+    adaptive_integrate(
+        &transformed,
+        -5.0,
+        5.0,
+        tolerance,
+        tolerance,
+        max_subdivisions,
+    )
 }
 
 /// Result of oscillatory integral computation.
@@ -260,16 +272,23 @@ pub struct OscillatoryResult {
 /// uses partial sums of periods combined with convergence acceleration.
 pub fn integrate_oscillatory_real<F: Fn(f64) -> f64, G: Fn(f64) -> f64>(
     amplitude: &F,
-    oscillator: &G,  // sin or cos of (ω*x)
+    oscillator: &G, // sin or cos of (ω*x)
     a: f64,
     b: f64,
-    period: f64,     // 2π/ω
+    period: f64, // 2π/ω
     tolerance: f64,
     max_periods: usize,
 ) -> OscillatoryResult {
     if b - a < period {
         // Less than one period, just integrate directly
-        let result = adaptive_integrate(&|x| amplitude(x) * oscillator(x), a, b, tolerance, tolerance, 100);
+        let result = adaptive_integrate(
+            &|x| amplitude(x) * oscillator(x),
+            a,
+            b,
+            tolerance,
+            tolerance,
+            100,
+        );
         return OscillatoryResult {
             value: result.value,
             error: result.error,
@@ -287,8 +306,11 @@ pub fn integrate_oscillatory_real<F: Fn(f64) -> f64, G: Fn(f64) -> f64>(
     while x + period <= b && periods_done < max_periods {
         let result = adaptive_integrate(
             &|t| amplitude(t) * oscillator(t),
-            x, x + period,
-            tolerance, tolerance, 50
+            x,
+            x + period,
+            tolerance,
+            tolerance,
+            50,
         );
         current_sum += result.value;
         partial_sums.push(current_sum);
@@ -300,8 +322,11 @@ pub fn integrate_oscillatory_real<F: Fn(f64) -> f64, G: Fn(f64) -> f64>(
     if x < b {
         let result = adaptive_integrate(
             &|t| amplitude(t) * oscillator(t),
-            x, b,
-            tolerance, tolerance, 50
+            x,
+            b,
+            tolerance,
+            tolerance,
+            50,
         );
         current_sum += result.value;
         partial_sums.push(current_sum);
@@ -367,7 +392,9 @@ fn wynn_epsilon(partial_sums: &[f64]) -> f64 {
     }
 
     // Return the best approximation (even-indexed epsilon values converge to limit)
-    *eps_curr.last().unwrap_or(partial_sums.last().unwrap_or(&0.0))
+    *eps_curr
+        .last()
+        .unwrap_or(partial_sums.last().unwrap_or(&0.0))
 }
 
 #[cfg(test)]

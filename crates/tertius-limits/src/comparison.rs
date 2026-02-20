@@ -85,10 +85,7 @@ impl GrowthRate {
 
     /// Creates an exponential growth rate.
     pub fn exp(power: i32) -> Self {
-        GrowthRate::Exponential {
-            coeff: 1.0,
-            power,
-        }
+        GrowthRate::Exponential { coeff: 1.0, power }
     }
 
     /// Compares two growth rates.
@@ -106,22 +103,18 @@ impl GrowthRate {
             (GrowthRate::Polynomial(_), GrowthRate::Logarithmic(_)) => ComparisonClass::GreaterThan,
 
             // Logarithmic comparisons
-            (GrowthRate::Logarithmic(a), GrowthRate::Logarithmic(b)) => {
-                match a.cmp(b) {
-                    Ordering::Less => ComparisonClass::LessThan,
-                    Ordering::Equal => ComparisonClass::Comparable,
-                    Ordering::Greater => ComparisonClass::GreaterThan,
-                }
-            }
+            (GrowthRate::Logarithmic(a), GrowthRate::Logarithmic(b)) => match a.cmp(b) {
+                Ordering::Less => ComparisonClass::LessThan,
+                Ordering::Equal => ComparisonClass::Comparable,
+                Ordering::Greater => ComparisonClass::GreaterThan,
+            },
 
             // Polynomial comparisons
-            (GrowthRate::Polynomial(a), GrowthRate::Polynomial(b)) => {
-                match a.cmp(b) {
-                    Ordering::Less => ComparisonClass::LessThan,
-                    Ordering::Equal => ComparisonClass::Comparable,
-                    Ordering::Greater => ComparisonClass::GreaterThan,
-                }
-            }
+            (GrowthRate::Polynomial(a), GrowthRate::Polynomial(b)) => match a.cmp(b) {
+                Ordering::Less => ComparisonClass::LessThan,
+                Ordering::Equal => ComparisonClass::Comparable,
+                Ordering::Greater => ComparisonClass::GreaterThan,
+            },
 
             // Polynomial < Exponential
             (GrowthRate::Polynomial(_), GrowthRate::Exponential { .. }) => {
@@ -143,13 +136,11 @@ impl GrowthRate {
             (
                 GrowthRate::Exponential { power: p1, .. },
                 GrowthRate::Exponential { power: p2, .. },
-            ) => {
-                match p1.cmp(p2) {
-                    Ordering::Less => ComparisonClass::LessThan,
-                    Ordering::Equal => ComparisonClass::Comparable,
-                    Ordering::Greater => ComparisonClass::GreaterThan,
-                }
-            }
+            ) => match p1.cmp(p2) {
+                Ordering::Less => ComparisonClass::LessThan,
+                Ordering::Equal => ComparisonClass::Comparable,
+                Ordering::Greater => ComparisonClass::GreaterThan,
+            },
 
             // SuperExponential > Exponential
             (GrowthRate::Exponential { .. }, GrowthRate::SuperExponential) => {
@@ -166,9 +157,7 @@ impl GrowthRate {
             }
 
             // SuperExponential > Logarithmic
-            (GrowthRate::Logarithmic(_), GrowthRate::SuperExponential) => {
-                ComparisonClass::LessThan
-            }
+            (GrowthRate::Logarithmic(_), GrowthRate::SuperExponential) => ComparisonClass::LessThan,
             (GrowthRate::SuperExponential, GrowthRate::Logarithmic(_)) => {
                 ComparisonClass::GreaterThan
             }

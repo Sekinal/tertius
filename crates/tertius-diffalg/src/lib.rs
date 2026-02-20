@@ -22,9 +22,9 @@
 //! For θ = exp(u): θ' = u'·θ
 
 pub mod derivation;
-pub mod tower;
 pub mod element;
+pub mod tower;
 
 pub use derivation::Derivation;
-pub use tower::{TranscendentalTower, TranscendentalType, TowerLevel};
 pub use element::TowerElement;
+pub use tower::{TowerLevel, TranscendentalTower, TranscendentalType};

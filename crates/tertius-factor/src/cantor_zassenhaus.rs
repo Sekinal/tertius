@@ -320,7 +320,11 @@ fn poly_div<const P: u64>(
 
     let mut remainder = a.coeffs().to_vec();
     let divisor = b.coeffs();
-    let divisor_lead_inv = divisor.last().unwrap().inv().expect("divisor lead must be invertible");
+    let divisor_lead_inv = divisor
+        .last()
+        .unwrap()
+        .inv()
+        .expect("divisor lead must be invertible");
     let deg_diff = a.degree() - b.degree();
     let mut quotient = vec![ff_zero(); deg_diff + 1];
 
@@ -368,8 +372,15 @@ fn make_monic<const P: u64>(f: &DensePoly<FiniteField<P>>) -> DensePoly<FiniteFi
     }
 
     let coeffs = f.coeffs();
-    let lead_inv = coeffs.last().unwrap().inv().expect("lead must be invertible");
-    let new_coeffs: Vec<_> = coeffs.iter().map(|c| c.clone() * lead_inv.clone()).collect();
+    let lead_inv = coeffs
+        .last()
+        .unwrap()
+        .inv()
+        .expect("lead must be invertible");
+    let new_coeffs: Vec<_> = coeffs
+        .iter()
+        .map(|c| c.clone() * lead_inv.clone())
+        .collect();
 
     DensePoly::new(new_coeffs)
 }

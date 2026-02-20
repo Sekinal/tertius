@@ -12,8 +12,8 @@
 //! The "self-initializing" variant uses multiple polynomials to speed up sieving.
 
 mod polynomial;
-mod sieve;
 mod relations;
+mod sieve;
 
 use num_traits::{One, Zero};
 use rayon::prelude::*;

@@ -74,14 +74,33 @@ pub enum NonIntegrabilityReason {
 impl std::fmt::Display for NonIntegrabilityReason {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::LiouvilleLograthmic { equation_description } => {
-                write!(f, "Liouville obstruction (logarithmic): {}", equation_description)
+            Self::LiouvilleLograthmic {
+                equation_description,
+            } => {
+                write!(
+                    f,
+                    "Liouville obstruction (logarithmic): {}",
+                    equation_description
+                )
             }
-            Self::LiouvilleExponential { equation_description } => {
-                write!(f, "Liouville obstruction (exponential): {}", equation_description)
+            Self::LiouvilleExponential {
+                equation_description,
+            } => {
+                write!(
+                    f,
+                    "Liouville obstruction (exponential): {}",
+                    equation_description
+                )
             }
-            Self::KnownNonElementary { canonical_name, special_function } => {
-                write!(f, "Known non-elementary: {} (defines {})", canonical_name, special_function)
+            Self::KnownNonElementary {
+                canonical_name,
+                special_function,
+            } => {
+                write!(
+                    f,
+                    "Known non-elementary: {} (defines {})",
+                    canonical_name, special_function
+                )
             }
             Self::RischNoSolution { failure_point } => {
                 write!(f, "Risch algorithm: no solution at {}", failure_point)
@@ -235,7 +254,8 @@ pub fn prove_non_elementary(integrand_pattern: &str) -> Option<NonIntegrabilityP
     let pattern = integrand_pattern.to_lowercase().replace(' ', "");
 
     // Check for Gaussian
-    if pattern.contains("exp(-x^2)") || pattern.contains("e^(-x^2)") || pattern.contains("exp(-x²)") {
+    if pattern.contains("exp(-x^2)") || pattern.contains("e^(-x^2)") || pattern.contains("exp(-x²)")
+    {
         return Some(NonIntegrabilityProof::from_known(
             "exp(-x²)",
             "x",
@@ -346,18 +366,14 @@ pub fn verify_proof(proof: &NonIntegrabilityProof) -> bool {
         NonIntegrabilityReason::KnownNonElementary { canonical_name, .. } => {
             !canonical_name.is_empty()
         }
-        NonIntegrabilityReason::LiouvilleLograthmic { equation_description } => {
-            !equation_description.is_empty() && proof.tower_description.is_some()
-        }
-        NonIntegrabilityReason::LiouvilleExponential { equation_description } => {
-            !equation_description.is_empty() && proof.tower_description.is_some()
-        }
-        NonIntegrabilityReason::RischNoSolution { failure_point } => {
-            !failure_point.is_empty()
-        }
-        NonIntegrabilityReason::TranscendentalConstants { constants } => {
-            !constants.is_empty()
-        }
+        NonIntegrabilityReason::LiouvilleLograthmic {
+            equation_description,
+        } => !equation_description.is_empty() && proof.tower_description.is_some(),
+        NonIntegrabilityReason::LiouvilleExponential {
+            equation_description,
+        } => !equation_description.is_empty() && proof.tower_description.is_some(),
+        NonIntegrabilityReason::RischNoSolution { failure_point } => !failure_point.is_empty(),
+        NonIntegrabilityReason::TranscendentalConstants { constants } => !constants.is_empty(),
     }
 }
 

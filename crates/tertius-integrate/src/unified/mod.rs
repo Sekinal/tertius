@@ -18,15 +18,15 @@
 //! // result contains x^3/3
 //! ```
 
-pub mod result;
+pub mod api;
 pub mod classifier;
 pub mod convert;
 pub mod dispatch;
-pub mod api;
+pub mod result;
 
 pub use api::{integrate, integrate_definite, integrate_with_options};
-pub use result::{
-    IntegrationMethod, IntegrationResult, NumericalResult, SymbolicAntiderivative,
-    SpecialFunctionResult, EllipticResult, NonElementaryResult, UnknownReason,
-};
 pub use dispatch::IntegrationOptions;
+pub use result::{
+    EllipticResult, IntegrationMethod, IntegrationResult, NonElementaryResult, NumericalResult,
+    SpecialFunctionResult, SymbolicAntiderivative, UnknownReason,
+};

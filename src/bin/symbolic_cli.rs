@@ -294,11 +294,19 @@ fn expr_to_sexpr(arena: &ExprArena, expr: ExprHandle) -> String {
             format!("(* {})", inner.join(" "))
         }
         ExprNode::Pow { base, exp } => {
-            format!("(^ {} {})", expr_to_sexpr(arena, *base), expr_to_sexpr(arena, *exp))
+            format!(
+                "(^ {} {})",
+                expr_to_sexpr(arena, *base),
+                expr_to_sexpr(arena, *exp)
+            )
         }
         ExprNode::Neg(arg) => format!("(neg {})", expr_to_sexpr(arena, *arg)),
         ExprNode::Div { num, den } => {
-            format!("(/ {} {})", expr_to_sexpr(arena, *num), expr_to_sexpr(arena, *den))
+            format!(
+                "(/ {} {})",
+                expr_to_sexpr(arena, *num),
+                expr_to_sexpr(arena, *den)
+            )
         }
         ExprNode::Function { id, args } => {
             let name = match *id {

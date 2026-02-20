@@ -18,7 +18,7 @@
 //!
 //! ∫ dx/√(1-x²) → arcsin(x) via substitution x = sin(t)
 
-use super::{AlgebraicIntegrand, AlgebraicIntegralResult};
+use super::{AlgebraicIntegralResult, AlgebraicIntegrand};
 
 /// Attempts to integrate a rationalizable algebraic function.
 ///

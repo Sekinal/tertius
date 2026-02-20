@@ -224,10 +224,8 @@ mod tests {
     #[test]
     fn test_from_derivatives() {
         // f(x) = exp(x) at x=0: f(0)=1, f'(0)=1, f''(0)=1, ...
-        let taylor = TaylorExpansion::from_derivatives(
-            q(0, 1),
-            vec![q(1, 1), q(1, 1), q(1, 1), q(1, 1)],
-        );
+        let taylor =
+            TaylorExpansion::from_derivatives(q(0, 1), vec![q(1, 1), q(1, 1), q(1, 1), q(1, 1)]);
 
         // Coefficients should be 1, 1, 1/2, 1/6
         assert_eq!(taylor.coeff(0), q(1, 1));
@@ -238,8 +236,7 @@ mod tests {
 
     #[test]
     fn test_from_coefficients() {
-        let taylor =
-            TaylorExpansion::from_coefficients(q(0, 1), vec![q(1, 1), q(2, 1), q(3, 1)]);
+        let taylor = TaylorExpansion::from_coefficients(q(0, 1), vec![q(1, 1), q(2, 1), q(3, 1)]);
 
         assert_eq!(taylor.coeff(0), q(1, 1));
         assert_eq!(taylor.coeff(1), q(2, 1));
@@ -249,10 +246,7 @@ mod tests {
     #[test]
     fn test_evaluate() {
         // f(x) = 1 + x + x² at center 0
-        let taylor = TaylorExpansion::from_coefficients(
-            q(0, 1),
-            vec![q(1, 1), q(1, 1), q(1, 1)],
-        );
+        let taylor = TaylorExpansion::from_coefficients(q(0, 1), vec![q(1, 1), q(1, 1), q(1, 1)]);
 
         // f(2) = 1 + 2 + 4 = 7
         assert_eq!(taylor.evaluate(&q(2, 1)), q(7, 1));

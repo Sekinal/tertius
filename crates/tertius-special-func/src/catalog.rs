@@ -5,10 +5,10 @@
 //! - Pattern matching to recognize integrands that reduce to special functions
 //! - Lookup of known non-elementary integrals
 
-use crate::error_func::ErrorFunction;
-use crate::polylog::Polylogarithm;
 use crate::elliptic::{EllipticE, EllipticF};
+use crate::error_func::ErrorFunction;
 use crate::hypergeometric::Hypergeometric2F1;
+use crate::polylog::Polylogarithm;
 
 /// A special function that may arise from integration.
 #[derive(Clone, Debug)]
@@ -225,9 +225,7 @@ pub fn explain_non_elementary(integrand_pattern: &str) -> Option<String> {
             SpecialFunction::FresnelS { .. } | SpecialFunction::FresnelC { .. } => {
                 "Integrals of sin(x²) and cos(x²) lead to Fresnel integrals S(x) and C(x)."
             }
-            _ => {
-                "This integral has no elementary antiderivative and requires special functions."
-            }
+            _ => "This integral has no elementary antiderivative and requires special functions.",
         };
         Some(explanation.to_string())
     } else {
@@ -248,7 +246,10 @@ mod tests {
     #[test]
     fn test_recognize_log_integral() {
         let result = recognize_special_function("1/ln(x)");
-        assert!(matches!(result, Some(SpecialFunction::LogarithmicIntegral { .. })));
+        assert!(matches!(
+            result,
+            Some(SpecialFunction::LogarithmicIntegral { .. })
+        ));
     }
 
     #[test]

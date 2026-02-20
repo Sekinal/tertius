@@ -29,15 +29,8 @@ impl<R: Clone + PartialEq> LabeledPoly<R> {
     }
 
     /// Creates a labeled polynomial for a generator.
-    pub fn from_generator(
-        terms: Vec<(R, PackedMonomial)>,
-        index: usize,
-        num_vars: usize,
-    ) -> Self {
-        let sugar = terms
-            .first()
-            .map(|(_, m)| m.total_degree())
-            .unwrap_or(0);
+    pub fn from_generator(terms: Vec<(R, PackedMonomial)>, index: usize, num_vars: usize) -> Self {
+        let sugar = terms.first().map(|(_, m)| m.total_degree()).unwrap_or(0);
 
         Self {
             terms,
@@ -78,7 +71,10 @@ impl<R: Clone + PartialEq> LabeledPoly<R> {
 
     /// Returns the degree (total degree of leading monomial).
     pub fn degree(&self) -> u32 {
-        self.terms.first().map(|(_, m)| m.total_degree()).unwrap_or(0)
+        self.terms
+            .first()
+            .map(|(_, m)| m.total_degree())
+            .unwrap_or(0)
     }
 
     /// Multiplies this polynomial by a monomial, updating signature accordingly.
@@ -154,7 +150,10 @@ impl<R: Clone + PartialEq + num_traits::Zero> SparsePoly<R> {
 
     /// Returns the total degree.
     pub fn degree(&self) -> u32 {
-        self.terms.first().map(|(_, m)| m.total_degree()).unwrap_or(0)
+        self.terms
+            .first()
+            .map(|(_, m)| m.total_degree())
+            .unwrap_or(0)
     }
 }
 

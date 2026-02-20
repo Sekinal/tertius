@@ -15,7 +15,13 @@ use std::ops::{Add, Mul, Neg, Sub};
 /// - Multiplication distributes over addition
 /// - Every element has an additive inverse (`neg`)
 pub trait Ring:
-    Clone + Eq + Debug + Add<Output = Self> + Sub<Output = Self> + Mul<Output = Self> + Neg<Output = Self>
+    Clone
+    + Eq
+    + Debug
+    + Add<Output = Self>
+    + Sub<Output = Self>
+    + Mul<Output = Self>
+    + Neg<Output = Self>
 {
     /// The additive identity.
     fn zero() -> Self;

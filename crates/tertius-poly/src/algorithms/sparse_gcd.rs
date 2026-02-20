@@ -140,10 +140,7 @@ pub fn sparse_gcd_univariate<const P: u64>(
 }
 
 /// Computes polynomial remainder.
-fn poly_remainder<const P: u64>(
-    a: &[FiniteField<P>],
-    b: &[FiniteField<P>],
-) -> Vec<FiniteField<P>> {
+fn poly_remainder<const P: u64>(a: &[FiniteField<P>], b: &[FiniteField<P>]) -> Vec<FiniteField<P>> {
     if b.is_empty() || b.iter().all(|c| c.is_zero()) {
         panic!("Division by zero polynomial");
     }
@@ -206,7 +203,6 @@ pub fn sparse_gcd_multivariate<const P: u64>(
     g: &SparseMultiPoly<FiniteField<P>>,
     omega: FiniteField<P>,
 ) -> SparseGcdResult<FiniteField<P>> {
-
     let num_vars = f.num_vars.max(g.num_vars);
 
     if num_vars == 0 || f.is_zero() {
@@ -264,13 +260,18 @@ pub fn sparse_gcd_multivariate<const P: u64>(
 
     // For now, return the GCD at the first point (proper interpolation TBD)
     SparseGcdResult {
-        gcd: gcd_evals.into_iter().next().unwrap_or_else(|| SparseMultiPoly::zero(num_vars)),
+        gcd: gcd_evals
+            .into_iter()
+            .next()
+            .unwrap_or_else(|| SparseMultiPoly::zero(num_vars)),
         evaluations: num_probes,
     }
 }
 
 /// Converts sparse multivariate to univariate dense.
-fn to_univariate_dense<const P: u64>(poly: &SparseMultiPoly<FiniteField<P>>) -> Vec<FiniteField<P>> {
+fn to_univariate_dense<const P: u64>(
+    poly: &SparseMultiPoly<FiniteField<P>>,
+) -> Vec<FiniteField<P>> {
     if poly.is_zero() {
         return vec![];
     }
@@ -311,14 +312,12 @@ fn evaluate_last_var<const P: u64>(
     if poly.num_vars <= 1 {
         // Substitute directly
         let result = poly.evaluate(&[val.clone()]);
-        return SparseMultiPoly::new(
-            vec![SparseTerm::new(result, vec![])],
-            0,
-        );
+        return SparseMultiPoly::new(vec![SparseTerm::new(result, vec![])], 0);
     }
 
     let new_num_vars = poly.num_vars - 1;
-    let mut new_terms: std::collections::HashMap<Vec<u32>, FiniteField<P>> = std::collections::HashMap::new();
+    let mut new_terms: std::collections::HashMap<Vec<u32>, FiniteField<P>> =
+        std::collections::HashMap::new();
 
     for term in &poly.terms {
         let last_exp = term.exponents.last().copied().unwrap_or(0);

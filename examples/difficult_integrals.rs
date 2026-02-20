@@ -6,13 +6,11 @@
 //! Run with: cargo run --example difficult_integrals
 
 use std::time::Instant;
-use tertius_integrate::{
-    integrate_rational, prove_non_elementary, RationalIntegrationResult,
-};
 use tertius_integrate::polynomial::integrate_polynomial;
 use tertius_integrate::risch::heuristic::{
-    check_known_non_elementary, IntegrationTable, heuristic_integrate,
+    check_known_non_elementary, heuristic_integrate, IntegrationTable,
 };
+use tertius_integrate::{integrate_rational, prove_non_elementary, RationalIntegrationResult};
 use tertius_poly::dense::DensePoly;
 use tertius_rational_func::RationalFunction;
 use tertius_rings::rationals::Q;
@@ -47,23 +45,43 @@ fn main() {
 
     // Test 1: Simple pole
     total += 1;
-    if test_simple_pole() { passed += 1; } else { failed += 1; }
+    if test_simple_pole() {
+        passed += 1;
+    } else {
+        failed += 1;
+    }
 
     // Test 2: Double pole
     total += 1;
-    if test_double_pole() { passed += 1; } else { failed += 1; }
+    if test_double_pole() {
+        passed += 1;
+    } else {
+        failed += 1;
+    }
 
     // Test 3: Cubic denominator
     total += 1;
-    if test_cubic_denominator() { passed += 1; } else { failed += 1; }
+    if test_cubic_denominator() {
+        passed += 1;
+    } else {
+        failed += 1;
+    }
 
     // Test 4: Irreducible quadratic
     total += 1;
-    if test_irreducible_quadratic() { passed += 1; } else { failed += 1; }
+    if test_irreducible_quadratic() {
+        passed += 1;
+    } else {
+        failed += 1;
+    }
 
     // Test 5: High degree
     total += 1;
-    if test_high_degree() { passed += 1; } else { failed += 1; }
+    if test_high_degree() {
+        passed += 1;
+    } else {
+        failed += 1;
+    }
 
     // Category 2: Pathological Cases
     println!("═══════════════════════════════════════════════════════════════════");
@@ -72,15 +90,27 @@ fn main() {
 
     // Test 6: Near-cancellation
     total += 1;
-    if test_near_cancellation() { passed += 1; } else { failed += 1; }
+    if test_near_cancellation() {
+        passed += 1;
+    } else {
+        failed += 1;
+    }
 
     // Test 7: Large coefficients
     total += 1;
-    if test_large_coefficients() { passed += 1; } else { failed += 1; }
+    if test_large_coefficients() {
+        passed += 1;
+    } else {
+        failed += 1;
+    }
 
     // Test 8: Nested structure
     total += 1;
-    if test_nested_structure() { passed += 1; } else { failed += 1; }
+    if test_nested_structure() {
+        passed += 1;
+    } else {
+        failed += 1;
+    }
 
     // Category 3: Non-Elementary Detection
     println!("═══════════════════════════════════════════════════════════════════");
@@ -89,19 +119,35 @@ fn main() {
 
     // Test 9: Gaussian
     total += 1;
-    if test_non_elementary_gaussian() { passed += 1; } else { failed += 1; }
+    if test_non_elementary_gaussian() {
+        passed += 1;
+    } else {
+        failed += 1;
+    }
 
     // Test 10: Sine integral
     total += 1;
-    if test_non_elementary_sinx_over_x() { passed += 1; } else { failed += 1; }
+    if test_non_elementary_sinx_over_x() {
+        passed += 1;
+    } else {
+        failed += 1;
+    }
 
     // Test 11: Logarithmic integral
     total += 1;
-    if test_non_elementary_1_over_lnx() { passed += 1; } else { failed += 1; }
+    if test_non_elementary_1_over_lnx() {
+        passed += 1;
+    } else {
+        failed += 1;
+    }
 
     // Test 12: Exponential integral
     total += 1;
-    if test_non_elementary_expx_over_x() { passed += 1; } else { failed += 1; }
+    if test_non_elementary_expx_over_x() {
+        passed += 1;
+    } else {
+        failed += 1;
+    }
 
     // Category 4: Tricky Elementary Integrals
     println!("═══════════════════════════════════════════════════════════════════");
@@ -110,15 +156,27 @@ fn main() {
 
     // Test 13: Partial fractions with repeated roots
     total += 1;
-    if test_repeated_roots() { passed += 1; } else { failed += 1; }
+    if test_repeated_roots() {
+        passed += 1;
+    } else {
+        failed += 1;
+    }
 
     // Test 14: Mixed degree
     total += 1;
-    if test_mixed_degree() { passed += 1; } else { failed += 1; }
+    if test_mixed_degree() {
+        passed += 1;
+    } else {
+        failed += 1;
+    }
 
     // Test 15: Almost cancelling
     total += 1;
-    if test_almost_cancelling() { passed += 1; } else { failed += 1; }
+    if test_almost_cancelling() {
+        passed += 1;
+    } else {
+        failed += 1;
+    }
 
     // Category 5: Performance Tests
     println!("═══════════════════════════════════════════════════════════════════");
@@ -127,11 +185,19 @@ fn main() {
 
     // Test 16: High degree polynomial integration
     total += 1;
-    if test_high_degree_polynomial() { passed += 1; } else { failed += 1; }
+    if test_high_degree_polynomial() {
+        passed += 1;
+    } else {
+        failed += 1;
+    }
 
     // Test 17: Many terms
     total += 1;
-    if test_many_terms() { passed += 1; } else { failed += 1; }
+    if test_many_terms() {
+        passed += 1;
+    } else {
+        failed += 1;
+    }
 
     // Summary
     println!("═══════════════════════════════════════════════════════════════════");
@@ -140,7 +206,10 @@ fn main() {
     println!("  Total tests:  {}", total);
     println!("  Passed:       {} ✓", passed);
     println!("  Failed:       {} ✗", failed);
-    println!("  Success rate: {:.1}%", (passed as f64 / total as f64) * 100.0);
+    println!(
+        "  Success rate: {:.1}%",
+        (passed as f64 / total as f64) * 100.0
+    );
     println!();
 
     if failed == 0 {
@@ -232,7 +301,14 @@ fn test_irreducible_quadratic() -> bool {
     let success = result.logarithmic_part.is_some() || !result.rational_part.is_zero();
 
     println!("  Time: {:?}", elapsed);
-    println!("  Result: {}\n", if success { "✓ PASS (computed)" } else { "✗ FAIL" });
+    println!(
+        "  Result: {}\n",
+        if success {
+            "✓ PASS (computed)"
+        } else {
+            "✗ FAIL"
+        }
+    );
 
     success
 }
@@ -423,8 +499,8 @@ fn test_mixed_degree() -> bool {
     let start = Instant::now();
 
     let rf = RationalFunction::new(
-        poly(&[1, 1, 1, 1]),  // x³ + x² + x + 1
-        poly(&[1, 0, 1])      // x² + 1
+        poly(&[1, 1, 1, 1]), // x³ + x² + x + 1
+        poly(&[1, 0, 1]),    // x² + 1
     );
     let result = integrate_rational(&rf);
 
@@ -434,7 +510,10 @@ fn test_mixed_degree() -> bool {
     let success = true; // Check that it doesn't crash
 
     println!("  Time: {:?}", elapsed);
-    println!("  Polynomial part degree: {}", result.polynomial_part.degree());
+    println!(
+        "  Polynomial part degree: {}",
+        result.polynomial_part.degree()
+    );
     println!("  Result: {}\n", if success { "✓ PASS" } else { "✗ FAIL" });
 
     success
@@ -447,8 +526,8 @@ fn test_almost_cancelling() -> bool {
 
     // (x² + 2x + 1)/(x + 1) = (x + 1)²/(x + 1) = x + 1
     let rf = RationalFunction::new(
-        poly(&[1, 2, 1]),  // x² + 2x + 1 = (x + 1)²
-        poly(&[1, 1])      // x + 1
+        poly(&[1, 2, 1]), // x² + 2x + 1 = (x + 1)²
+        poly(&[1, 1]),    // x + 1
     );
     let result = integrate_rational(&rf);
 

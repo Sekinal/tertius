@@ -15,7 +15,7 @@
 //! Any quartic/cubic radicand can be reduced to Legendre normal form
 //! y² = (1 - x²)(1 - k²x²) through appropriate substitutions.
 
-use super::{AlgebraicIntegrand, AlgebraicIntegralResult};
+use super::{AlgebraicIntegralResult, AlgebraicIntegrand};
 
 /// Reduces a cubic or quartic polynomial to Legendre normal form.
 ///

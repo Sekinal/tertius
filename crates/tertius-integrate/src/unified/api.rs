@@ -218,8 +218,8 @@ pub fn integrate_numerical_with_params<F: Fn(f64) -> f64>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tertius_core::expr::{functions, ExprNode};
     use smallvec::smallvec;
+    use tertius_core::expr::{functions, ExprNode};
 
     #[test]
     fn test_integrate_x_squared() {

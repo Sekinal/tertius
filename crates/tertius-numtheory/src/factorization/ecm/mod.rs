@@ -41,10 +41,10 @@ pub fn ecm_factor(n: &Integer) -> Option<Integer> {
 
     // Try with increasing bounds
     let bounds: [(u64, u64, usize); 6] = [
-        (2_000, 200_000, 25),      // ~15 digit factors
-        (11_000, 1_100_000, 90),   // ~20 digit factors
-        (50_000, 5_000_000, 300),  // ~25 digit factors
-        (250_000, 25_000_000, 700), // ~30 digit factors
+        (2_000, 200_000, 25),           // ~15 digit factors
+        (11_000, 1_100_000, 90),        // ~20 digit factors
+        (50_000, 5_000_000, 300),       // ~25 digit factors
+        (250_000, 25_000_000, 700),     // ~30 digit factors
         (1_000_000, 100_000_000, 1800), // ~35 digit factors
         (3_000_000, 300_000_000, 5100), // ~40 digit factors
     ];

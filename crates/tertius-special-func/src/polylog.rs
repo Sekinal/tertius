@@ -22,7 +22,7 @@
 //! - ∫ ln(1-x)/x dx = -Li_2(x)
 
 use tertius_rings::rationals::Q;
-use tertius_rings::traits::{Ring, Field};
+use tertius_rings::traits::{Field, Ring};
 
 /// A polylogarithm function Li_n(argument).
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -57,7 +57,12 @@ impl Polylogarithm {
         if self.order <= 1 {
             format!("-1/((1-{}) * {})", self.argument, self.argument)
         } else {
-            format!("Li_{}({}) / {}", self.order - 1, self.argument, self.argument)
+            format!(
+                "Li_{}({}) / {}",
+                self.order - 1,
+                self.argument,
+                self.argument
+            )
         }
     }
 

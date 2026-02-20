@@ -469,7 +469,10 @@ mod tests {
 
     #[test]
     fn test_unknown_reason_display() {
-        assert_eq!(format!("{}", UnknownReason::Timeout), "computation timed out");
+        assert_eq!(
+            format!("{}", UnknownReason::Timeout),
+            "computation timed out"
+        );
         assert_eq!(
             format!("{}", UnknownReason::InternalError("test".to_string())),
             "internal error: test"

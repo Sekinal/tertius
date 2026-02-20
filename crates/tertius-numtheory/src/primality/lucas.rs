@@ -347,10 +347,16 @@ mod tests {
         // 5 mod 3 = 2, (2/3) = -1
         // 5 mod 7 = 5, (5/7) = -1 (since 5 is not a QR mod 7)
         // So (5/21) = (-1)(-1) = 1
-        assert_eq!(jacobi_symbol(&Integer::from(5i64), &Integer::from(21i64)), 1);
+        assert_eq!(
+            jacobi_symbol(&Integer::from(5i64), &Integer::from(21i64)),
+            1
+        );
 
         // (3/5) = -1
-        assert_eq!(jacobi_symbol(&Integer::from(3i64), &Integer::from(5i64)), -1);
+        assert_eq!(
+            jacobi_symbol(&Integer::from(3i64), &Integer::from(5i64)),
+            -1
+        );
     }
 
     #[test]

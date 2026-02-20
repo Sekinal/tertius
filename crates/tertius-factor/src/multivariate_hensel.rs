@@ -118,13 +118,7 @@ pub fn multivariate_hensel_lift(
         let eval_point = &evaluation_points[var_idx - 1];
 
         // Lift factors for this variable
-        let lift_result = lift_variable(
-            f,
-            &current_factors,
-            var_idx,
-            eval_point,
-            target_precision,
-        );
+        let lift_result = lift_variable(f, &current_factors, var_idx, eval_point, target_precision);
 
         if !lift_result.success {
             return MultivariateHenselResult {
@@ -241,7 +235,12 @@ fn lift_two_factors(
     // For now, work over Z and assume coprimality
     let (s, t, gcd) = extended_gcd_poly(&g_uni, &h_uni);
 
-    if gcd.degree() > 0 || gcd.coeffs().iter().any(|c| c.0 != Integer::new(1) && c.0 != Integer::new(-1)) {
+    if gcd.degree() > 0
+        || gcd
+            .coeffs()
+            .iter()
+            .any(|c| c.0 != Integer::new(1) && c.0 != Integer::new(-1))
+    {
         // Factors are not coprime - lifting may fail
         return VariableLiftResult {
             factors: vec![g.clone(), h.clone()],
@@ -383,12 +382,7 @@ fn is_approximately_zero(f: &SparsePoly<Z>, var: usize, eval_point: &Z, k: u32) 
 }
 
 /// Reduces a polynomial modulo the ideal (x_var - a)^k.
-fn reduce_mod_ideal(
-    f: &SparsePoly<Z>,
-    var: usize,
-    eval_point: &Z,
-    k: u32,
-) -> SparsePoly<Z> {
+fn reduce_mod_ideal(f: &SparsePoly<Z>, var: usize, eval_point: &Z, k: u32) -> SparsePoly<Z> {
     // For now, keep only terms with degree < k in the variable
     let num_vars = f.num_vars();
     let order = f.order();
@@ -406,7 +400,10 @@ fn reduce_mod_ideal(
 /// Extended GCD for polynomials over Z.
 ///
 /// Returns (s, t, gcd) such that s*a + t*b = gcd.
-fn extended_gcd_poly(a: &DensePoly<Z>, b: &DensePoly<Z>) -> (DensePoly<Z>, DensePoly<Z>, DensePoly<Z>) {
+fn extended_gcd_poly(
+    a: &DensePoly<Z>,
+    b: &DensePoly<Z>,
+) -> (DensePoly<Z>, DensePoly<Z>, DensePoly<Z>) {
     if b.is_zero() {
         return (
             DensePoly::new(vec![Z(Integer::new(1))]),
@@ -541,7 +538,11 @@ fn sub_poly(a: &DensePoly<Z>, b: &DensePoly<Z>) -> DensePoly<Z> {
 
 /// Scales a polynomial by a constant.
 fn scale_poly(a: &DensePoly<Z>, c: &Z) -> DensePoly<Z> {
-    let coeffs: Vec<_> = a.coeffs().iter().map(|x| Z(x.0.clone() * c.0.clone())).collect();
+    let coeffs: Vec<_> = a
+        .coeffs()
+        .iter()
+        .map(|x| Z(x.0.clone() * c.0.clone()))
+        .collect();
     DensePoly::new(coeffs)
 }
 

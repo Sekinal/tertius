@@ -109,10 +109,7 @@ fn factor_lc_polynomial(lc: &SparsePoly<Z>) -> Vec<SparsePoly<Z>> {
 ///
 /// For factorization p = c * f₁^e₁ * ... * fₖ^eₖ, generates all products
 /// of subsets of factors that could be leading coefficients of factors.
-fn generate_divisors(
-    original: &SparsePoly<Z>,
-    factors: &[SparsePoly<Z>],
-) -> Vec<SparsePoly<Z>> {
+fn generate_divisors(original: &SparsePoly<Z>, factors: &[SparsePoly<Z>]) -> Vec<SparsePoly<Z>> {
     if factors.is_empty() {
         return vec![original.clone()];
     }

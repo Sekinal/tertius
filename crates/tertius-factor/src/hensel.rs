@@ -191,7 +191,9 @@ fn extended_gcd_poly(
 }
 
 fn is_zero_mod(p: &DensePoly<Z>, m: &Integer) -> bool {
-    p.coeffs().iter().all(|c| (c.0.clone() % m.clone()).is_zero())
+    p.coeffs()
+        .iter()
+        .all(|c| (c.0.clone() % m.clone()).is_zero())
 }
 
 fn poly_add_mod(a: &DensePoly<Z>, b: &DensePoly<Z>, m: &Integer) -> DensePoly<Z> {
@@ -256,11 +258,7 @@ fn poly_mul_mod(a: &DensePoly<Z>, b: &DensePoly<Z>, m: &Integer) -> DensePoly<Z>
     DensePoly::new(result)
 }
 
-fn poly_div_mod(
-    a: &DensePoly<Z>,
-    b: &DensePoly<Z>,
-    m: &Integer,
-) -> (DensePoly<Z>, DensePoly<Z>) {
+fn poly_div_mod(a: &DensePoly<Z>, b: &DensePoly<Z>, m: &Integer) -> (DensePoly<Z>, DensePoly<Z>) {
     if b.is_zero() {
         panic!("Division by zero");
     }
@@ -284,11 +282,11 @@ fn poly_div_mod(
             for (j, d) in divisor.iter().enumerate() {
                 let ridx = i + j;
                 if ridx < remainder.len() {
-                    remainder[ridx] = Z(
-                        ((remainder[ridx].0.clone() - coeff.clone() * d.0.clone()) % m.clone()
-                            + m.clone())
-                            % m.clone(),
-                    );
+                    remainder[ridx] = Z(((remainder[ridx].0.clone()
+                        - coeff.clone() * d.0.clone())
+                        % m.clone()
+                        + m.clone())
+                        % m.clone());
                 }
             }
         }

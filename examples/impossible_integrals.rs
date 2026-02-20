@@ -12,13 +12,14 @@
 //! - Symbolic Integration Tutorial (Moses, 1971)
 //! - "The Integration of Algebraic Functions" (Davenport, 1981)
 
-use std::time::{Duration, Instant};
 use std::sync::mpsc;
 use std::thread;
-use tertius_integrate::{
-    integrate_rational, integrate_rational_q, integrate_rational_with_algebraic, AlgebraicIntegrationResult,
-};
+use std::time::{Duration, Instant};
 use tertius_integrate::risch::heuristic::check_known_non_elementary;
+use tertius_integrate::{
+    integrate_rational, integrate_rational_q, integrate_rational_with_algebraic,
+    AlgebraicIntegrationResult,
+};
 use tertius_poly::dense::DensePoly;
 use tertius_rational_func::RationalFunction;
 use tertius_rings::rationals::Q;
@@ -36,7 +37,10 @@ fn poly(coeffs: &[i64]) -> DensePoly<Q> {
 }
 
 /// Run algebraic integration with a timeout (in seconds).
-fn integrate_with_timeout(rf: RationalFunction<Q>, timeout_secs: u64) -> Option<AlgebraicIntegrationResult> {
+fn integrate_with_timeout(
+    rf: RationalFunction<Q>,
+    timeout_secs: u64,
+) -> Option<AlgebraicIntegrationResult> {
     let (tx, rx) = mpsc::channel();
 
     thread::spawn(move || {
@@ -153,10 +157,20 @@ fn test_tier1_deceptive() {
     // Use algebraic integration with timeout for x^4+1
     if let Some(result) = integrate_with_timeout(rf, TIMEOUT_SECS) {
         println!("     Tertius time: {:?}", start.elapsed());
-        let has_log = result.algebraic_log_part.as_ref().map_or(false, |p| !p.is_empty());
+        let has_log = result
+            .algebraic_log_part
+            .as_ref()
+            .map_or(false, |p| !p.is_empty());
         println!("     Has algebraic log part: {}", has_log);
         println!("     Is complete: {}", result.is_complete);
-        println!("     Status: {}\n", if has_log || result.is_complete { "COMPUTED" } else { "NEEDS WORK" });
+        println!(
+            "     Status: {}\n",
+            if has_log || result.is_complete {
+                "COMPUTED"
+            } else {
+                "NEEDS WORK"
+            }
+        );
     } else {
         println!("     Tertius time: TIMEOUT (>{}s)", TIMEOUT_SECS);
         println!("     Status: TIMEOUT (needs optimization)\n");
@@ -171,14 +185,24 @@ fn test_tier1_deceptive() {
     // Use algebraic integration
     let result = integrate_rational_with_algebraic(&rf);
     println!("     Tertius time: {:?}", start.elapsed());
-    let has_log = result.algebraic_log_part.as_ref().map_or(false, |p| !p.is_empty());
+    let has_log = result
+        .algebraic_log_part
+        .as_ref()
+        .map_or(false, |p| !p.is_empty());
     println!("     Has algebraic log part: {}", has_log);
     if has_log {
         if let Some(ref log_part) = result.algebraic_log_part {
             println!("     Number of log terms: {}", log_part.terms.len());
         }
     }
-    println!("     Status: {}\n", if has_log || result.is_complete { "COMPUTED" } else { "NEEDS WORK" });
+    println!(
+        "     Status: {}\n",
+        if has_log || result.is_complete {
+            "COMPUTED"
+        } else {
+            "NEEDS WORK"
+        }
+    );
 
     // 1.3: ∫ 1/(x⁸ + 1) dx
     // 8th roots of unity - Galois theory nightmare
@@ -189,14 +213,24 @@ fn test_tier1_deceptive() {
     // Use algebraic integration
     let result = integrate_rational_with_algebraic(&rf);
     println!("     Tertius time: {:?}", start.elapsed());
-    let has_log = result.algebraic_log_part.as_ref().map_or(false, |p| !p.is_empty());
+    let has_log = result
+        .algebraic_log_part
+        .as_ref()
+        .map_or(false, |p| !p.is_empty());
     println!("     Has algebraic log part: {}", has_log);
     if has_log {
         if let Some(ref log_part) = result.algebraic_log_part {
             println!("     Number of log terms: {}", log_part.terms.len());
         }
     }
-    println!("     Status: {}\n", if has_log || result.is_complete { "COMPUTED" } else { "NEEDS WORK" });
+    println!(
+        "     Status: {}\n",
+        if has_log || result.is_complete {
+            "COMPUTED"
+        } else {
+            "NEEDS WORK"
+        }
+    );
 
     // 1.4: ∫ x²/(x⁴ + 1) dx
     println!("1.4: ∫ x²/(x⁴ + 1) dx");
@@ -206,14 +240,24 @@ fn test_tier1_deceptive() {
     // Use algebraic integration
     let result = integrate_rational_with_algebraic(&rf);
     println!("     Tertius time: {:?}", start.elapsed());
-    let has_log = result.algebraic_log_part.as_ref().map_or(false, |p| !p.is_empty());
+    let has_log = result
+        .algebraic_log_part
+        .as_ref()
+        .map_or(false, |p| !p.is_empty());
     println!("     Has algebraic log part: {}", has_log);
     if has_log {
         if let Some(ref log_part) = result.algebraic_log_part {
             println!("     Number of log terms: {}", log_part.terms.len());
         }
     }
-    println!("     Status: {}\n", if has_log || result.is_complete { "COMPUTED" } else { "NEEDS WORK" });
+    println!(
+        "     Status: {}\n",
+        if has_log || result.is_complete {
+            "COMPUTED"
+        } else {
+            "NEEDS WORK"
+        }
+    );
 
     // 1.5: ∫ 1/(x² + 1) dx - simpler algebraic case (should work!)
     println!("1.5: ∫ 1/(x² + 1) dx");
@@ -222,14 +266,20 @@ fn test_tier1_deceptive() {
     let start = Instant::now();
     let result = integrate_rational_with_algebraic(&rf);
     println!("     Tertius time: {:?}", start.elapsed());
-    let has_log = result.algebraic_log_part.as_ref().map_or(false, |p| !p.is_empty());
+    let has_log = result
+        .algebraic_log_part
+        .as_ref()
+        .map_or(false, |p| !p.is_empty());
     println!("     Has algebraic log part: {}", has_log);
     if has_log {
         if let Some(ref log_part) = result.algebraic_log_part {
             println!("     Number of log terms: {}", log_part.terms.len());
         }
     }
-    println!("     Status: {}\n", if has_log { "COMPUTED" } else { "NEEDS WORK" });
+    println!(
+        "     Status: {}\n",
+        if has_log { "COMPUTED" } else { "NEEDS WORK" }
+    );
 
     // 1.6: ∫ 1/(x² - 1) dx - rational roots case
     println!("1.6: ∫ 1/(x² - 1) dx");
@@ -238,14 +288,20 @@ fn test_tier1_deceptive() {
     let start = Instant::now();
     let result = integrate_rational_with_algebraic(&rf);
     println!("     Tertius time: {:?}", start.elapsed());
-    let has_log = result.algebraic_log_part.as_ref().map_or(false, |p| !p.is_empty());
+    let has_log = result
+        .algebraic_log_part
+        .as_ref()
+        .map_or(false, |p| !p.is_empty());
     println!("     Has algebraic log part: {}", has_log);
     if has_log {
         if let Some(ref log_part) = result.algebraic_log_part {
             println!("     Number of log terms: {}", log_part.terms.len());
         }
     }
-    println!("     Status: {}\n", if has_log { "COMPUTED" } else { "NEEDS WORK" });
+    println!(
+        "     Status: {}\n",
+        if has_log { "COMPUTED" } else { "NEEDS WORK" }
+    );
 }
 
 fn test_tier2_elliptic() {
@@ -290,14 +346,24 @@ fn test_tier3_rational_nightmares() {
     // Use algebraic integration
     let result = integrate_rational_with_algebraic(&rf);
     println!("     Tertius time: {:?}", start.elapsed());
-    let has_log = result.algebraic_log_part.as_ref().map_or(false, |p| !p.is_empty());
+    let has_log = result
+        .algebraic_log_part
+        .as_ref()
+        .map_or(false, |p| !p.is_empty());
     println!("     Has algebraic log part: {}", has_log);
     if has_log {
         if let Some(ref log_part) = result.algebraic_log_part {
             println!("     Number of log terms: {}", log_part.terms.len());
         }
     }
-    println!("     Status: {}\n", if has_log || result.is_complete { "COMPUTED" } else { "NEEDS WORK" });
+    println!(
+        "     Status: {}\n",
+        if has_log || result.is_complete {
+            "COMPUTED"
+        } else {
+            "NEEDS WORK"
+        }
+    );
 
     // 3.2: Repeated irreducible factors
     println!("3.2: ∫ 1/(x² + 1)³ dx");
@@ -308,8 +374,18 @@ fn test_tier3_rational_nightmares() {
     let start = Instant::now();
     let result = integrate_rational(&rf);
     println!("     Tertius time: {:?}", start.elapsed());
-    println!("     Has rational part: {}", !result.rational_part.is_zero());
-    println!("     Status: {}\n", if !result.rational_part.is_zero() { "COMPUTED" } else { "INCOMPLETE" });
+    println!(
+        "     Has rational part: {}",
+        !result.rational_part.is_zero()
+    );
+    println!(
+        "     Status: {}\n",
+        if !result.rational_part.is_zero() {
+            "COMPUTED"
+        } else {
+            "INCOMPLETE"
+        }
+    );
 
     // 3.3: Mixed repeated roots
     println!("3.3: ∫ 1/((x² + 1)²(x² + 4)²) dx");
@@ -320,7 +396,14 @@ fn test_tier3_rational_nightmares() {
     let start = Instant::now();
     let result = integrate_rational(&rf);
     println!("     Tertius time: {:?}", start.elapsed());
-    println!("     Status: {}\n", if !result.rational_part.is_zero() { "COMPUTED" } else { "INCOMPLETE" });
+    println!(
+        "     Status: {}\n",
+        if !result.rational_part.is_zero() {
+            "COMPUTED"
+        } else {
+            "INCOMPLETE"
+        }
+    );
 
     // 3.4: Fibonacci-like polynomial
     println!("3.4: ∫ 1/(x⁵ - x - 1) dx");
@@ -331,7 +414,10 @@ fn test_tier3_rational_nightmares() {
     let start = Instant::now();
     let result = integrate_rational(&rf);
     println!("     Tertius time: {:?}", start.elapsed());
-    println!("     Status: {}\n", status_str(result.logarithmic_part.is_some()));
+    println!(
+        "     Status: {}\n",
+        status_str(result.logarithmic_part.is_some())
+    );
 }
 
 fn test_tier4_famous_non_elementary() {
@@ -339,7 +425,14 @@ fn test_tier4_famous_non_elementary() {
     println!("     PROVEN non-elementary by Liouville (1835)");
     println!("     Answer: √π/2 · erf(x)");
     let detected = check_known_non_elementary("exp(-x^2)");
-    println!("     Tertius detection: {}", if detected.is_some() { "RECOGNIZED" } else { "MISSED" });
+    println!(
+        "     Tertius detection: {}",
+        if detected.is_some() {
+            "RECOGNIZED"
+        } else {
+            "MISSED"
+        }
+    );
     if let Some((_, exp)) = detected {
         println!("     Explanation: {}", exp);
     }
@@ -358,23 +451,51 @@ fn test_tier4_famous_non_elementary() {
     println!("4.4: ∫ sin(x)/x dx (Sine integral)");
     let detected = check_known_non_elementary("sin(x)/x");
     println!("     Answer: Si(x)");
-    println!("     Tertius detection: {}\n", if detected.is_some() { "RECOGNIZED" } else { "MISSED" });
+    println!(
+        "     Tertius detection: {}\n",
+        if detected.is_some() {
+            "RECOGNIZED"
+        } else {
+            "MISSED"
+        }
+    );
 
     println!("4.5: ∫ e^x/x dx (Exponential integral)");
     let detected = check_known_non_elementary("exp(x)/x");
     println!("     Answer: Ei(x)");
-    println!("     Tertius detection: {}\n", if detected.is_some() { "RECOGNIZED" } else { "MISSED" });
+    println!(
+        "     Tertius detection: {}\n",
+        if detected.is_some() {
+            "RECOGNIZED"
+        } else {
+            "MISSED"
+        }
+    );
 
     println!("4.6: ∫ 1/ln(x) dx (Logarithmic integral)");
     let detected = check_known_non_elementary("1/ln(x)");
     println!("     Answer: li(x)");
-    println!("     Tertius detection: {}\n", if detected.is_some() { "RECOGNIZED" } else { "MISSED" });
+    println!(
+        "     Tertius detection: {}\n",
+        if detected.is_some() {
+            "RECOGNIZED"
+        } else {
+            "MISSED"
+        }
+    );
 
     println!("4.7: ∫ x^x dx");
     let detected = check_known_non_elementary("x^x");
     println!("     No known special function!");
     println!("     Cannot be expressed in terms of ANY known functions");
-    println!("     Tertius detection: {}\n", if detected.is_some() { "RECOGNIZED" } else { "MISSED" });
+    println!(
+        "     Tertius detection: {}\n",
+        if detected.is_some() {
+            "RECOGNIZED"
+        } else {
+            "MISSED"
+        }
+    );
 
     println!("4.8: ∫ e^(e^x) dx");
     println!("     Doubly exponential - no elementary or special function form");
@@ -418,13 +539,20 @@ fn test_tier6_mathematica_failures() {
     println!("     The denominator factors non-trivially over algebraic numbers");
     // x⁶ - 5x⁴ + 5x² + 4
     let rf = RationalFunction::new(
-        poly(&[6, 0, -3, 0, 1, 0, 0]),  // x⁴ - 3x² + 6 (padded)
-        poly(&[4, 0, 5, 0, -5, 0, 1])
+        poly(&[6, 0, -3, 0, 1, 0, 0]), // x⁴ - 3x² + 6 (padded)
+        poly(&[4, 0, 5, 0, -5, 0, 1]),
     );
     let start = Instant::now();
     let result = integrate_rational(&rf);
     println!("     Tertius time: {:?}", start.elapsed());
-    println!("     Status: {}\n", if result.logarithmic_part.is_some() || !result.rational_part.is_zero() { "ATTEMPT" } else { "UNEVALUATED" });
+    println!(
+        "     Status: {}\n",
+        if result.logarithmic_part.is_some() || !result.rational_part.is_zero() {
+            "ATTEMPT"
+        } else {
+            "UNEVALUATED"
+        }
+    );
 
     println!("6.2: ∫ 1/((x-1)(x-2)(x-3)(x-4)(x-5)(x-6)(x-7)) dx");
     println!("     7 distinct linear factors - partial fractions explosion");
@@ -432,7 +560,7 @@ fn test_tier6_mathematica_failures() {
     // Product = x⁷ - 28x⁶ + 322x⁵ - 1960x⁴ + 6769x³ - 13132x² + 13068x - 5040
     let rf = RationalFunction::new(
         poly(&[1]),
-        poly(&[-5040, 13068, -13132, 6769, -1960, 322, -28, 1])
+        poly(&[-5040, 13068, -13132, 6769, -1960, 322, -28, 1]),
     );
     let start = Instant::now();
     // Use integrate_rational_q which properly finds fractional roots like 1/720
@@ -454,12 +582,19 @@ fn test_tier6_mathematica_failures() {
     // Φ₁₁(x) = x¹⁰ + x⁹ + ... + x + 1
     let rf = RationalFunction::new(
         poly(&[1]),
-        poly(&[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1])  // all 1s
+        poly(&[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]), // all 1s
     );
     let start = Instant::now();
     let result = integrate_rational(&rf);
     println!("     Tertius time: {:?}", start.elapsed());
-    println!("     Status: {}\n", if result.logarithmic_part.is_some() { "COMPUTED" } else { "UNEVALUATED" });
+    println!(
+        "     Status: {}\n",
+        if result.logarithmic_part.is_some() {
+            "COMPUTED"
+        } else {
+            "UNEVALUATED"
+        }
+    );
 }
 
 fn test_tier7_truly_impossible() {
@@ -470,7 +605,14 @@ fn test_tier7_truly_impossible() {
     println!("     Related to: imaginary error function erfi(x)");
     println!("     F(x) = e^(-x²) ∫₀ˣ e^(t²) dt (Dawson's integral)");
     let detected = check_known_non_elementary("exp(x^2)");
-    println!("     Tertius detection: {}\n", if detected.is_some() { "RECOGNIZED" } else { "MISSED" });
+    println!(
+        "     Tertius detection: {}\n",
+        if detected.is_some() {
+            "RECOGNIZED"
+        } else {
+            "MISSED"
+        }
+    );
 
     println!("7.2: ∫ e^(x³) dx");
     println!("     No standard special function!");
@@ -522,9 +664,20 @@ fn test_tier7_truly_impossible() {
     let start = Instant::now();
     let result = integrate_rational(&rf);
     println!("     Tertius time: {:?}", start.elapsed());
-    println!("     Status: {}\n", if result.logarithmic_part.is_some() || !result.polynomial_part.is_zero() { "ATTEMPT" } else { "UNEVALUATED" });
+    println!(
+        "     Status: {}\n",
+        if result.logarithmic_part.is_some() || !result.polynomial_part.is_zero() {
+            "ATTEMPT"
+        } else {
+            "UNEVALUATED"
+        }
+    );
 }
 
 fn status_str(success: bool) -> &'static str {
-    if success { "COMPUTED" } else { "NEEDS WORK" }
+    if success {
+        "COMPUTED"
+    } else {
+        "NEEDS WORK"
+    }
 }

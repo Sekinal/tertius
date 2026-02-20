@@ -303,15 +303,24 @@ mod tests {
     #[test]
     fn test_legendre() {
         // 2 is a QR mod 7 (3² = 9 ≡ 2)
-        assert_eq!(legendre_symbol(&Integer::from(2i64), &Integer::from(7i64)), 1);
+        assert_eq!(
+            legendre_symbol(&Integer::from(2i64), &Integer::from(7i64)),
+            1
+        );
         // 3 is not a QR mod 7
-        assert_eq!(legendre_symbol(&Integer::from(3i64), &Integer::from(7i64)), -1);
+        assert_eq!(
+            legendre_symbol(&Integer::from(3i64), &Integer::from(7i64)),
+            -1
+        );
     }
 
     #[test]
     fn test_jacobi() {
         // (5/21) = (5/3)(5/7) = (-1)(-1) = 1
-        assert_eq!(jacobi_symbol(&Integer::from(5i64), &Integer::from(21i64)), 1);
+        assert_eq!(
+            jacobi_symbol(&Integer::from(5i64), &Integer::from(21i64)),
+            1
+        );
     }
 
     #[test]

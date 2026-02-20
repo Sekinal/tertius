@@ -151,9 +151,7 @@ mod tests {
         for n in 0..12 {
             assert_eq!(
                 partitions(n as u64).len() as u64,
-                partition_count(n as u64)
-                    .to_i64()
-                    .unwrap_or(i64::MAX) as u64
+                partition_count(n as u64).to_i64().unwrap_or(i64::MAX) as u64
             );
         }
     }

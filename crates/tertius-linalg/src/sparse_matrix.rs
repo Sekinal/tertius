@@ -106,11 +106,7 @@ impl<R: Ring + Clone> CsrMatrix<R> {
     ///
     /// Duplicate entries are summed. Entries are sorted by (row, col).
     #[must_use]
-    pub fn from_triplets(
-        num_rows: usize,
-        num_cols: usize,
-        triplets: &[(usize, usize, R)],
-    ) -> Self {
+    pub fn from_triplets(num_rows: usize, num_cols: usize, triplets: &[(usize, usize, R)]) -> Self {
         if triplets.is_empty() {
             return Self::new(num_rows, num_cols);
         }
@@ -234,9 +230,7 @@ impl<R: Ring + Clone> CsrMatrix<R> {
         let end = self.row_ptrs[row + 1];
 
         // Binary search for the column
-        let idx = self.col_indices[start..end]
-            .binary_search(&col)
-            .ok()?;
+        let idx = self.col_indices[start..end].binary_search(&col).ok()?;
         Some(&self.values[start + idx])
     }
 
@@ -260,9 +254,7 @@ impl<R: Ring + Clone> CsrMatrix<R> {
     pub fn spmv(&self, x: &[R]) -> Vec<R> {
         assert_eq!(x.len(), self.num_cols, "Vector dimension mismatch");
 
-        (0..self.num_rows())
-            .map(|i| self.row_dot(i, x))
-            .collect()
+        (0..self.num_rows()).map(|i| self.row_dot(i, x)).collect()
     }
 }
 
@@ -346,7 +338,11 @@ impl<R: Ring + Clone> CsrMatrix<R> {
     #[must_use]
     pub fn scale(&self, scalar: &R) -> Self {
         Self {
-            values: self.values.iter().map(|v| v.clone() * scalar.clone()).collect(),
+            values: self
+                .values
+                .iter()
+                .map(|v| v.clone() * scalar.clone())
+                .collect(),
             col_indices: self.col_indices.clone(),
             row_ptrs: self.row_ptrs.clone(),
             num_cols: self.num_cols,

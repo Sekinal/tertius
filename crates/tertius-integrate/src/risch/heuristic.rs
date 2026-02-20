@@ -39,7 +39,7 @@ pub enum HeuristicAntiderivative<F: Field> {
     },
     /// Special form involving exp
     WithExp {
-        exp_coeff: F,            // Coefficient of exp term
+        exp_coeff: F,               // Coefficient of exp term
         exp_argument: DensePoly<F>, // Argument of exp
         poly_factor: DensePoly<F>,  // Polynomial multiplied by exp
     },

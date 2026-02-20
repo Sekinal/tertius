@@ -1,12 +1,12 @@
 //! Simplification rules organized by category.
 
 pub mod arithmetic;
-pub mod trig;
 pub mod exp_log;
 pub mod integration;
+pub mod trig;
 
-use egg::Rewrite;
 use crate::language::TertiusLang;
+use egg::Rewrite;
 
 /// Collects all simplification rules.
 pub fn all_rules() -> Vec<Rewrite<TertiusLang, ()>> {

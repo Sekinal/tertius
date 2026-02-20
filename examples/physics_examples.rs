@@ -53,7 +53,7 @@ fn example_1_polynomial_arithmetic() {
 
     // Create polynomials: p(x) = x² + 2x + 1, q(x) = x - 1
     let p = poly_z(&[1, 2, 1]); // 1 + 2x + x²
-    let q = poly_z(&[-1, 1]);   // -1 + x
+    let q = poly_z(&[-1, 1]); // -1 + x
 
     println!("  p(x) = x² + 2x + 1 = (x + 1)²");
     println!("  q(x) = x - 1\n");
@@ -79,7 +79,10 @@ fn example_2_factorization() {
     let p1 = poly_z(&[-1, 0, 0, 0, 1]); // x⁴ - 1
     println!("  Factoring: x⁴ - 1");
     let result1 = van_hoeij_factor(&p1);
-    println!("  Factors found: {} irreducible factors", result1.factors.len());
+    println!(
+        "  Factors found: {} irreducible factors",
+        result1.factors.len()
+    );
     for (i, f) in result1.factors.iter().enumerate() {
         println!("    Factor {}: {:?}", i + 1, f.coeffs());
     }
@@ -90,7 +93,10 @@ fn example_2_factorization() {
     let p2 = poly_z(&[4, 0, 0, 0, 1]); // x⁴ + 4
     println!("  Factoring: x⁴ + 4 (Sophie Germain identity)");
     let result2 = van_hoeij_factor(&p2);
-    println!("  Factors found: {} irreducible factors", result2.factors.len());
+    println!(
+        "  Factors found: {} irreducible factors",
+        result2.factors.len()
+    );
     for (i, f) in result2.factors.iter().enumerate() {
         println!("    Factor {}: {:?}", i + 1, f.coeffs());
     }
@@ -100,7 +106,10 @@ fn example_2_factorization() {
     let p3 = poly_z(&[1, 5, 10, 10, 5, 1]); // (x+1)⁵
     println!("  Factoring: (x+1)⁵ = x⁵ + 5x⁴ + 10x³ + 10x² + 5x + 1");
     let result3 = van_hoeij_factor(&p3);
-    println!("  Factors found: {} factors (with multiplicity)", result3.factors.len());
+    println!(
+        "  Factors found: {} factors (with multiplicity)",
+        result3.factors.len()
+    );
     println!();
 }
 
@@ -128,8 +137,14 @@ fn example_3_critical_points() {
     println!("  Gröbner basis computed: {} elements", gb.len());
 
     let result = fglm_convert(&gb, 2);
-    println!("  Lex basis (triangular form): {} polynomials", result.lex_basis.len());
-    println!("  Quotient dimension: {} (number of solutions)", result.dimension);
+    println!(
+        "  Lex basis (triangular form): {} polynomials",
+        result.lex_basis.len()
+    );
+    println!(
+        "  Quotient dimension: {} (number of solutions)",
+        result.dimension
+    );
     println!();
     println!("  → Solution: (x, y) = (0, 0) - the unique critical point!\n");
 }

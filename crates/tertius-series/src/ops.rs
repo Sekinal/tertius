@@ -273,7 +273,11 @@ impl<R: Field + Clone + Send + Sync + 'static> PowerSeries<R> {
 }
 
 /// Computes [x^n] g^k for composition.
-fn power_coeff<R: Field + Clone + Send + Sync + 'static>(g: &PowerSeries<R>, k: usize, n: usize) -> R {
+fn power_coeff<R: Field + Clone + Send + Sync + 'static>(
+    g: &PowerSeries<R>,
+    k: usize,
+    n: usize,
+) -> R {
     if k == 0 {
         return if n == 0 { R::one() } else { R::zero() };
     }

@@ -5,6 +5,7 @@
 //!
 //! Run with: cargo run --example factorization_examples
 
+use std::time::Instant;
 use tertius_factor::{
     factor_multivariate, lecerf_factor_multivariate, van_hoeij_factor, MultivariateFactorResult,
 };
@@ -14,7 +15,6 @@ use tertius_poly::monomial::PackedMonomial;
 use tertius_poly::ordering::MonomialOrder;
 use tertius_poly::sparse::SparsePoly;
 use tertius_rings::integers::Z;
-use std::time::Instant;
 
 // Helper to create integers
 fn z(n: i64) -> Z {
@@ -67,11 +67,15 @@ fn example_1_univariate_factorization() {
     println!("  Time: {:?}", elapsed);
     println!("  Found {} irreducible factors:", result.factors.len());
     for (i, f) in result.factors.iter().enumerate() {
-        let coeffs: Vec<i64> = f.coeffs().iter().map(|c| {
-            // Convert to i64 for display
-            let s = format!("{:?}", c.0);
-            s.parse().unwrap_or(0)
-        }).collect();
+        let coeffs: Vec<i64> = f
+            .coeffs()
+            .iter()
+            .map(|c| {
+                // Convert to i64 for display
+                let s = format!("{:?}", c.0);
+                s.parse().unwrap_or(0)
+            })
+            .collect();
         println!("    Factor {}: {:?}", i + 1, coeffs);
     }
     println!();

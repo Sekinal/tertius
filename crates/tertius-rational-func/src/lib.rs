@@ -9,9 +9,9 @@
 //! These are foundational components for the Risch algorithm
 //! for symbolic integration.
 
-mod rational_func;
 mod arithmetic;
-pub mod partial_fractions;
 pub mod hermite;
+pub mod partial_fractions;
+mod rational_func;
 
 pub use rational_func::RationalFunction;

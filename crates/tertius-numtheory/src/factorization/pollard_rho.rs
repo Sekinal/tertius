@@ -37,14 +37,12 @@ pub fn pollard_rho_with_params(n: &Integer, x0: Integer, c: Integer) -> Option<I
     let mut y = x0;
     let mut d = Integer::one();
 
-    let f = |x: Integer| -> Integer {
-        ((x.clone() * x.clone()) + c.clone()) % n.clone()
-    };
+    let f = |x: Integer| -> Integer { ((x.clone() * x.clone()) + c.clone()) % n.clone() };
 
     // Floyd's cycle detection: tortoise and hare
     while d.is_one() {
-        x = f(x);           // Tortoise moves one step
-        y = f(f(y));        // Hare moves two steps
+        x = f(x); // Tortoise moves one step
+        y = f(f(y)); // Hare moves two steps
 
         // d = gcd(|x - y|, n)
         let diff = if x >= y {
@@ -112,9 +110,7 @@ fn pollard_rho_brent_with_params(n: &Integer, y0: Integer, c: Integer) -> Option
 
     let m = Integer::from(128i64); // Batch size for GCD
 
-    let f = |x: Integer| -> Integer {
-        ((x.clone() * x.clone()) + c.clone()) % n.clone()
-    };
+    let f = |x: Integer| -> Integer { ((x.clone() * x.clone()) + c.clone()) % n.clone() };
 
     while g.is_one() {
         x = y.clone();

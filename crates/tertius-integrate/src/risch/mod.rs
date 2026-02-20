@@ -14,18 +14,20 @@
 //! - For θ = log(u): θ' = u'/u
 //! - For θ = exp(u): θ' = u'·θ
 
-pub mod logarithmic;
 pub mod exponential;
 pub mod heuristic;
+pub mod logarithmic;
 
-use tertius_diffalg::{TranscendentalTower, TowerElement};
+use tertius_diffalg::{TowerElement, TranscendentalTower};
 use tertius_poly::dense::DensePoly;
 use tertius_rational_func::RationalFunction;
 use tertius_rings::traits::Field;
 
-pub use logarithmic::{integrate_log_polynomial, integrate_log_power, LogExtIntegrationResult};
-pub use exponential::{integrate_exp_polynomial, integrate_poly_times_exp, ExpExtIntegrationResult, ExpPowerIntegral};
+pub use exponential::{
+    integrate_exp_polynomial, integrate_poly_times_exp, ExpExtIntegrationResult, ExpPowerIntegral,
+};
 pub use heuristic::{heuristic_integrate, HeuristicResult};
+pub use logarithmic::{integrate_log_polynomial, integrate_log_power, LogExtIntegrationResult};
 
 /// Result of attempting integration via the Risch algorithm.
 #[derive(Clone, Debug)]
@@ -128,8 +130,12 @@ pub fn risch_integrate<F: Field>(
         TowerElement::Base(rf) => {
             // The integrand is in a lower level - integrate in base field
             integrate_base_field(integrand)
-        },
-        TowerElement::Extension { level, numerator_coeffs, denominator_coeffs } => {
+        }
+        TowerElement::Extension {
+            level,
+            numerator_coeffs,
+            denominator_coeffs,
+        } => {
             // Check if we're at the right level
             if *level != tower.height() {
                 // Mismatch - this shouldn't happen with proper tower construction
@@ -139,7 +145,9 @@ pub fn risch_integrate<F: Field>(
             // For now, only handle polynomial case (denominator = 1)
             let is_polynomial = denominator_coeffs.len() == 1
                 && denominator_coeffs[0].is_base()
-                && denominator_coeffs[0].as_base().map_or(false, |rf| rf.is_polynomial());
+                && denominator_coeffs[0]
+                    .as_base()
+                    .map_or(false, |rf| rf.is_polynomial());
 
             if !is_polynomial {
                 // Rational function in θ - requires more complex handling
@@ -150,7 +158,7 @@ pub fn risch_integrate<F: Field>(
             match &top.extension_type {
                 tertius_diffalg::TranscendentalType::Logarithmic { argument_repr, .. } => {
                     integrate_logarithmic_extension(numerator_coeffs, argument_repr, tower)
-                },
+                }
                 tertius_diffalg::TranscendentalType::Exponential { exponent_repr, .. } => {
                     integrate_exponential_extension(numerator_coeffs, exponent_repr, tower)
                 }
@@ -160,9 +168,7 @@ pub fn risch_integrate<F: Field>(
 }
 
 /// Integrates an element in the base field Q(x).
-fn integrate_base_field<F: Field>(
-    integrand: &TowerElement<F>,
-) -> RischResult<F> {
+fn integrate_base_field<F: Field>(integrand: &TowerElement<F>) -> RischResult<F> {
     match integrand {
         TowerElement::Base(rf) => {
             // For a rational function in Q(x), we use Hermite + Rothstein-Trager
@@ -170,7 +176,7 @@ fn integrate_base_field<F: Field>(
             // For now, return the rational function wrapped in an expression
             // (actual integration would use crate::rational::integrate_rational)
             RischResult::Elementary(IntegralExpression::Rational(rf.clone()))
-        },
+        }
         TowerElement::Extension { .. } => {
             // Not a base field element
             RischResult::Unknown
@@ -199,7 +205,7 @@ fn integrate_logarithmic_extension<F: Field>(
                     // Non-constant coefficient - more complex case
                     return RischResult::Unknown;
                 }
-            },
+            }
             TowerElement::Extension { .. } => {
                 // Nested extension - requires full tower recursion
                 return RischResult::Unknown;
@@ -221,13 +227,19 @@ fn integrate_logarithmic_extension<F: Field>(
     let result = logarithmic::integrate_log_polynomial(&f, &theta_deriv);
 
     match result {
-        logarithmic::LogExtIntegrationResult::Success { poly_part, log_coeffs, log_arguments } => {
+        logarithmic::LogExtIntegrationResult::Success {
+            poly_part,
+            log_coeffs,
+            log_arguments,
+        } => {
             let theta_level = tower.height();
             let mut parts = Vec::new();
 
             // Add polynomial part
             if !poly_part.is_zero() {
-                let poly_coeffs: Vec<_> = poly_part.coeffs().iter()
+                let poly_coeffs: Vec<_> = poly_part
+                    .coeffs()
+                    .iter()
                     .map(|c| IntegralExpression::Rational(RationalFunction::constant(c.clone())))
                     .collect();
                 parts.push(IntegralExpression::Polynomial {
@@ -238,9 +250,13 @@ fn integrate_logarithmic_extension<F: Field>(
 
             // Add logarithmic terms
             if !log_coeffs.is_empty() {
-                let log_terms: Vec<_> = log_coeffs.into_iter()
+                let log_terms: Vec<_> = log_coeffs
+                    .into_iter()
                     .zip(log_arguments.into_iter())
-                    .map(|(coeff, arg)| LogTerm { coeff, argument: arg })
+                    .map(|(coeff, arg)| LogTerm {
+                        coeff,
+                        argument: arg,
+                    })
                     .collect();
                 parts.push(IntegralExpression::LogSum(log_terms));
             }
@@ -250,16 +266,15 @@ fn integrate_logarithmic_extension<F: Field>(
             } else {
                 RischResult::Elementary(IntegralExpression::sum(parts))
             }
-        },
+        }
         logarithmic::LogExtIntegrationResult::NonElementary => {
             RischResult::NonElementary(NonElementaryProof {
                 reason: NonElementaryReason::RischDecision,
-                explanation: "Logarithmic integration determined no elementary solution exists".to_string(),
+                explanation: "Logarithmic integration determined no elementary solution exists"
+                    .to_string(),
             })
-        },
-        logarithmic::LogExtIntegrationResult::Failed => {
-            RischResult::Unknown
         }
+        logarithmic::LogExtIntegrationResult::Failed => RischResult::Unknown,
     }
 }
 
@@ -284,7 +299,7 @@ fn integrate_exponential_extension<F: Field>(
                     // Non-constant coefficient - more complex case
                     return RischResult::Unknown;
                 }
-            },
+            }
             TowerElement::Extension { .. } => {
                 // Nested extension - requires full tower recursion
                 return RischResult::Unknown;
@@ -305,7 +320,9 @@ fn integrate_exponential_extension<F: Field>(
     let result = exponential::integrate_exp_polynomial(&f, &u_deriv);
 
     match result {
-        exponential::ExpExtIntegrationResult::Success { coeffs: result_coeffs } => {
+        exponential::ExpExtIntegrationResult::Success {
+            coeffs: result_coeffs,
+        } => {
             let theta_level = tower.height();
 
             // Build the polynomial in θ from the result coefficients
@@ -314,25 +331,23 @@ fn integrate_exponential_extension<F: Field>(
             let mut poly_coeffs = vec![IntegralExpression::zero(); (max_power + 1) as usize];
 
             for (power, coeff) in result_coeffs {
-                poly_coeffs[power as usize] = IntegralExpression::Rational(
-                    RationalFunction::constant(coeff)
-                );
+                poly_coeffs[power as usize] =
+                    IntegralExpression::Rational(RationalFunction::constant(coeff));
             }
 
             RischResult::Elementary(IntegralExpression::Polynomial {
                 coeffs: poly_coeffs,
                 theta_level,
             })
-        },
+        }
         exponential::ExpExtIntegrationResult::NonElementary => {
             RischResult::NonElementary(NonElementaryProof {
                 reason: NonElementaryReason::RischDecision,
-                explanation: "Exponential integration determined no elementary solution exists".to_string(),
+                explanation: "Exponential integration determined no elementary solution exists"
+                    .to_string(),
             })
-        },
-        exponential::ExpExtIntegrationResult::Failed => {
-            RischResult::Unknown
         }
+        exponential::ExpExtIntegrationResult::Failed => RischResult::Unknown,
     }
 }
 
@@ -384,7 +399,7 @@ mod tests {
         match result {
             RischResult::Elementary(IntegralExpression::Rational(rf)) => {
                 assert!(rf.is_zero());
-            },
+            }
             _ => panic!("Expected Elementary(Rational(0)), got {:?}", result),
         }
     }
@@ -416,7 +431,7 @@ mod tests {
         match result {
             RischResult::Elementary(IntegralExpression::Polynomial { theta_level, .. }) => {
                 assert_eq!(theta_level, 1);
-            },
+            }
             _ => panic!("Expected Elementary polynomial, got {:?}", result),
         }
     }

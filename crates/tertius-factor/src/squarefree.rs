@@ -452,8 +452,14 @@ mod tests {
 
     #[test]
     fn test_gcd_int() {
-        assert_eq!(gcd_int(&Integer::new(12), &Integer::new(8)), Integer::new(4));
-        assert_eq!(gcd_int(&Integer::new(17), &Integer::new(5)), Integer::new(1));
+        assert_eq!(
+            gcd_int(&Integer::new(12), &Integer::new(8)),
+            Integer::new(4)
+        );
+        assert_eq!(
+            gcd_int(&Integer::new(17), &Integer::new(5)),
+            Integer::new(1)
+        );
     }
 
     #[test]
@@ -477,7 +483,11 @@ mod tests {
 
         assert_eq!(sf.factors.len(), 2);
 
-        let total_degree: usize = sf.factors.iter().map(|f| f.factor.degree() * f.multiplicity).sum();
+        let total_degree: usize = sf
+            .factors
+            .iter()
+            .map(|f| f.factor.degree() * f.multiplicity)
+            .sum();
         assert_eq!(total_degree, 3);
     }
 

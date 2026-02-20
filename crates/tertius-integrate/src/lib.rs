@@ -34,33 +34,36 @@
 //! - **Numerical fallback**: Adaptive Gauss-Kronrod quadrature
 //! - **Non-integrability proofs**: Formal proofs when no elementary antiderivative exists
 
-pub mod rational;
-pub mod rothstein_trager;
-pub mod polynomial;
-pub mod risch;
-pub mod proofs;
-pub mod special_forms;
-pub mod numerical;
-pub mod definite;
 pub mod algebraic;
+pub mod definite;
+pub mod numerical;
+pub mod polynomial;
+pub mod proofs;
+pub mod rational;
+pub mod risch;
+pub mod rothstein_trager;
 pub mod special_definite;
+pub mod special_forms;
 pub mod unified;
 
 // Primary API - unified integration
-pub use unified::{
-    integrate, integrate_definite, integrate_with_options,
-    IntegrationResult, IntegrationMethod, IntegrationOptions,
-    SymbolicAntiderivative, NumericalResult, SpecialFunctionResult,
-    EllipticResult, NonElementaryResult, UnknownReason,
-};
 pub use unified::api::{integrate_numerical, integrate_numerical_with_params};
+pub use unified::{
+    integrate, integrate_definite, integrate_with_options, EllipticResult, IntegrationMethod,
+    IntegrationOptions, IntegrationResult, NonElementaryResult, NumericalResult,
+    SpecialFunctionResult, SymbolicAntiderivative, UnknownReason,
+};
 
 // Re-exports for direct backend access
-pub use rational::{
-    integrate_rational, integrate_rational_q, integrate_rational_with_algebraic, AlgebraicIntegrationResult,
-    RationalIntegrationResult,
+pub use proofs::{
+    prove_non_elementary, NonIntegrabilityProof, NonIntegrabilityReason as ProofReason,
 };
-pub use rothstein_trager::{AlgebraicLogarithmicPart, LogarithmicPart, rothstein_trager_q};
+pub use rational::{
+    integrate_rational, integrate_rational_q, integrate_rational_with_algebraic,
+    AlgebraicIntegrationResult, RationalIntegrationResult,
+};
 pub use risch::{risch_integrate, IntegralExpression, RischResult};
-pub use proofs::{prove_non_elementary, NonIntegrabilityProof, NonIntegrabilityReason as ProofReason};
-pub use special_forms::{recognize_special_form, SpecialFormResult, SpecialFunction as SpecialFormFunc, SpecialIntegral};
+pub use rothstein_trager::{rothstein_trager_q, AlgebraicLogarithmicPart, LogarithmicPart};
+pub use special_forms::{
+    recognize_special_form, SpecialFormResult, SpecialFunction as SpecialFormFunc, SpecialIntegral,
+};

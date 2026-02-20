@@ -444,12 +444,13 @@ impl<'a> IntegrationDispatcher<'a> {
                         {
                             // ∫ exp(-x²) dx = (√π/2) erf(x)
                             return Some(IntegrationResult::SpecialFunction(
-                                SpecialFunctionResult::new("(√π/2) erf(x)".to_string())
-                                    .with_term(SpecialFunctionTerm {
+                                SpecialFunctionResult::new("(√π/2) erf(x)".to_string()).with_term(
+                                    SpecialFunctionTerm {
                                         function: SpecialFunction::Erf,
                                         coefficient: Q::new(1, 2),
                                         argument: "x".to_string(),
-                                    }),
+                                    },
+                                ),
                             ));
                         }
                     }
@@ -517,7 +518,14 @@ impl<'a> IntegrationDispatcher<'a> {
 
         // Would need expression evaluation to create a closure
         // For now, just return a placeholder
-        let result = adaptive_integrate(&|_x| 0.0, a, b, self.options.numerical_tolerance, self.options.numerical_tolerance, self.options.max_subdivisions);
+        let result = adaptive_integrate(
+            &|_x| 0.0,
+            a,
+            b,
+            self.options.numerical_tolerance,
+            self.options.numerical_tolerance,
+            self.options.max_subdivisions,
+        );
 
         IntegrationResult::Numerical(
             NumericalResult::new(result.value, result.error)
@@ -543,9 +551,7 @@ impl<'a> IntegrationDispatcher<'a> {
         match node {
             ExprNode::Integer(n) => n.to_string(),
             ExprNode::Rational(num, den) => format!("{}/{}", num, den),
-            ExprNode::Symbol(id) => {
-                self.arena.symbol_name(*id).unwrap_or("?").to_string()
-            }
+            ExprNode::Symbol(id) => self.arena.symbol_name(*id).unwrap_or("?").to_string(),
             ExprNode::Add(_) => "(...+...)".to_string(),
             ExprNode::Mul(_) => "(...*...)".to_string(),
             ExprNode::Pow { .. } => "...^...".to_string(),

@@ -30,11 +30,7 @@ pub struct BoundEvaluationResult {
 /// * `f` - The function to evaluate
 /// * `x` - The point at which to evaluate
 /// * `from_left` - Whether to approach from the left (x - ε) or right (x + ε)
-pub fn evaluate_with_limit<F: Fn(f64) -> f64>(
-    f: &F,
-    x: f64,
-    from_left: bool,
-) -> Option<f64> {
+pub fn evaluate_with_limit<F: Fn(f64) -> f64>(f: &F, x: f64, from_left: bool) -> Option<f64> {
     // First try direct evaluation
     let direct = f(x);
     if direct.is_finite() {

@@ -686,10 +686,7 @@ mod tests {
     }
 
     fn sparse_poly(terms: &[(i64, &[u32])], num_vars: usize) -> SparsePoly<Z> {
-        let t: Vec<_> = terms
-            .iter()
-            .map(|(c, e)| (mono(e), z(*c)))
-            .collect();
+        let t: Vec<_> = terms.iter().map(|(c, e)| (mono(e), z(*c))).collect();
         SparsePoly::new(t, num_vars, MonomialOrder::Grevlex)
     }
 

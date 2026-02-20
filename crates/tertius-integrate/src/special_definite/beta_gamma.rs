@@ -6,8 +6,8 @@
 //! - ∫₀^∞ x^(n-1)e^(-x) dx = Γ(n)
 //! - ∫₀^∞ x^(a-1)e^(-bx) dx = Γ(a)/b^a
 
+use super::{beta, gamma};
 use std::f64::consts::PI;
-use super::{gamma, beta};
 
 /// Beta function integral evaluator.
 #[derive(Clone, Debug)]

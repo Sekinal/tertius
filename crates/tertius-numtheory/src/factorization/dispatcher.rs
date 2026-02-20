@@ -5,11 +5,11 @@
 use num_traits::{One, Zero};
 use tertius_integers::Integer;
 
-use super::trial_division::{extract_small_factors, trial_division_factor};
-use super::pollard_rho::pollard_rho_brent;
-use super::pollard_pm1::pollard_pm1;
 use super::ecm::ecm_factor;
+use super::pollard_pm1::pollard_pm1;
+use super::pollard_rho::pollard_rho_brent;
 use super::siqs::siqs_factor;
+use super::trial_division::{extract_small_factors, trial_division_factor};
 use super::Factorization;
 use crate::primality::is_prime;
 

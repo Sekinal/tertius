@@ -12,11 +12,11 @@
 //! - Inversion: Newton iteration
 //! - Exp/Log: Fast power series algorithms
 
-pub mod power_series;
-pub mod taylor;
 pub mod laurent;
 pub mod ops;
+pub mod power_series;
+pub mod taylor;
 
+pub use laurent::LaurentSeries;
 pub use power_series::{PowerSeries, SeriesCoeff};
 pub use taylor::TaylorExpansion;
-pub use laurent::LaurentSeries;

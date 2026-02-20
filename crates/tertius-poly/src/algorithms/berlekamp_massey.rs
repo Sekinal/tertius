@@ -157,11 +157,7 @@ pub fn find_roots_exhaustive<const P: u64>(
 /// Reconstructs the sequence elements from a connection polynomial.
 ///
 /// Given C(x) and initial values, computes more elements of the sequence.
-pub fn extend_sequence<R>(
-    connection_poly: &[R],
-    initial: &[R],
-    target_length: usize,
-) -> Vec<R>
+pub fn extend_sequence<R>(connection_poly: &[R], initial: &[R], target_length: usize) -> Vec<R>
 where
     R: Ring + Clone + Neg<Output = R>,
 {

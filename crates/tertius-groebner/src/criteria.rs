@@ -5,7 +5,7 @@
 
 use crate::labeled_poly::LabeledPoly;
 use crate::monomial::PackedMonomial;
-use crate::signature::{SignedPair, Signature};
+use crate::signature::{Signature, SignedPair};
 
 /// Checks the F5 criterion: whether a signature is rewritable.
 ///
@@ -14,10 +14,7 @@ use crate::signature::{SignedPair, Signature};
 ///
 /// This detects when an S-polynomial would just reproduce work already done
 /// with a smaller signature.
-pub fn is_rewritable<R: Clone + PartialEq>(
-    sig: &Signature,
-    basis: &[LabeledPoly<R>],
-) -> bool {
+pub fn is_rewritable<R: Clone + PartialEq>(sig: &Signature, basis: &[LabeledPoly<R>]) -> bool {
     is_rewritable_excluding(sig, basis, usize::MAX, usize::MAX)
 }
 
@@ -99,10 +96,7 @@ pub fn chain_criterion<R: Clone + PartialEq>(
 /// then the S-polynomial reduces to zero.
 ///
 /// In F5, principal syzygies are of the form: g_i * lm(g_j) - g_j * lm(g_i) = 0
-pub fn syzygy_criterion<R: Clone + PartialEq>(
-    pair: &SignedPair,
-    basis: &[LabeledPoly<R>],
-) -> bool {
+pub fn syzygy_criterion<R: Clone + PartialEq>(pair: &SignedPair, basis: &[LabeledPoly<R>]) -> bool {
     // For pairs where i < j, check if the signature indicates a principal syzygy
     if pair.i >= pair.j {
         return false;
@@ -140,7 +134,9 @@ pub fn syzygy_criterion<R: Clone + PartialEq>(
 pub fn sugar_selection(pairs: &mut [SignedPair]) -> Vec<SignedPair> {
     // Sort by sugar, then by signature
     pairs.sort_by(|a, b| {
-        a.sugar.cmp(&b.sugar).then_with(|| a.signature.cmp_pot(&b.signature))
+        a.sugar
+            .cmp(&b.sugar)
+            .then_with(|| a.signature.cmp_pot(&b.signature))
     });
 
     // Take all pairs with minimum sugar

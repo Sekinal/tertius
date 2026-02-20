@@ -45,15 +45,17 @@
 #![allow(clippy::must_use_candidate)]
 #![allow(clippy::module_name_repetitions)]
 
-pub mod primality;
-pub mod factorization;
 pub mod arithmetic;
 pub mod congruences;
+pub mod factorization;
+pub mod primality;
 pub mod primes;
 
 // Re-export main types and functions
-pub use primality::{is_prime, is_probable_prime, PrimalityResult};
+pub use arithmetic::{
+    carmichael_lambda, divisor_count, divisor_sum, divisors, euler_phi, mobius, radical,
+};
+pub use congruences::{crt, jacobi_symbol, legendre_symbol, tonelli_shanks};
 pub use factorization::{factor, Factorization};
-pub use arithmetic::{euler_phi, carmichael_lambda, divisors, divisor_count, divisor_sum, mobius, radical};
-pub use congruences::{crt, legendre_symbol, jacobi_symbol, tonelli_shanks};
-pub use primes::{sieve_of_eratosthenes, nth_prime, prime_count, primes_up_to};
+pub use primality::{is_prime, is_probable_prime, PrimalityResult};
+pub use primes::{nth_prime, prime_count, primes_up_to, sieve_of_eratosthenes};

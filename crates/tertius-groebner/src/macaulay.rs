@@ -73,10 +73,7 @@ impl<R: Ring + Clone + Send + Sync> MacaulayMatrix<R> {
     /// # Arguments
     /// - `polys`: The polynomials to include.
     /// - `multiples`: For each polynomial, the monomials to multiply by.
-    pub fn construct(
-        polys: &[LabeledPoly<R>],
-        multiples: &[Vec<PackedMonomial>],
-    ) -> Self {
+    pub fn construct(polys: &[LabeledPoly<R>], multiples: &[Vec<PackedMonomial>]) -> Self {
         // Collect all monomials that will appear
         let mut all_monomials: Vec<PackedMonomial> = Vec::new();
         let mut seen: FxHashMap<MonomialKey, ()> = FxHashMap::default();
@@ -185,7 +182,7 @@ impl<R: Ring + Clone + Send + Sync> MacaulayMatrix<R> {
 /// Given a set of S-polynomials to reduce, computes the required polynomial
 /// multiples to include in the Macaulay matrix.
 pub fn symbolic_preprocessing<R: Ring + Clone>(
-    spolys: &[(usize, usize, PackedMonomial)],  // (i, j, lcm)
+    spolys: &[(usize, usize, PackedMonomial)], // (i, j, lcm)
     basis: &[LabeledPoly<R>],
 ) -> Vec<Vec<PackedMonomial>> {
     let mut multiples: Vec<Vec<PackedMonomial>> = vec![Vec::new(); basis.len()];

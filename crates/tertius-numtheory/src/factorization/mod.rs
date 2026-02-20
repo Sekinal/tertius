@@ -12,19 +12,19 @@
 //!
 //! The main entry point is [`factor`] which automatically selects the best algorithm.
 
-mod trial_division;
-mod pollard_rho;
-mod pollard_pm1;
-mod ecm;
-mod siqs;
 mod dispatcher;
+mod ecm;
+mod pollard_pm1;
+mod pollard_rho;
+mod siqs;
+mod trial_division;
 
-pub use trial_division::trial_division_factor;
-pub use pollard_rho::{pollard_rho, pollard_rho_brent};
-pub use pollard_pm1::pollard_pm1;
-pub use ecm::ecm_factor;
-pub use siqs::siqs_factor;
 pub use dispatcher::factor;
+pub use ecm::ecm_factor;
+pub use pollard_pm1::pollard_pm1;
+pub use pollard_rho::{pollard_rho, pollard_rho_brent};
+pub use siqs::siqs_factor;
+pub use trial_division::trial_division_factor;
 
 use std::collections::BTreeMap;
 use tertius_integers::Integer;

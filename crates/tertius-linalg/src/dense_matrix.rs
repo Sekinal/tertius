@@ -176,7 +176,11 @@ impl<R: Ring + Clone> DenseMatrix<R> {
     #[must_use]
     pub fn scale(&self, scalar: &R) -> Self {
         Self {
-            data: self.data.iter().map(|v| v.clone() * scalar.clone()).collect(),
+            data: self
+                .data
+                .iter()
+                .map(|v| v.clone() * scalar.clone())
+                .collect(),
             num_rows: self.num_rows,
             num_cols: self.num_cols,
         }
@@ -613,14 +617,10 @@ mod tests {
 
     #[test]
     fn test_mm() {
-        let a = DenseMatrix::from_rows(vec![
-            vec![Z::new(1), Z::new(2)],
-            vec![Z::new(3), Z::new(4)],
-        ]);
-        let b = DenseMatrix::from_rows(vec![
-            vec![Z::new(5), Z::new(6)],
-            vec![Z::new(7), Z::new(8)],
-        ]);
+        let a =
+            DenseMatrix::from_rows(vec![vec![Z::new(1), Z::new(2)], vec![Z::new(3), Z::new(4)]]);
+        let b =
+            DenseMatrix::from_rows(vec![vec![Z::new(5), Z::new(6)], vec![Z::new(7), Z::new(8)]]);
         let c = a.mm(&b);
         // [[1*5+2*7, 1*6+2*8], [3*5+4*7, 3*6+4*8]] = [[19, 22], [43, 50]]
         assert_eq!(c[(0, 0)], Z::new(19));

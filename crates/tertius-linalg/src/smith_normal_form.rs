@@ -186,7 +186,8 @@ fn eliminate_row_col<R: EuclideanDomain + Clone>(
             // Apply row transformation: [row_k, row_i] -> [[s, t], [-q_ik/g, q_kk/g]] * [row_k, row_i]
             for j in 0..a.num_cols() {
                 let new_k = s.clone() * a[(k, j)].clone() + t.clone() * a[(i, j)].clone();
-                let new_i = q_ik.clone().neg() * a[(k, j)].clone() + q_kk.clone() * a[(i, j)].clone();
+                let new_i =
+                    q_ik.clone().neg() * a[(k, j)].clone() + q_kk.clone() * a[(i, j)].clone();
                 a[(k, j)] = new_k;
                 a[(i, j)] = new_i;
             }
@@ -196,8 +197,8 @@ fn eliminate_row_col<R: EuclideanDomain + Clone>(
                 for j in 0..u_mat.num_cols() {
                     let new_k =
                         s.clone() * u_mat[(k, j)].clone() + t.clone() * u_mat[(i, j)].clone();
-                    let new_i =
-                        q_ik.clone().neg() * u_mat[(k, j)].clone() + q_kk.clone() * u_mat[(i, j)].clone();
+                    let new_i = q_ik.clone().neg() * u_mat[(k, j)].clone()
+                        + q_kk.clone() * u_mat[(i, j)].clone();
                     u_mat[(k, j)] = new_k;
                     u_mat[(i, j)] = new_i;
                 }
@@ -218,7 +219,8 @@ fn eliminate_row_col<R: EuclideanDomain + Clone>(
             // Apply column transformation
             for i in 0..a.num_rows() {
                 let new_k = s.clone() * a[(i, k)].clone() + t.clone() * a[(i, j)].clone();
-                let new_j = q_kj.clone().neg() * a[(i, k)].clone() + q_kk.clone() * a[(i, j)].clone();
+                let new_j =
+                    q_kj.clone().neg() * a[(i, k)].clone() + q_kk.clone() * a[(i, j)].clone();
                 a[(i, k)] = new_k;
                 a[(i, j)] = new_j;
             }
@@ -228,8 +230,8 @@ fn eliminate_row_col<R: EuclideanDomain + Clone>(
                 for i in 0..v_mat.num_rows() {
                     let new_k =
                         s.clone() * v_mat[(i, k)].clone() + t.clone() * v_mat[(i, j)].clone();
-                    let new_j =
-                        q_kj.clone().neg() * v_mat[(i, k)].clone() + q_kk.clone() * v_mat[(i, j)].clone();
+                    let new_j = q_kj.clone().neg() * v_mat[(i, k)].clone()
+                        + q_kk.clone() * v_mat[(i, j)].clone();
                     v_mat[(i, k)] = new_k;
                     v_mat[(i, j)] = new_j;
                 }
@@ -398,10 +400,8 @@ mod tests {
     fn test_non_diagonal_snf() {
         // Matrix [[1, 2], [3, 4]]
         // det = 1*4 - 2*3 = -2
-        let m = DenseMatrix::from_rows(vec![
-            vec![Z::new(1), Z::new(2)],
-            vec![Z::new(3), Z::new(4)],
-        ]);
+        let m =
+            DenseMatrix::from_rows(vec![vec![Z::new(1), Z::new(2)], vec![Z::new(3), Z::new(4)]]);
 
         let snf = smith_normal_form(&m, false);
 

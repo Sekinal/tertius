@@ -23,8 +23,8 @@ pub mod evaluate;
 pub mod improper;
 
 use crate::numerical::{
-    adaptive_integrate, adaptive_integrate_to_infinity, adaptive_integrate_from_neg_infinity,
-    adaptive_integrate_full_line, AdaptiveResult,
+    adaptive_integrate, adaptive_integrate_from_neg_infinity, adaptive_integrate_full_line,
+    adaptive_integrate_to_infinity, AdaptiveResult,
 };
 
 /// Represents an integration bound.
@@ -105,7 +105,8 @@ pub fn definite_integral_numerical<F: Fn(f64) -> f64>(
         }
         (Bound::Finite(a), Bound::PosInfinity) => {
             // Semi-infinite [a, ∞)
-            let result = adaptive_integrate_to_infinity(f, *a, tolerance, tolerance, max_subdivisions);
+            let result =
+                adaptive_integrate_to_infinity(f, *a, tolerance, tolerance, max_subdivisions);
             DefiniteResult {
                 value: result.value,
                 error: result.error,
@@ -116,7 +117,8 @@ pub fn definite_integral_numerical<F: Fn(f64) -> f64>(
         }
         (Bound::NegInfinity, Bound::Finite(b)) => {
             // Semi-infinite (-∞, b]
-            let result = adaptive_integrate_from_neg_infinity(f, *b, tolerance, tolerance, max_subdivisions);
+            let result =
+                adaptive_integrate_from_neg_infinity(f, *b, tolerance, tolerance, max_subdivisions);
             DefiniteResult {
                 value: result.value,
                 error: result.error,
@@ -182,7 +184,13 @@ pub fn definite_integral_with_singularities<F: Fn(f64) -> f64>(
     use crate::numerical::adaptive_integrate_with_singularities;
 
     let result = adaptive_integrate_with_singularities(
-        f, lower, upper, singularities, tolerance, tolerance, max_subdivisions
+        f,
+        lower,
+        upper,
+        singularities,
+        tolerance,
+        tolerance,
+        max_subdivisions,
     );
 
     DefiniteResult {
@@ -232,8 +240,22 @@ pub fn principal_value<F: Fn(f64) -> f64>(
     let epsilon = 1e-10;
 
     // Integrate on each side
-    let left = adaptive_integrate(f, a, pole - epsilon, tolerance / 2.0, tolerance / 2.0, max_subdivisions / 2);
-    let right = adaptive_integrate(f, pole + epsilon, b, tolerance / 2.0, tolerance / 2.0, max_subdivisions / 2);
+    let left = adaptive_integrate(
+        f,
+        a,
+        pole - epsilon,
+        tolerance / 2.0,
+        tolerance / 2.0,
+        max_subdivisions / 2,
+    );
+    let right = adaptive_integrate(
+        f,
+        pole + epsilon,
+        b,
+        tolerance / 2.0,
+        tolerance / 2.0,
+        max_subdivisions / 2,
+    );
 
     DefiniteResult {
         value: left.value + right.value,
@@ -322,13 +344,8 @@ mod tests {
     #[test]
     fn test_invalid_bounds() {
         // +∞ as lower bound should give NaN
-        let result = definite_integral_numerical(
-            &|x| x,
-            Bound::PosInfinity,
-            Bound::Finite(0.0),
-            1e-10,
-            100,
-        );
+        let result =
+            definite_integral_numerical(&|x| x, Bound::PosInfinity, Bound::Finite(0.0), 1e-10, 100);
         assert!(result.value.is_nan());
     }
 }

@@ -41,7 +41,10 @@ pub fn poly_div_rem<F: Field>(a: &DensePoly<F>, b: &DensePoly<F>) -> (DensePoly<
         return (DensePoly::zero(), a.clone());
     }
 
-    let b_lead_inv = b.leading_coeff().inv().expect("field element should have inverse");
+    let b_lead_inv = b
+        .leading_coeff()
+        .inv()
+        .expect("field element should have inverse");
     let mut quotient = vec![F::zero(); a.degree() - b.degree() + 1];
     let mut remainder = a.coeffs().to_vec();
 
@@ -74,7 +77,10 @@ pub fn make_monic<F: Field>(p: &DensePoly<F>) -> DensePoly<F> {
         return p.clone();
     }
 
-    let lead_inv = p.leading_coeff().inv().expect("field element should have inverse");
+    let lead_inv = p
+        .leading_coeff()
+        .inv()
+        .expect("field element should have inverse");
     p.scale(&lead_inv)
 }
 
@@ -98,10 +104,7 @@ pub fn primitive_part<R: EuclideanDomain>(p: &DensePoly<R>) -> DensePoly<R> {
         return p.clone();
     }
 
-    let coeffs: Vec<R> = p.coeffs()
-        .iter()
-        .map(|x| x.div(&c))
-        .collect();
+    let coeffs: Vec<R> = p.coeffs().iter().map(|x| x.div(&c)).collect();
 
     DensePoly::new(coeffs)
 }
@@ -134,12 +137,18 @@ pub fn poly_extended_gcd<F: Field>(
         if b.is_zero() {
             return (DensePoly::zero(), DensePoly::one(), DensePoly::zero());
         }
-        let scale = b.leading_coeff().inv().expect("field element should have inverse");
+        let scale = b
+            .leading_coeff()
+            .inv()
+            .expect("field element should have inverse");
         return (g, DensePoly::zero(), DensePoly::constant(scale));
     }
     if b.is_zero() {
         let g = make_monic(a);
-        let scale = a.leading_coeff().inv().expect("field element should have inverse");
+        let scale = a
+            .leading_coeff()
+            .inv()
+            .expect("field element should have inverse");
         return (g, DensePoly::constant(scale), DensePoly::zero());
     }
 

@@ -173,7 +173,8 @@ impl<R: Ring> DensePoly<R> {
 
         for i in 0..n {
             for j in 0..m {
-                result[i + j] = result[i + j].clone() + self.coeffs[i].clone() * other.coeffs[j].clone();
+                result[i + j] =
+                    result[i + j].clone() + self.coeffs[i].clone() * other.coeffs[j].clone();
             }
         }
 

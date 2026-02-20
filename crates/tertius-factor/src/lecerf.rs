@@ -98,7 +98,11 @@ pub fn lecerf_factor_multivariate(f: &SparsePoly<Z>) -> LecerfMultivariateResult
     }
 
     if is_constant(f) {
-        let c = f.terms().first().map(|(_, c)| c.clone()).unwrap_or(Z(Integer::new(1)));
+        let c = f
+            .terms()
+            .first()
+            .map(|(_, c)| c.clone())
+            .unwrap_or(Z(Integer::new(1)));
         return LecerfMultivariateResult {
             factors: vec![],
             multiplicities: vec![],
@@ -274,7 +278,10 @@ fn factor_general_multivariate(
     }
 
     // Hensel lifting for multivariate case
-    let eval_z: Vec<Z> = all_eval_points.iter().map(|&p| Z(Integer::new(p))).collect();
+    let eval_z: Vec<Z> = all_eval_points
+        .iter()
+        .map(|&p| Z(Integer::new(p)))
+        .collect();
     let max_deg: u32 = (1..num_vars).map(|v| f.degree_in(v)).sum();
 
     let hensel_result = multivariate_hensel_lift(f, &uni_result.factors, &eval_z, max_deg + 1);
@@ -314,7 +321,10 @@ fn factor_general_multivariate(
 }
 
 /// Verifies lifted factors and extracts true factors via trial division.
-fn verify_and_extract_factors(f: &SparsePoly<Z>, candidates: &[SparsePoly<Z>]) -> Vec<SparsePoly<Z>> {
+fn verify_and_extract_factors(
+    f: &SparsePoly<Z>,
+    candidates: &[SparsePoly<Z>],
+) -> Vec<SparsePoly<Z>> {
     let mut remaining = f.clone();
     let mut verified = Vec::new();
 
@@ -436,9 +446,9 @@ fn evaluate_at_point(f: &SparsePoly<Z>, var: usize, value: &Z) -> DensePoly<Z> {
 /// Checks if polynomial is univariate (only uses first variable).
 fn is_univariate(f: &SparsePoly<Z>) -> bool {
     let num_vars = f.num_vars();
-    f.terms().iter().all(|(m, _)| {
-        (1..num_vars).all(|i| m.exponent(i) == 0)
-    })
+    f.terms()
+        .iter()
+        .all(|(m, _)| (1..num_vars).all(|i| m.exponent(i) == 0))
 }
 
 /// Checks if polynomial is constant.
@@ -542,16 +552,11 @@ fn divide_with_remainder(a: &SparsePoly<Z>, b: &SparsePoly<Z>) -> (SparsePoly<Z>
         remainder = remainder.sub(&subtrahend);
     }
 
-    (
-        SparsePoly::new(quotient_terms, num_vars, order),
-        remainder,
-    )
+    (SparsePoly::new(quotient_terms, num_vars, order), remainder)
 }
 
 /// Batch factorization using parallel execution.
-pub fn lecerf_factor_multivariate_batch(
-    polys: &[SparsePoly<Z>],
-) -> Vec<LecerfMultivariateResult> {
+pub fn lecerf_factor_multivariate_batch(polys: &[SparsePoly<Z>]) -> Vec<LecerfMultivariateResult> {
     polys.par_iter().map(lecerf_factor_multivariate).collect()
 }
 

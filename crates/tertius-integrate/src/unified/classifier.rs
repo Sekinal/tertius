@@ -150,9 +150,7 @@ impl<'a> IntegrandAnalyzer<'a> {
             ExprNode::Div { num, den } => {
                 self.depends_on_variable(*num) || self.depends_on_variable(*den)
             }
-            ExprNode::Function { args, .. } => {
-                args.iter().any(|h| self.depends_on_variable(*h))
-            }
+            ExprNode::Function { args, .. } => args.iter().any(|h| self.depends_on_variable(*h)),
         }
     }
 
@@ -277,9 +275,7 @@ impl<'a> IntegrandAnalyzer<'a> {
         match node {
             ExprNode::Integer(_) | ExprNode::Rational(_, _) | ExprNode::Symbol(_) => false,
 
-            ExprNode::Add(args) | ExprNode::Mul(args) => {
-                args.iter().any(|h| self.has_radical(*h))
-            }
+            ExprNode::Add(args) | ExprNode::Mul(args) => args.iter().any(|h| self.has_radical(*h)),
 
             ExprNode::Pow { base, exp } => {
                 // Check if exponent is fractional
@@ -406,7 +402,10 @@ impl<'a> IntegrandAnalyzer<'a> {
 
             ExprNode::Add(args) | ExprNode::Mul(args) => {
                 // Find the maximum radicand degree in subexpressions
-                args.iter().map(|h| self.radicand_degree(*h)).max().unwrap_or(0)
+                args.iter()
+                    .map(|h| self.radicand_degree(*h))
+                    .max()
+                    .unwrap_or(0)
             }
 
             ExprNode::Neg(arg) => self.radicand_degree(*arg),
@@ -576,6 +575,9 @@ mod tests {
         assert_eq!(AlgebraicGenus::from_degree(2), AlgebraicGenus::Rational);
         assert_eq!(AlgebraicGenus::from_degree(3), AlgebraicGenus::Elliptic);
         assert_eq!(AlgebraicGenus::from_degree(4), AlgebraicGenus::Elliptic);
-        assert_eq!(AlgebraicGenus::from_degree(5), AlgebraicGenus::Hyperelliptic(2));
+        assert_eq!(
+            AlgebraicGenus::from_degree(5),
+            AlgebraicGenus::Hyperelliptic(2)
+        );
     }
 }

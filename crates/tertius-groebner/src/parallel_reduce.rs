@@ -162,7 +162,9 @@ impl<R: Field + Clone + Neg<Output = R>> SparseRow<R> {
 
     fn make_monic(mut self) -> Self {
         if let Some((_, lead_coeff)) = self.entries.first() {
-            let inv = lead_coeff.inv().expect("leading coefficient must be invertible");
+            let inv = lead_coeff
+                .inv()
+                .expect("leading coefficient must be invertible");
             for (_, coeff) in &mut self.entries {
                 *coeff = coeff.clone() * inv.clone();
             }

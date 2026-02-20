@@ -6,8 +6,8 @@
 
 use crate::comparison::{ComparisonClass, GrowthRate};
 use std::collections::HashSet;
-use tertius_core::{ExprArena, ExprHandle, ExprNode};
 use tertius_core::expr::functions;
+use tertius_core::{ExprArena, ExprHandle, ExprNode};
 
 /// A set of Most Rapidly Varying subexpressions.
 #[derive(Clone, Debug)]
@@ -407,10 +407,13 @@ mod tests {
     #[test]
     fn test_mrv_merge() {
         let mrv1 = MrvSet::singleton(ExprHandle::new(1), GrowthRate::Polynomial(2));
-        let mrv2 = MrvSet::singleton(ExprHandle::new(2), GrowthRate::Exponential {
-            coeff: 1.0,
-            power: 1,
-        });
+        let mrv2 = MrvSet::singleton(
+            ExprHandle::new(2),
+            GrowthRate::Exponential {
+                coeff: 1.0,
+                power: 1,
+            },
+        );
 
         let merged = mrv1.merge(mrv2);
         // Exponential > Polynomial, so exp should dominate

@@ -36,7 +36,11 @@ pub fn miller_rabin(n: &Integer, k: u32) -> bool {
 
     for _ in 0..k {
         // Pick random witness a in [2, n-2]
-        let a = random_in_range(&mut rng, &Integer::from(2i64), &(n.clone() - Integer::from(2i64)));
+        let a = random_in_range(
+            &mut rng,
+            &Integer::from(2i64),
+            &(n.clone() - Integer::from(2i64)),
+        );
         if !miller_rabin_witness(n, &a, &d, r) {
             return false;
         }
@@ -212,13 +216,21 @@ mod tests {
     fn test_mod_pow() {
         // 2^10 mod 1000 = 1024 mod 1000 = 24
         assert_eq!(
-            mod_pow(&Integer::from(2i64), &Integer::from(10i64), &Integer::from(1000i64)),
+            mod_pow(
+                &Integer::from(2i64),
+                &Integer::from(10i64),
+                &Integer::from(1000i64)
+            ),
             Integer::from(24i64)
         );
 
         // 3^7 mod 13 = 2187 mod 13 = 3
         assert_eq!(
-            mod_pow(&Integer::from(3i64), &Integer::from(7i64), &Integer::from(13i64)),
+            mod_pow(
+                &Integer::from(3i64),
+                &Integer::from(7i64),
+                &Integer::from(13i64)
+            ),
             Integer::from(3i64)
         );
     }

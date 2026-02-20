@@ -138,9 +138,8 @@ impl<R: Ring> SparsePoly<R> {
     /// Sorts terms and combines like terms.
     fn normalize(&mut self) {
         // Sort by monomial order (descending for leading term first)
-        self.terms.sort_by(|a, b| {
-            self.order.compare(&b.0, &a.0, self.num_vars)
-        });
+        self.terms
+            .sort_by(|a, b| self.order.compare(&b.0, &a.0, self.num_vars));
 
         // Combine like terms
         let mut i = 0;
@@ -217,7 +216,11 @@ impl<R: Ring> SparsePoly<R> {
         }
 
         Self {
-            terms: self.terms.iter().map(|(m, x)| (*m, x.clone() * c.clone())).collect(),
+            terms: self
+                .terms
+                .iter()
+                .map(|(m, x)| (*m, x.clone() * c.clone()))
+                .collect(),
             num_vars: self.num_vars,
             order: self.order,
         }
@@ -231,7 +234,11 @@ impl<R: Ring> SparsePoly<R> {
         }
 
         Self {
-            terms: self.terms.iter().map(|(m2, c2)| (m.mul(m2), c2.clone() * c.clone())).collect(),
+            terms: self
+                .terms
+                .iter()
+                .map(|(m2, c2)| (m.mul(m2), c2.clone() * c.clone()))
+                .collect(),
             num_vars: self.num_vars,
             order: self.order,
         }
@@ -535,7 +542,9 @@ mod tests {
         // f = x²y + 2xy + 3y + 4
         // coeff of x^1 is 2y
         let x2y = x.mul(&x).mul(&y);
-        let two_xy = SparsePoly::constant(Q::from_integer(2), 2, order).mul(&x).mul(&y);
+        let two_xy = SparsePoly::constant(Q::from_integer(2), 2, order)
+            .mul(&x)
+            .mul(&y);
         let three_y = SparsePoly::constant(Q::from_integer(3), 2, order).mul(&y);
         let four = SparsePoly::constant(Q::from_integer(4), 2, order);
         let f = x2y.add(&two_xy).add(&three_y).add(&four);

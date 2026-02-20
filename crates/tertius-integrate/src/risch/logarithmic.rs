@@ -229,7 +229,7 @@ mod tests {
 
         assert_eq!(result.len(), 2);
         assert_eq!(result[0], (-1, 0)); // -1 * log^0(x) = -1
-        assert_eq!(result[1], (1, 1));  // 1 * log^1(x) = log(x)
+        assert_eq!(result[1], (1, 1)); // 1 * log^1(x) = log(x)
     }
 
     #[test]
@@ -239,8 +239,8 @@ mod tests {
         let result = integrate_log_power(2);
 
         assert_eq!(result.len(), 3);
-        assert_eq!(result[0], (2, 0));  // 2 * log^0(x)
+        assert_eq!(result[0], (2, 0)); // 2 * log^0(x)
         assert_eq!(result[1], (-2, 1)); // -2 * log^1(x)
-        assert_eq!(result[2], (1, 2));  // 1 * log^2(x)
+        assert_eq!(result[2], (1, 2)); // 1 * log^2(x)
     }
 }

@@ -23,8 +23,6 @@
 pub mod liouville;
 
 pub use liouville::{
-    NonIntegrabilityProof,
+    check_liouville_obstruction, prove_non_elementary, NonIntegrabilityProof,
     NonIntegrabilityReason,
-    prove_non_elementary,
-    check_liouville_obstruction,
 };

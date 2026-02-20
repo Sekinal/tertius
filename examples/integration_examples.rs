@@ -5,28 +5,24 @@
 //!
 //! Run with: cargo run --example integration_examples
 
-use tertius_integrate::{
-    integrate_rational, prove_non_elementary, RationalIntegrationResult,
-};
 use tertius_integrate::polynomial::integrate_polynomial;
-use tertius_integrate::risch::{
-    integrate_log_polynomial, integrate_exp_polynomial,
-    integrate_log_power, integrate_poly_times_exp,
-    LogExtIntegrationResult, ExpExtIntegrationResult,
-};
 use tertius_integrate::risch::heuristic::{
-    check_known_non_elementary, IntegrationTable, IntegrationByParts,
+    check_known_non_elementary, IntegrationByParts, IntegrationTable,
 };
+use tertius_integrate::risch::{
+    integrate_exp_polynomial, integrate_log_polynomial, integrate_log_power,
+    integrate_poly_times_exp, ExpExtIntegrationResult, LogExtIntegrationResult,
+};
+use tertius_integrate::{integrate_rational, prove_non_elementary, RationalIntegrationResult};
 use tertius_poly::dense::DensePoly;
 use tertius_rational_func::RationalFunction;
 use tertius_rings::rationals::Q;
 use tertius_rings::traits::Field;
 use tertius_special_func::catalog::{
-    recognize_special_function, known_non_elementary_integrals,
-    explain_non_elementary,
+    explain_non_elementary, known_non_elementary_integrals, recognize_special_function,
 };
+use tertius_special_func::hypergeometric::{hypergeometric_series, pochhammer};
 use tertius_special_func::polylog::{dilog, polylog_series};
-use tertius_special_func::hypergeometric::{pochhammer, hypergeometric_series};
 
 fn q(n: i64) -> Q {
     Q::from_integer(n)
@@ -105,7 +101,10 @@ fn rational_function_examples() {
     let rf = RationalFunction::new(poly(&[1]), poly(&[-1, 1]));
     let result = integrate_rational(&rf);
     println!("  Integrand: 1/(x-1)");
-    println!("  Has logarithmic part: {}", result.logarithmic_part.is_some());
+    println!(
+        "  Has logarithmic part: {}",
+        result.logarithmic_part.is_some()
+    );
     if let Some(ref log_part) = result.logarithmic_part {
         println!("  Logarithmic terms: {} term(s)", log_part.terms.len());
     }
@@ -124,7 +123,10 @@ fn rational_function_examples() {
     let rf = RationalFunction::new(poly(&[1]), poly(&[0, 0, 1]));
     let result = integrate_rational(&rf);
     println!("  Result: -1/x (rational part from Hermite reduction)");
-    println!("  Rational part is_zero: {}", result.rational_part.is_zero());
+    println!(
+        "  Rational part is_zero: {}",
+        result.rational_part.is_zero()
+    );
     println!("  ✓ Hermite reduction handles repeated poles\n");
 
     // Example 4: Polynomial + rational
@@ -206,7 +208,10 @@ fn physics_electromagnetism_examples() {
     println!("  This gives Φ ∝ ln(r₂/r₁)");
     let rf = RationalFunction::new(poly(&[1]), poly(&[0, 1])); // 1/r
     let result = integrate_rational(&rf);
-    println!("  Has logarithmic part: {}", result.logarithmic_part.is_some());
+    println!(
+        "  Has logarithmic part: {}",
+        result.logarithmic_part.is_some()
+    );
     println!("  ✓ Ampère's law verified\n");
 
     // Inductor energy
@@ -237,7 +242,10 @@ fn physics_thermodynamics_examples() {
     println!("  W = ∫ P dV = ∫ (nRT/V) dV = nRT·ln(V₂/V₁)");
     let rf = RationalFunction::new(poly(&[1]), poly(&[0, 1])); // 1/V
     let result = integrate_rational(&rf);
-    println!("  Has logarithmic part: {}", result.logarithmic_part.is_some());
+    println!(
+        "  Has logarithmic part: {}",
+        result.logarithmic_part.is_some()
+    );
     println!("  ✓ W = nRT·ln(V₂/V₁)\n");
 
     // Heat capacity integration
@@ -246,7 +254,10 @@ fn physics_thermodynamics_examples() {
     println!("  = a·ln(T) + bT");
     let rf = RationalFunction::new(poly(&[1]), poly(&[0, 1])); // 1/T for a/T term
     let result = integrate_rational(&rf);
-    println!("  Logarithmic term from a/T: {}", result.logarithmic_part.is_some());
+    println!(
+        "  Logarithmic term from a/T: {}",
+        result.logarithmic_part.is_some()
+    );
     println!("  ✓ Entropy integral computed\n");
 
     // Adiabatic process
@@ -385,7 +396,10 @@ fn non_elementary_examples() {
         }
 
         if let Some(explanation) = explain_non_elementary(integrand) {
-            println!("  Explanation: {}...", &explanation[..explanation.len().min(60)]);
+            println!(
+                "  Explanation: {}...",
+                &explanation[..explanation.len().min(60)]
+            );
         }
 
         println!("  Expected: {}\n", expected);
@@ -437,7 +451,8 @@ fn advanced_integration_examples() {
     let theta_deriv = poly(&[2]); // θ' = 2 (example)
 
     if let LogExtIntegrationResult::Success { poly_part, .. } =
-        integrate_log_polynomial(&theta_poly, &theta_deriv) {
+        integrate_log_polynomial(&theta_poly, &theta_deriv)
+    {
         println!("  ∫ θ dθ/2 = {}", format_poly(&poly_part));
     }
     println!("  ✓ Log extension integration\n");
@@ -450,14 +465,15 @@ fn advanced_integration_examples() {
     let u_deriv = q(1); // u' = 1 for θ = exp(x)
 
     if let ExpExtIntegrationResult::Success { coeffs } =
-        integrate_exp_polynomial(&exp_poly, &u_deriv) {
+        integrate_exp_polynomial(&exp_poly, &u_deriv)
+    {
         println!("  ∫ eˣ dx = eˣ");
         println!("    Coefficients: {:?}", coeffs);
     }
 
     let exp_sq = poly(&[0, 0, 1]); // θ²
-    if let ExpExtIntegrationResult::Success { coeffs } =
-        integrate_exp_polynomial(&exp_sq, &u_deriv) {
+    if let ExpExtIntegrationResult::Success { coeffs } = integrate_exp_polynomial(&exp_sq, &u_deriv)
+    {
         println!("  ∫ e²ˣ dx = e²ˣ/2");
         println!("    Coefficients: {:?}", coeffs);
     }
@@ -470,8 +486,14 @@ fn advanced_integration_examples() {
     let den = poly(&[0, -1, 0, 1]); // x³ - x
     let rf = RationalFunction::new(num, den);
     let result = integrate_rational(&rf);
-    println!("  Polynomial part degree: {}", result.polynomial_part.degree());
-    println!("  Has logarithmic part: {}", result.logarithmic_part.is_some());
+    println!(
+        "  Polynomial part degree: {}",
+        result.polynomial_part.degree()
+    );
+    println!(
+        "  Has logarithmic part: {}",
+        result.logarithmic_part.is_some()
+    );
     println!("  ✓ Partial fractions + logarithms\n");
 }
 

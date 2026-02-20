@@ -92,18 +92,10 @@ impl EuclideanDomain for Q {
 
         if !self.is_zero() {
             // gcd = 1 = self * (1/self) + other * 0
-            (
-                Self::one(),
-                Self(self.0.recip()),
-                Self::zero(),
-            )
+            (Self::one(), Self(self.0.recip()), Self::zero())
         } else {
             // gcd = 1 = self * 0 + other * (1/other)
-            (
-                Self::one(),
-                Self::zero(),
-                Self(other.0.recip()),
-            )
+            (Self::one(), Self::zero(), Self(other.0.recip()))
         }
     }
 }

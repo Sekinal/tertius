@@ -140,15 +140,31 @@ impl<F: Field> std::ops::Add for TowerElement<F> {
             (a, b) if b.is_zero() => a,
 
             // Base + Extension: treat base as constant term
-            (TowerElement::Base(scalar), TowerElement::Extension { level, mut numerator_coeffs, denominator_coeffs }) |
-            (TowerElement::Extension { level, mut numerator_coeffs, denominator_coeffs }, TowerElement::Base(scalar)) => {
+            (
+                TowerElement::Base(scalar),
+                TowerElement::Extension {
+                    level,
+                    mut numerator_coeffs,
+                    denominator_coeffs,
+                },
+            )
+            | (
+                TowerElement::Extension {
+                    level,
+                    mut numerator_coeffs,
+                    denominator_coeffs,
+                },
+                TowerElement::Base(scalar),
+            ) => {
                 // Add scalar to the constant term (coefficient of θ⁰)
-                let is_denom_one = denominator_coeffs.len() == 1 && denominator_coeffs[0].is_one_like();
+                let is_denom_one =
+                    denominator_coeffs.len() == 1 && denominator_coeffs[0].is_one_like();
                 if is_denom_one {
                     if numerator_coeffs.is_empty() {
                         numerator_coeffs.push(TowerElement::Base(scalar));
                     } else {
-                        numerator_coeffs[0] = numerator_coeffs[0].clone() + TowerElement::Base(scalar);
+                        numerator_coeffs[0] =
+                            numerator_coeffs[0].clone() + TowerElement::Base(scalar);
                     }
 
                     // Trim trailing zeros
@@ -168,10 +184,20 @@ impl<F: Field> std::ops::Add for TowerElement<F> {
                 } else {
                     TowerElement::zero()
                 }
-            },
+            }
 
-            (TowerElement::Extension { level: l1, numerator_coeffs: n1, denominator_coeffs: d1 },
-             TowerElement::Extension { level: l2, numerator_coeffs: n2, denominator_coeffs: d2 }) if l1 == l2 => {
+            (
+                TowerElement::Extension {
+                    level: l1,
+                    numerator_coeffs: n1,
+                    denominator_coeffs: d1,
+                },
+                TowerElement::Extension {
+                    level: l2,
+                    numerator_coeffs: n2,
+                    denominator_coeffs: d2,
+                },
+            ) if l1 == l2 => {
                 // (n1/d1) + (n2/d2) = (n1*d2 + n2*d1) / (d1*d2)
                 // For simplicity, assume both have denominator 1 for now
                 let is_d1_one = d1.len() == 1 && d1[0].is_one_like();
@@ -206,7 +232,7 @@ impl<F: Field> std::ops::Add for TowerElement<F> {
                     // Full rational function addition - not implemented yet
                     TowerElement::zero()
                 }
-            },
+            }
             // Different levels or other cases - not implemented
             _ => TowerElement::zero(),
         }
@@ -219,8 +245,18 @@ impl<F: Field> std::ops::Mul for TowerElement<F> {
     fn mul(self, rhs: Self) -> Self::Output {
         match (self, rhs) {
             (TowerElement::Base(a), TowerElement::Base(b)) => TowerElement::Base(a * b),
-            (TowerElement::Extension { level: l1, numerator_coeffs: n1, denominator_coeffs: d1 },
-             TowerElement::Extension { level: l2, numerator_coeffs: n2, denominator_coeffs: d2 }) if l1 == l2 => {
+            (
+                TowerElement::Extension {
+                    level: l1,
+                    numerator_coeffs: n1,
+                    denominator_coeffs: d1,
+                },
+                TowerElement::Extension {
+                    level: l2,
+                    numerator_coeffs: n2,
+                    denominator_coeffs: d2,
+                },
+            ) if l1 == l2 => {
                 // Polynomial multiplication (assuming denominator = 1)
                 let is_d1_one = d1.len() == 1 && d1[0].is_one_like();
                 let is_d2_one = d2.len() == 1 && d2[0].is_one_like();
@@ -253,11 +289,26 @@ impl<F: Field> std::ops::Mul for TowerElement<F> {
                 } else {
                     TowerElement::zero()
                 }
-            },
+            }
             // Base * Extension: multiply each coefficient
-            (TowerElement::Base(scalar), TowerElement::Extension { level, numerator_coeffs, denominator_coeffs }) |
-            (TowerElement::Extension { level, numerator_coeffs, denominator_coeffs }, TowerElement::Base(scalar)) => {
-                let new_num: Vec<_> = numerator_coeffs.into_iter()
+            (
+                TowerElement::Base(scalar),
+                TowerElement::Extension {
+                    level,
+                    numerator_coeffs,
+                    denominator_coeffs,
+                },
+            )
+            | (
+                TowerElement::Extension {
+                    level,
+                    numerator_coeffs,
+                    denominator_coeffs,
+                },
+                TowerElement::Base(scalar),
+            ) => {
+                let new_num: Vec<_> = numerator_coeffs
+                    .into_iter()
                     .map(|c| c * TowerElement::Base(scalar.clone()))
                     .collect();
                 TowerElement::Extension {
@@ -265,7 +316,7 @@ impl<F: Field> std::ops::Mul for TowerElement<F> {
                     numerator_coeffs: new_num,
                     denominator_coeffs,
                 }
-            },
+            }
             _ => TowerElement::zero(),
         }
     }
@@ -280,7 +331,7 @@ impl<F: Field> TowerElement<F> {
                 rf.is_polynomial()
                     && rf.numerator().degree() == 0
                     && rf.numerator().leading_coeff().is_one()
-            },
+            }
             _ => false,
         }
     }
@@ -290,16 +341,19 @@ impl<F: Field> TowerElement<F> {
         match self {
             TowerElement::Base(rf) => {
                 // rf * n
-                let scalar = RationalFunction::from_poly(DensePoly::new(vec![F::one().mul_by_scalar(n)]));
+                let scalar =
+                    RationalFunction::from_poly(DensePoly::new(vec![F::one().mul_by_scalar(n)]));
                 TowerElement::Base(rf.clone() * scalar)
-            },
-            TowerElement::Extension { level, numerator_coeffs, denominator_coeffs } => {
-                TowerElement::Extension {
-                    level: *level,
-                    numerator_coeffs: numerator_coeffs.iter().map(|c| c.scale(n)).collect(),
-                    denominator_coeffs: denominator_coeffs.clone(),
-                }
             }
+            TowerElement::Extension {
+                level,
+                numerator_coeffs,
+                denominator_coeffs,
+            } => TowerElement::Extension {
+                level: *level,
+                numerator_coeffs: numerator_coeffs.iter().map(|c| c.scale(n)).collect(),
+                denominator_coeffs: denominator_coeffs.clone(),
+            },
         }
     }
 }
@@ -319,7 +373,11 @@ impl<F: Field> TowerElement<F> {
     pub fn derivative(&self, tower: &TranscendentalTower) -> TowerElement<F> {
         match self {
             TowerElement::Base(rf) => TowerElement::Base(rf.derivative()),
-            TowerElement::Extension { level, numerator_coeffs, denominator_coeffs } => {
+            TowerElement::Extension {
+                level,
+                numerator_coeffs,
+                denominator_coeffs,
+            } => {
                 // Get the extension type from the tower
                 let tower_level = match tower.level(*level - 1) {
                     Some(l) => l,
@@ -327,8 +385,8 @@ impl<F: Field> TowerElement<F> {
                 };
 
                 // Check if denominator is 1 (polynomial case)
-                let is_polynomial = denominator_coeffs.len() == 1
-                    && denominator_coeffs[0].is_one_like();
+                let is_polynomial =
+                    denominator_coeffs.len() == 1 && denominator_coeffs[0].is_one_like();
 
                 if !is_polynomial {
                     // Rational function case: use quotient rule
@@ -348,7 +406,8 @@ impl<F: Field> TowerElement<F> {
                 let coeff_deriv_part = self.derivative_coeff_part(numerator_coeffs, *level, tower);
 
                 // Part 2: θ' · Σ i·cᵢ·θⁱ⁻¹ (chain rule part)
-                let chain_rule_part = self.derivative_chain_part(numerator_coeffs, *level, &theta_derivative, tower);
+                let chain_rule_part =
+                    self.derivative_chain_part(numerator_coeffs, *level, &theta_derivative, tower);
 
                 // Sum the two parts
                 coeff_deriv_part + chain_rule_part
@@ -357,7 +416,12 @@ impl<F: Field> TowerElement<F> {
     }
 
     /// Computes θ' for the given extension level.
-    fn compute_theta_derivative(&self, tower_level: &crate::tower::TowerLevel, level: usize, _tower: &TranscendentalTower) -> TowerElement<F> {
+    fn compute_theta_derivative(
+        &self,
+        tower_level: &crate::tower::TowerLevel,
+        level: usize,
+        _tower: &TranscendentalTower,
+    ) -> TowerElement<F> {
         match &tower_level.extension_type {
             crate::tower::TranscendentalType::Logarithmic { argument_repr, .. } => {
                 // θ = log(u), θ' = u'/u
@@ -372,7 +436,7 @@ impl<F: Field> TowerElement<F> {
                     // For now, return a placeholder (zero means derivative fails gracefully)
                     TowerElement::zero()
                 }
-            },
+            }
             crate::tower::TranscendentalType::Exponential { exponent_repr, .. } => {
                 // θ = exp(u), θ' = u'·θ
                 // For θ = exp(x): θ' = 1·θ = θ
@@ -392,7 +456,12 @@ impl<F: Field> TowerElement<F> {
     }
 
     /// Computes Σ cᵢ' θⁱ (the coefficient derivative part).
-    fn derivative_coeff_part(&self, coeffs: &[TowerElement<F>], level: usize, tower: &TranscendentalTower) -> TowerElement<F> {
+    fn derivative_coeff_part(
+        &self,
+        coeffs: &[TowerElement<F>],
+        level: usize,
+        tower: &TranscendentalTower,
+    ) -> TowerElement<F> {
         let mut result_coeffs: Vec<TowerElement<F>> = Vec::new();
 
         for c in coeffs {
@@ -416,7 +485,13 @@ impl<F: Field> TowerElement<F> {
     }
 
     /// Computes θ' · Σ i·cᵢ·θⁱ⁻¹ (the chain rule part).
-    fn derivative_chain_part(&self, coeffs: &[TowerElement<F>], level: usize, theta_deriv: &TowerElement<F>, _tower: &TranscendentalTower) -> TowerElement<F> {
+    fn derivative_chain_part(
+        &self,
+        coeffs: &[TowerElement<F>],
+        level: usize,
+        theta_deriv: &TowerElement<F>,
+        _tower: &TranscendentalTower,
+    ) -> TowerElement<F> {
         if theta_deriv.is_zero() {
             return TowerElement::zero();
         }
@@ -613,7 +688,10 @@ mod tests {
         let deriv = theta_squared.derivative(&tower);
 
         // Should be 2θ²
-        if let TowerElement::Extension { numerator_coeffs, .. } = deriv {
+        if let TowerElement::Extension {
+            numerator_coeffs, ..
+        } = deriv
+        {
             // Check coefficient at θ² is 2
             assert!(numerator_coeffs.len() >= 3);
             if let TowerElement::Base(rf) = &numerator_coeffs[2] {
@@ -630,7 +708,10 @@ mod tests {
         let theta: TowerElement<Q> = TowerElement::theta();
         let sum = theta.clone() + theta;
 
-        if let TowerElement::Extension { numerator_coeffs, .. } = sum {
+        if let TowerElement::Extension {
+            numerator_coeffs, ..
+        } = sum
+        {
             // Coefficient at θ¹ should be 2
             assert!(numerator_coeffs.len() >= 2);
             if let TowerElement::Base(rf) = &numerator_coeffs[1] {
@@ -647,7 +728,10 @@ mod tests {
         let theta: TowerElement<Q> = TowerElement::theta();
         let prod = theta.clone() * theta;
 
-        if let TowerElement::Extension { numerator_coeffs, .. } = prod {
+        if let TowerElement::Extension {
+            numerator_coeffs, ..
+        } = prod
+        {
             // Should have coefficient 1 at θ²
             assert_eq!(numerator_coeffs.len(), 3); // [0, 0, 1]
             assert!(numerator_coeffs[0].is_zero());
@@ -664,7 +748,10 @@ mod tests {
         let theta: TowerElement<Q> = TowerElement::theta();
         let scaled = theta.scale(3);
 
-        if let TowerElement::Extension { numerator_coeffs, .. } = scaled {
+        if let TowerElement::Extension {
+            numerator_coeffs, ..
+        } = scaled
+        {
             // Coefficient at θ¹ should be 3
             if let TowerElement::Base(rf) = &numerator_coeffs[1] {
                 assert_eq!(rf.numerator().coeff(0), q(3));

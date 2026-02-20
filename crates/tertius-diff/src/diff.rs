@@ -3,8 +3,8 @@
 //! Provides the main `diff` function for computing derivatives of expressions.
 
 use smallvec::SmallVec;
-use tertius_core::assumptions::AssumptionSet;
 use tertius_core::arena::ExprArena;
+use tertius_core::assumptions::AssumptionSet;
 use tertius_core::expr::{functions, ExprNode, SymbolId};
 use tertius_core::handle::ExprHandle;
 
@@ -173,8 +173,7 @@ fn diff_internal(arena: &mut ExprArena, expr: ExprHandle, var_id: SymbolId) -> E
                 // Exponential rule: d/dx(a^g) = a^g * ln(a) * g'
                 let dg = diff_internal(arena, exp, var_id);
                 let ln_base = make_function(arena, functions::LN, smallvec::smallvec![base]);
-                let product =
-                    simplify_product(arena, smallvec::smallvec![expr, ln_base, dg]);
+                let product = simplify_product(arena, smallvec::smallvec![expr, ln_base, dg]);
                 product
             } else {
                 // General case: d/dx(f^g) = f^g * (g' * ln(f) + g * f'/f)
@@ -222,9 +221,7 @@ fn diff_internal(arena: &mut ExprArena, expr: ExprHandle, var_id: SymbolId) -> E
         }
 
         // Function rules (chain rule + known derivatives)
-        ExprNode::Function { id, args } => {
-            diff_function(arena, id, &args, var_id)
-        }
+        ExprNode::Function { id, args } => diff_function(arena, id, &args, var_id),
     }
 }
 
@@ -267,9 +264,7 @@ fn diff_function(
         }
 
         // d/dx(exp(u)) = exp(u) * u'
-        functions::EXP => {
-            make_function(arena, functions::EXP, smallvec::smallvec![arg])
-        }
+        functions::EXP => make_function(arena, functions::EXP, smallvec::smallvec![arg]),
 
         // d/dx(ln(u)) = (1/u) * u'
         functions::LN => {
@@ -334,27 +329,19 @@ fn depends_on(arena: &ExprArena, expr: ExprHandle, var_id: SymbolId) -> bool {
         ExprNode::Div { num, den } => {
             depends_on(arena, *num, var_id) || depends_on(arena, *den, var_id)
         }
-        ExprNode::Function { args, .. } => {
-            args.iter().any(|&arg| depends_on(arena, arg, var_id))
-        }
+        ExprNode::Function { args, .. } => args.iter().any(|&arg| depends_on(arena, arg, var_id)),
     }
 }
 
 /// Creates a function application node.
-fn make_function(
-    arena: &mut ExprArena,
-    id: u32,
-    args: SmallVec<[ExprHandle; 2]>,
-) -> ExprHandle {
+fn make_function(arena: &mut ExprArena, id: u32, args: SmallVec<[ExprHandle; 2]>) -> ExprHandle {
     arena.intern(ExprNode::Function { id, args })
 }
 
 /// Simplifies a sum, removing zeros.
 fn simplify_sum(arena: &mut ExprArena, terms: SmallVec<[ExprHandle; 4]>) -> ExprHandle {
-    let non_zero: SmallVec<[ExprHandle; 4]> = terms
-        .into_iter()
-        .filter(|&t| !is_zero(arena, t))
-        .collect();
+    let non_zero: SmallVec<[ExprHandle; 4]> =
+        terms.into_iter().filter(|&t| !is_zero(arena, t)).collect();
 
     match non_zero.len() {
         0 => arena.integer(0),
@@ -371,10 +358,8 @@ fn simplify_product(arena: &mut ExprArena, factors: SmallVec<[ExprHandle; 4]>) -
     }
 
     // Filter out ones
-    let non_one: SmallVec<[ExprHandle; 4]> = factors
-        .into_iter()
-        .filter(|&f| !is_one(arena, f))
-        .collect();
+    let non_one: SmallVec<[ExprHandle; 4]> =
+        factors.into_iter().filter(|&f| !is_one(arena, f)).collect();
 
     match non_one.len() {
         0 => arena.integer(1),
@@ -516,8 +501,12 @@ mod tests {
             ExprNode::Mul(args) => {
                 assert_eq!(args.len(), 2);
                 // Check one is 2 and one is x
-                let has_two = args.iter().any(|&h| matches!(arena.get(h), ExprNode::Integer(2)));
-                let has_x = args.iter().any(|&h| matches!(arena.get(h), ExprNode::Symbol(_)));
+                let has_two = args
+                    .iter()
+                    .any(|&h| matches!(arena.get(h), ExprNode::Integer(2)));
+                let has_x = args
+                    .iter()
+                    .any(|&h| matches!(arena.get(h), ExprNode::Symbol(_)));
                 assert!(has_two && has_x);
             }
             _ => panic!("Expected Mul, got {:?}", arena.get(d)),

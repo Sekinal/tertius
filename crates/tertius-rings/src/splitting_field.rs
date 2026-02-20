@@ -236,7 +236,8 @@ impl SplittingFieldBuilder {
         let top_field = Arc::clone(self.tower.last().unwrap());
 
         // Save any rational roots we found before extending
-        let rational_roots: Vec<Q> = self.roots
+        let rational_roots: Vec<Q> = self
+            .roots
             .iter()
             .filter(|r| r.coeffs().len() == 1)
             .map(|r| r.coeffs()[0].clone())
@@ -385,7 +386,9 @@ fn make_monic_q(p: &[Q]) -> Vec<Q> {
     if p[deg].is_one() {
         return p.to_vec();
     }
-    let lead_inv = p[deg].inv().expect("leading coefficient should be non-zero");
+    let lead_inv = p[deg]
+        .inv()
+        .expect("leading coefficient should be non-zero");
     p.iter().map(|c| c.clone() * lead_inv.clone()).collect()
 }
 

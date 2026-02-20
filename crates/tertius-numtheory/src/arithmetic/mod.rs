@@ -320,7 +320,10 @@ mod tests {
     fn test_carmichael() {
         assert_eq!(carmichael_lambda(&Integer::from(1i64)), Integer::from(1i64));
         assert_eq!(carmichael_lambda(&Integer::from(8i64)), Integer::from(2i64));
-        assert_eq!(carmichael_lambda(&Integer::from(15i64)), Integer::from(4i64));
+        assert_eq!(
+            carmichael_lambda(&Integer::from(15i64)),
+            Integer::from(4i64)
+        );
     }
 
     #[test]

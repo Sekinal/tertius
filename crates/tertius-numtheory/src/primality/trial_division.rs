@@ -10,10 +10,9 @@ use super::PrimalityResult;
 
 /// Small primes for quick divisibility checks.
 const SMALL_PRIMES: [u64; 54] = [
-    2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71,
-    73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151,
-    157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233,
-    239, 241, 251,
+    2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97,
+    101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193,
+    197, 199, 211, 223, 227, 229, 233, 239, 241, 251,
 ];
 
 /// Product of first few primes for GCD-based divisibility check.
@@ -132,25 +131,55 @@ mod tests {
 
     #[test]
     fn test_quick_check_small() {
-        assert_eq!(quick_check(&Integer::from(0i64)), Some(PrimalityResult::Composite));
-        assert_eq!(quick_check(&Integer::from(1i64)), Some(PrimalityResult::Composite));
-        assert_eq!(quick_check(&Integer::from(2i64)), Some(PrimalityResult::Prime));
-        assert_eq!(quick_check(&Integer::from(3i64)), Some(PrimalityResult::Prime));
-        assert_eq!(quick_check(&Integer::from(4i64)), Some(PrimalityResult::Composite));
-        assert_eq!(quick_check(&Integer::from(5i64)), Some(PrimalityResult::Prime));
+        assert_eq!(
+            quick_check(&Integer::from(0i64)),
+            Some(PrimalityResult::Composite)
+        );
+        assert_eq!(
+            quick_check(&Integer::from(1i64)),
+            Some(PrimalityResult::Composite)
+        );
+        assert_eq!(
+            quick_check(&Integer::from(2i64)),
+            Some(PrimalityResult::Prime)
+        );
+        assert_eq!(
+            quick_check(&Integer::from(3i64)),
+            Some(PrimalityResult::Prime)
+        );
+        assert_eq!(
+            quick_check(&Integer::from(4i64)),
+            Some(PrimalityResult::Composite)
+        );
+        assert_eq!(
+            quick_check(&Integer::from(5i64)),
+            Some(PrimalityResult::Prime)
+        );
     }
 
     #[test]
     fn test_quick_check_divisibility() {
         // 1001 = 7 * 11 * 13, should be caught by quick check
-        assert_eq!(quick_check(&Integer::from(1001i64)), Some(PrimalityResult::Composite));
+        assert_eq!(
+            quick_check(&Integer::from(1001i64)),
+            Some(PrimalityResult::Composite)
+        );
     }
 
     #[test]
     fn test_trial_division() {
-        assert_eq!(trial_division(&Integer::from(997i64)), PrimalityResult::Prime);
-        assert_eq!(trial_division(&Integer::from(1009i64)), PrimalityResult::Prime);
-        assert_eq!(trial_division(&Integer::from(1000i64)), PrimalityResult::Composite);
+        assert_eq!(
+            trial_division(&Integer::from(997i64)),
+            PrimalityResult::Prime
+        );
+        assert_eq!(
+            trial_division(&Integer::from(1009i64)),
+            PrimalityResult::Prime
+        );
+        assert_eq!(
+            trial_division(&Integer::from(1000i64)),
+            PrimalityResult::Composite
+        );
     }
 
     #[test]

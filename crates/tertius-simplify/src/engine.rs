@@ -87,9 +87,7 @@ impl Simplifier {
     ///
     /// Returns an error if the expression cannot be parsed.
     pub fn simplify_str(&self, expr: &str) -> Result<String, String> {
-        let parsed: RecExpr<TertiusLang> = expr
-            .parse()
-            .map_err(|e| format!("parse error: {e}"))?;
+        let parsed: RecExpr<TertiusLang> = expr.parse().map_err(|e| format!("parse error: {e}"))?;
 
         let simplified = self.simplify(&parsed);
         Ok(simplified.to_string())
@@ -104,9 +102,7 @@ impl Simplifier {
         expr: &str,
         assumptions: &AssumptionSet,
     ) -> Result<String, String> {
-        let parsed: RecExpr<TertiusLang> = expr
-            .parse()
-            .map_err(|e| format!("parse error: {e}"))?;
+        let parsed: RecExpr<TertiusLang> = expr.parse().map_err(|e| format!("parse error: {e}"))?;
 
         let simplified = self.simplify_with_assumptions(&parsed, Some(assumptions));
         Ok(simplified.to_string())
@@ -230,7 +226,9 @@ mod tests {
         let simplifier = Simplifier::new();
 
         // sin²(x) + cos²(x) = 1
-        let result = simplifier.simplify_str("(+ (^ (sin x) 2) (^ (cos x) 2))").unwrap();
+        let result = simplifier
+            .simplify_str("(+ (^ (sin x) 2) (^ (cos x) 2))")
+            .unwrap();
         assert_eq!(result, "1");
     }
 
@@ -242,7 +240,10 @@ mod tests {
         assert_eq!(simplifier.simplify_str("(exp (ln x))").unwrap(), "x");
 
         // ln(exp(x)) is branch-sensitive and should not simplify by default
-        assert_eq!(simplifier.simplify_str("(ln (exp x))").unwrap(), "(ln (exp x))");
+        assert_eq!(
+            simplifier.simplify_str("(ln (exp x))").unwrap(),
+            "(ln (exp x))"
+        );
     }
 
     #[test]

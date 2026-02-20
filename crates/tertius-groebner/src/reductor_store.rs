@@ -257,7 +257,11 @@ mod tests {
     fn make_poly(lm: &[u16]) -> LabeledPoly<i64> {
         let mono = PackedMonomial::new(lm);
         let terms = vec![(1i64, mono.clone())];
-        LabeledPoly::new(terms, Signature::generator(0, lm.len()), mono.total_degree())
+        LabeledPoly::new(
+            terms,
+            Signature::generator(0, lm.len()),
+            mono.total_degree(),
+        )
     }
 
     #[test]

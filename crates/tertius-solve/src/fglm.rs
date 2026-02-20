@@ -198,7 +198,10 @@ where
 
         #[cfg(test)]
         if iterations <= 10 {
-            eprintln!("fglm_convert: iteration {}, processing {:?}", iterations, current);
+            eprintln!(
+                "fglm_convert: iteration {}, processing {:?}",
+                iterations, current
+            );
         }
 
         // Compute normal form of current monomial w.r.t. grevlex basis
@@ -438,10 +441,7 @@ fn express_in_basis<R: Field + Clone>(
 /// 1. Compute Gröbner basis in grevlex
 /// 2. Convert to lex using FGLM
 /// 3. Extract solutions from triangular form
-pub fn solve_system<R>(
-    generators: Vec<Vec<(R, PackedMonomial)>>,
-    num_vars: usize,
-) -> FGLMResult<R>
+pub fn solve_system<R>(generators: Vec<Vec<(R, PackedMonomial)>>, num_vars: usize) -> FGLMResult<R>
 where
     R: Field + Clone + Send + Sync + Neg<Output = R> + std::fmt::Debug,
 {

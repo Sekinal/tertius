@@ -158,7 +158,8 @@ impl<R: Ring> Polynomial<R> {
 
         for i in 0..n {
             for j in 0..m {
-                result[i + j] = result[i + j].clone() + self.coeffs[i].clone() * other.coeffs[j].clone();
+                result[i + j] =
+                    result[i + j].clone() + self.coeffs[i].clone() * other.coeffs[j].clone();
             }
         }
 
@@ -272,7 +273,11 @@ mod tests {
     #[test]
     fn test_polynomial_basic() {
         // p(x) = 1 + 2x + 3x^2
-        let p = Polynomial::new(vec![Q::from_integer(1), Q::from_integer(2), Q::from_integer(3)]);
+        let p = Polynomial::new(vec![
+            Q::from_integer(1),
+            Q::from_integer(2),
+            Q::from_integer(3),
+        ]);
         assert_eq!(p.degree(), 2);
         assert_eq!(p.coeff(0), Q::from_integer(1));
         assert_eq!(p.coeff(1), Q::from_integer(2));
@@ -299,7 +304,11 @@ mod tests {
     #[test]
     fn test_derivative() {
         // p(x) = 1 + 2x + 3x^2, p'(x) = 2 + 6x
-        let p = Polynomial::new(vec![Q::from_integer(1), Q::from_integer(2), Q::from_integer(3)]);
+        let p = Polynomial::new(vec![
+            Q::from_integer(1),
+            Q::from_integer(2),
+            Q::from_integer(3),
+        ]);
         let dp = p.derivative();
         assert_eq!(dp.coeff(0), Q::from_integer(2));
         assert_eq!(dp.coeff(1), Q::from_integer(6));

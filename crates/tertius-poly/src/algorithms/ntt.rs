@@ -173,9 +173,7 @@ mod tests {
 
     #[test]
     fn test_ntt_intt_roundtrip() {
-        let original: Vec<NttField> = (0..8)
-            .map(|i| NttField::new(i + 1))
-            .collect();
+        let original: Vec<NttField> = (0..8).map(|i| NttField::new(i + 1)).collect();
 
         let mut a = original.clone();
         ntt(&mut a);

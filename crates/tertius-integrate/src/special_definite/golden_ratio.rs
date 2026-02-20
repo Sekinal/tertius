@@ -24,8 +24,8 @@
 //! 3. **Residue calculus** using contour integration
 //! 4. **Exact symbolic** using dilogarithm identities
 
-use std::f64::consts::PI;
 use super::MathConstants;
+use std::f64::consts::PI;
 
 /// The golden ratio integral and its properties.
 #[derive(Clone, Debug)]
@@ -244,10 +244,7 @@ impl GoldenRatioIntegral {
         vec![
             ("4π·arccot(φ)".to_string(), 4.0 * PI * (1.0 / phi).atan()),
             ("4π·arctan(1/φ)".to_string(), 4.0 * PI * (1.0 / phi).atan()),
-            (
-                "4π·arctan(φ-1)".to_string(),
-                4.0 * PI * (phi - 1.0).atan(),
-            ),
+            ("4π·arctan(φ-1)".to_string(), 4.0 * PI * (phi - 1.0).atan()),
             (
                 "4π·arctan((√5-1)/2)".to_string(),
                 4.0 * PI * ((5.0_f64.sqrt() - 1.0) / 2.0).atan(),
@@ -273,7 +270,11 @@ impl std::fmt::Display for GoldenRatioResult {
         if self.is_exact {
             write!(f, "{} ≈ {:.10}", self.symbolic, self.numerical_value)
         } else {
-            write!(f, "{:.10} (error: {:.2e})", self.numerical_value, self.error)
+            write!(
+                f,
+                "{:.10} (error: {:.2e})",
+                self.numerical_value, self.error
+            )
         }
     }
 }

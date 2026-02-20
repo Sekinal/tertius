@@ -282,8 +282,12 @@ mod tests {
         let phi = (1.0 + 5.0_f64.sqrt()) / 2.0;
         let expected = 4.0 * PI * (1.0 / phi).atan();
 
-        println!("Numerical: {}, Expected: {}, Diff: {}",
-                 result.value, expected, (result.value - expected).abs());
+        println!(
+            "Numerical: {}, Expected: {}, Diff: {}",
+            result.value,
+            expected,
+            (result.value - expected).abs()
+        );
 
         // Just verify we get a reasonable positive result
         assert!(result.value > 0.0);

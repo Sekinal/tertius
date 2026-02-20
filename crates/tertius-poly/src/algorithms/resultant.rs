@@ -142,14 +142,18 @@ fn determinant<R: EuclideanDomain + Clone + Neg<Output = R>>(matrix: &[Vec<R>]) 
 
         // Get the pivot element and previous pivot (for Bareiss division)
         let pivot = m[k][k].clone();
-        let prev_pivot = if k > 0 { m[k - 1][k - 1].clone() } else { R::one() };
+        let prev_pivot = if k > 0 {
+            m[k - 1][k - 1].clone()
+        } else {
+            R::one()
+        };
 
         // Eliminate column k in rows k+1 to n-1
         for i in k + 1..n {
             for j in k + 1..n {
                 // Bareiss formula: m[i][j] = (m[i][j] * pivot - m[i][k] * m[k][j]) / prev_pivot
-                let numerator = m[i][j].clone() * pivot.clone()
-                    + (m[i][k].clone() * m[k][j].clone()).neg();
+                let numerator =
+                    m[i][j].clone() * pivot.clone() + (m[i][k].clone() * m[k][j].clone()).neg();
                 // In an integral domain, this division is exact
                 m[i][j] = exact_div(&numerator, &prev_pivot);
             }

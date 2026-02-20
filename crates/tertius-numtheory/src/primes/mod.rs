@@ -324,8 +324,8 @@ mod tests {
 
     #[test]
     fn test_prime_gap() {
-        assert_eq!(prime_gap(2), 1);  // gap to 3
-        assert_eq!(prime_gap(3), 2);  // gap to 5
-        assert_eq!(prime_gap(7), 4);  // gap to 11
+        assert_eq!(prime_gap(2), 1); // gap to 3
+        assert_eq!(prime_gap(3), 2); // gap to 5
+        assert_eq!(prime_gap(7), 4); // gap to 11
     }
 }

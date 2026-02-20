@@ -38,11 +38,9 @@ fn bench_polynomial_multiplication(c: &mut Criterion) {
         let p = random_poly_q(size);
         let q = random_poly_q(size);
 
-        group.bench_with_input(
-            BenchmarkId::new("DensePoly<Q>", size),
-            &size,
-            |b, _| b.iter(|| black_box(p.mul(&q))),
-        );
+        group.bench_with_input(BenchmarkId::new("DensePoly<Q>", size), &size, |b, _| {
+            b.iter(|| black_box(p.mul(&q)))
+        });
     }
 
     group.finish();
@@ -55,11 +53,9 @@ fn bench_ntt(c: &mut Criterion) {
         let a = random_poly_ntt(size);
         let b = random_poly_ntt(size);
 
-        group.bench_with_input(
-            BenchmarkId::new("NTT", size),
-            &size,
-            |b_iter, _| b_iter.iter(|| black_box(ntt_multiply(&a, &b))),
-        );
+        group.bench_with_input(BenchmarkId::new("NTT", size), &size, |b_iter, _| {
+            b_iter.iter(|| black_box(ntt_multiply(&a, &b)))
+        });
     }
 
     group.finish();
@@ -72,11 +68,9 @@ fn bench_fft_integers(c: &mut Criterion) {
         let a = random_poly_integer(size);
         let b = random_poly_integer(size);
 
-        group.bench_with_input(
-            BenchmarkId::new("FFT+CRT", size),
-            &size,
-            |b_iter, _| b_iter.iter(|| black_box(fft_multiply_integers(&a, &b))),
-        );
+        group.bench_with_input(BenchmarkId::new("FFT+CRT", size), &size, |b_iter, _| {
+            b_iter.iter(|| black_box(fft_multiply_integers(&a, &b)))
+        });
     }
 
     group.finish();

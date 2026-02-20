@@ -88,10 +88,7 @@ impl ErrorFunction {
     pub fn integral(&self) -> String {
         match self.variant {
             ErrorFunctionVariant::Standard => {
-                format!(
-                    "{0} * erf({0}) + exp(-{0}²)/√π",
-                    self.argument
-                )
+                format!("{0} * erf({0}) + exp(-{0}²)/√π", self.argument)
             }
             _ => format!("∫ {} dx", self),
         }
@@ -153,7 +150,11 @@ pub fn error_func_series(x: Q, num_terms: usize) -> Q {
         let two_n_plus_1 = Q::from_integer((2 * n + 1) as i64);
         let denom = n_factorial.clone() * two_n_plus_1;
 
-        let sign = if n % 2 == 0 { Q::from_integer(1) } else { Q::from_integer(-1) };
+        let sign = if n % 2 == 0 {
+            Q::from_integer(1)
+        } else {
+            Q::from_integer(-1)
+        };
         let term = sign * power.clone() * denom.inv().unwrap();
 
         result = result + term;

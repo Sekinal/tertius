@@ -10,8 +10,8 @@
 use num_traits::{One, Zero};
 use tertius_integers::Integer;
 
-use super::miller_rabin::{miller_rabin_deterministic, mod_pow};
 use super::lucas::strong_lucas_test;
+use super::miller_rabin::{miller_rabin_deterministic, mod_pow};
 use super::trial_division::quick_check;
 use super::PrimalityResult;
 

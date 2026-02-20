@@ -43,10 +43,14 @@ pub fn karatsuba_mul<R: Ring>(a: &[R], b: &[R]) -> Vec<R> {
     let z2 = karatsuba_mul(a1, b1);
 
     // Compute (a0+a1) and (b0+b1)
-    let a01: Vec<R> = a0.iter().zip(a1.iter())
+    let a01: Vec<R> = a0
+        .iter()
+        .zip(a1.iter())
         .map(|(x, y)| x.clone() + y.clone())
         .collect();
-    let b01: Vec<R> = b0.iter().zip(b1.iter())
+    let b01: Vec<R> = b0
+        .iter()
+        .zip(b1.iter())
         .map(|(x, y)| x.clone() + y.clone())
         .collect();
 

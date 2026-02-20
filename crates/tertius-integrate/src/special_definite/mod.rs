@@ -17,9 +17,9 @@
 //! println!("Golden ratio integral = {}", result); // 4π·arccot(φ)
 //! ```
 
-pub mod golden_ratio;
-pub mod dirichlet;
 pub mod beta_gamma;
+pub mod dirichlet;
+pub mod golden_ratio;
 
 pub use golden_ratio::{GoldenRatioIntegral, GoldenRatioResult};
 

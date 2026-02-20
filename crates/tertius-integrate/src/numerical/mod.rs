@@ -29,19 +29,15 @@
 //! println!("∫₋₁₀¹⁰ 1/(1+x²) dx ≈ {} ± {}", result.value, result.error);
 //! ```
 
-pub mod gauss_kronrod;
 pub mod adaptive;
+pub mod gauss_kronrod;
 
 // Re-exports for convenience
-pub use gauss_kronrod::{GaussKronrodRule, GKResult, integrate_gk15, integrate_gk31};
 pub use adaptive::{
-    AdaptiveResult,
-    adaptive_integrate,
-    adaptive_integrate_with_singularities,
-    adaptive_integrate_to_infinity,
-    adaptive_integrate_from_neg_infinity,
-    adaptive_integrate_full_line,
+    adaptive_integrate, adaptive_integrate_from_neg_infinity, adaptive_integrate_full_line,
+    adaptive_integrate_to_infinity, adaptive_integrate_with_singularities, AdaptiveResult,
 };
+pub use gauss_kronrod::{integrate_gk15, integrate_gk31, GKResult, GaussKronrodRule};
 
 /// Computes the golden ratio integral numerically.
 ///
@@ -67,7 +63,14 @@ pub fn golden_ratio_integral_numerical(tol: f64, max_subdivisions: usize) -> Ada
 
     // Integrate avoiding endpoint singularities
     let epsilon = 1e-6;
-    adaptive_integrate(&f, -1.0 + epsilon, 1.0 - epsilon, tol, tol, max_subdivisions)
+    adaptive_integrate(
+        &f,
+        -1.0 + epsilon,
+        1.0 - epsilon,
+        tol,
+        tol,
+        max_subdivisions,
+    )
 }
 
 /// Returns the exact value of the golden ratio integral.

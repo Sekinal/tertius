@@ -29,9 +29,9 @@
 //! let result = integrate_algebraic(&integrand);
 //! ```
 
+pub mod elliptic;
 pub mod rationalize;
 pub mod sqrt_rational;
-pub mod elliptic;
 
 use std::fmt;
 
@@ -112,8 +112,8 @@ impl AlgebraicIntegrand {
     /// Creates the integrand for √((1+x)/(1-x)).
     pub fn sqrt_ratio() -> Self {
         Self {
-            radicand_num: vec![1.0, 1.0],    // 1 + x
-            radicand_den: vec![1.0, -1.0],   // 1 - x
+            radicand_num: vec![1.0, 1.0],  // 1 + x
+            radicand_den: vec![1.0, -1.0], // 1 - x
             rational_part: (vec![1.0], vec![1.0]),
             sqrt_in_numerator: true,
         }
@@ -185,7 +185,11 @@ pub enum AlgebraicIntegralResult {
 impl fmt::Display for AlgebraicIntegralResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            AlgebraicIntegralResult::Elementary { rational, logs, arctans } => {
+            AlgebraicIntegralResult::Elementary {
+                rational,
+                logs,
+                arctans,
+            } => {
                 write!(f, "{}", rational)?;
                 for (coef, arg) in logs {
                     if *coef >= 0.0 {
@@ -203,14 +207,23 @@ impl fmt::Display for AlgebraicIntegralResult {
                 }
                 Ok(())
             }
-            AlgebraicIntegralResult::Elliptic { kind, amplitude, modulus, parameter } => {
-                match kind {
-                    1 => write!(f, "F({}, {})", amplitude, modulus),
-                    2 => write!(f, "E({}, {})", amplitude, modulus),
-                    3 => write!(f, "Π({}; {}, {})", parameter.unwrap_or(0.0), amplitude, modulus),
-                    _ => write!(f, "Elliptic[{}]", kind),
-                }
-            }
+            AlgebraicIntegralResult::Elliptic {
+                kind,
+                amplitude,
+                modulus,
+                parameter,
+            } => match kind {
+                1 => write!(f, "F({}, {})", amplitude, modulus),
+                2 => write!(f, "E({}, {})", amplitude, modulus),
+                3 => write!(
+                    f,
+                    "Π({}; {}, {})",
+                    parameter.unwrap_or(0.0),
+                    amplitude,
+                    modulus
+                ),
+                _ => write!(f, "Elliptic[{}]", kind),
+            },
             AlgebraicIntegralResult::NonElementary { description, genus } => {
                 write!(f, "{} (genus {})", description, genus)
             }

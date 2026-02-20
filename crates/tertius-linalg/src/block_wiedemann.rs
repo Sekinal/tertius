@@ -55,7 +55,11 @@ impl<R: Field + Clone + Send + Sync> BlockWiedemann<R> {
     #[must_use]
     pub fn new(matrix: CsrMatrix<R>, config: BlockWiedemannConfig) -> Self {
         let rng = ChaCha8Rng::seed_from_u64(config.seed);
-        Self { matrix, config, rng }
+        Self {
+            matrix,
+            config,
+            rng,
+        }
     }
 
     /// Generates a random vector over the field.
@@ -108,7 +112,8 @@ impl<R: Field + Clone + Send + Sync> BlockWiedemann<R> {
 
         // Compute projection sequence
         let sequence_length = 2 * n / self.config.block_size + 10;
-        let projections = self.compute_projections(&w, &v, sequence_length.min(self.config.max_iterations));
+        let projections =
+            self.compute_projections(&w, &v, sequence_length.min(self.config.max_iterations));
 
         // Find minimal polynomial via Berlekamp-Massey
         let bm_result = berlekamp_massey(&projections);
@@ -157,7 +162,8 @@ impl<R: Field + Clone + Send + Sync> BlockWiedemann<R> {
 
         // Compute sequence w^T * A^i * b
         let sequence_length = 2 * n / self.config.block_size + 10;
-        let projections = self.compute_projections(&w, b, sequence_length.min(self.config.max_iterations));
+        let projections =
+            self.compute_projections(&w, b, sequence_length.min(self.config.max_iterations));
 
         // Find minimal polynomial
         let bm_result = berlekamp_massey(&projections);

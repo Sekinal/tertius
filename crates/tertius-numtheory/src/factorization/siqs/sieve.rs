@@ -7,11 +7,7 @@ use tertius_integers::Integer;
 use super::{Relation, SiqsParams};
 
 /// Sieve for smooth relations.
-pub fn sieve_for_relations(
-    n: &Integer,
-    factor_base: &[u64],
-    params: &SiqsParams,
-) -> Vec<Relation> {
+pub fn sieve_for_relations(n: &Integer, factor_base: &[u64], params: &SiqsParams) -> Vec<Relation> {
     let mut relations = Vec::new();
 
     // Simple implementation: just try values and check for smoothness
@@ -70,7 +66,10 @@ pub fn sieve_for_relations(
 
 /// Try to factor target over the factor base.
 /// Returns the exponent vector (mod 2) and full factorization if smooth.
-fn try_factor_smooth(target: &Integer, factor_base: &[u64]) -> Option<(Vec<u8>, Vec<(usize, u32)>)> {
+fn try_factor_smooth(
+    target: &Integer,
+    factor_base: &[u64],
+) -> Option<(Vec<u8>, Vec<(usize, u32)>)> {
     use num_traits::{One, Zero};
 
     if target.is_zero() {

@@ -65,9 +65,7 @@ impl<'a> ExprConverter<'a> {
         match node {
             ExprNode::Integer(n) => Some(DensePoly::constant(Q::from_integer(*n))),
 
-            ExprNode::Rational(num, den) => {
-                Some(DensePoly::constant(Q::new(*num, *den as i64)))
-            }
+            ExprNode::Rational(num, den) => Some(DensePoly::constant(Q::new(*num, *den as i64))),
 
             ExprNode::Symbol(id) if *id == self.variable => Some(DensePoly::x()),
 

@@ -112,9 +112,7 @@ impl ExprNode {
             ExprNode::Pow { base, exp } => smallvec::smallvec![*base, *exp],
             ExprNode::Neg(arg) => smallvec::smallvec![*arg],
             ExprNode::Div { num, den } => smallvec::smallvec![*num, *den],
-            ExprNode::Function { args, .. } => {
-                args.iter().copied().collect()
-            }
+            ExprNode::Function { args, .. } => args.iter().copied().collect(),
         }
     }
 }

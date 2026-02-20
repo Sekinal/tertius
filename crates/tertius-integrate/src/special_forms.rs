@@ -156,9 +156,7 @@ impl std::fmt::Display for SpecialIntegral {
 /// This is called when the Risch algorithm determines that no elementary
 /// antiderivative exists. We check if the integrand matches a known pattern
 /// that has a closed-form answer in terms of special functions.
-pub fn recognize_special_form<F: Field>(
-    integrand: &RationalFunction<F>,
-) -> SpecialFormResult {
+pub fn recognize_special_form<F: Field>(integrand: &RationalFunction<F>) -> SpecialFormResult {
     // For now, we only implement recognition for Q(x) integrands
     // The full implementation would handle tower elements as well
 
@@ -169,10 +167,7 @@ pub fn recognize_special_form<F: Field>(
 ///
 /// Result: exp(c - b²/4a) * √(π/(-a)) * erf((2ax + b)/√(-4a)) / 2
 /// (for a < 0, i.e., the integral converges)
-pub fn recognize_gaussian(
-    numerator: &DensePoly<Q>,
-    exponent: &DensePoly<Q>,
-) -> SpecialFormResult {
+pub fn recognize_gaussian(numerator: &DensePoly<Q>, exponent: &DensePoly<Q>) -> SpecialFormResult {
     // Check if numerator is constant (typically 1)
     if numerator.degree() != 0 {
         return SpecialFormResult::NotRecognized;
@@ -256,7 +251,10 @@ pub fn recognize_exponential_integral(
         SpecialFormResult::Recognized(SpecialIntegral {
             function: SpecialFunction::Ei,
             coefficient: SpecialCoefficient::Rational(Q::from_integer(1)),
-            argument: SpecialArgument::Linear { a, b: Q::from_integer(0) },
+            argument: SpecialArgument::Linear {
+                a,
+                b: Q::from_integer(0),
+            },
         })
     }
 }
@@ -327,7 +325,10 @@ mod tests {
         match result {
             SpecialFormResult::Recognized(integral) => {
                 assert_eq!(integral.function, SpecialFunction::Erf);
-                assert!(matches!(integral.coefficient, SpecialCoefficient::SqrtPiOver(2)));
+                assert!(matches!(
+                    integral.coefficient,
+                    SpecialCoefficient::SqrtPiOver(2)
+                ));
             }
             _ => panic!("Expected Gaussian to be recognized"),
         }

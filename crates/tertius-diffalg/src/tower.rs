@@ -170,7 +170,9 @@ impl TranscendentalTower {
 
     /// Checks if all extensions are logarithmic (purely logarithmic tower).
     pub fn is_purely_logarithmic(&self) -> bool {
-        self.levels.iter().all(|l| l.extension_type.is_logarithmic())
+        self.levels
+            .iter()
+            .all(|l| l.extension_type.is_logarithmic())
     }
 
     /// Checks if all extensions are exponential (purely exponential tower).
@@ -185,7 +187,13 @@ impl TranscendentalTower {
         let mut desc = format!("K = Q({})", self.base_variable);
 
         for (i, level) in self.levels.iter().enumerate() {
-            desc.push_str(&format!("\nK{} = K{}({}) where {}", i + 1, i, level.name, level));
+            desc.push_str(&format!(
+                "\nK{} = K{}({}) where {}",
+                i + 1,
+                i,
+                level.name,
+                level
+            ));
         }
 
         desc

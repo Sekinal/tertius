@@ -23,28 +23,22 @@ fn differentiation_rules() -> Vec<Rewrite<TertiusLang, ()>> {
         // Derivative of constant is 0
         rewrite!("d-const"; "(D ?c ?x)" => "0"
             if is_const_wrt("?c", "?x")),
-
         // Derivative of variable is 1
         rewrite!("d-var"; "(D ?x ?x)" => "1"),
-
         // Linearity of derivative
         rewrite!("d-add"; "(D (+ ?f ?g) ?x)" => "(+ (D ?f ?x) (D ?g ?x))"),
         rewrite!("d-sub"; "(D (- ?f ?g) ?x)" => "(- (D ?f ?x) (D ?g ?x))"),
         rewrite!("d-const-mul"; "(D (* ?c ?f) ?x)" => "(* ?c (D ?f ?x))"
             if is_const_wrt("?c", "?x")),
         rewrite!("d-neg"; "(D (neg ?f) ?x)" => "(neg (D ?f ?x))"),
-
         // Power rule: D(x^n, x) = n * x^(n-1)
         rewrite!("d-power"; "(D (^ ?x ?n) ?x)" => "(* ?n (^ ?x (- ?n 1)))"),
-
         // Product rule: D(f*g, x) = f*D(g,x) + g*D(f,x)
         rewrite!("d-product"; "(D (* ?f ?g) ?x)" =>
             "(+ (* ?f (D ?g ?x)) (* ?g (D ?f ?x)))"),
-
         // Quotient rule: D(f/g, x) = (g*D(f,x) - f*D(g,x)) / g^2
         rewrite!("d-quotient"; "(D (/ ?f ?g) ?x)" =>
             "(/ (- (* ?g (D ?f ?x)) (* ?f (D ?g ?x))) (^ ?g 2))"),
-
         // Chain rule for common functions
         rewrite!("d-sin"; "(D (sin ?f) ?x)" => "(* (cos ?f) (D ?f ?x))"),
         rewrite!("d-cos"; "(D (cos ?f) ?x)" => "(* (neg (sin ?f)) (D ?f ?x))"),
@@ -52,7 +46,6 @@ fn differentiation_rules() -> Vec<Rewrite<TertiusLang, ()>> {
         rewrite!("d-exp"; "(D (exp ?f) ?x)" => "(* (exp ?f) (D ?f ?x))"),
         rewrite!("d-ln"; "(D (ln ?f) ?x)" => "(* (/ 1 ?f) (D ?f ?x))"),
         rewrite!("d-sqrt"; "(D (sqrt ?f) ?x)" => "(* (/ 1 (* 2 (sqrt ?f))) (D ?f ?x))"),
-
         // Inverse trig derivatives
         rewrite!("d-asin"; "(D (asin ?f) ?x)" =>
             "(* (/ 1 (sqrt (- 1 (^ ?f 2)))) (D ?f ?x))"),
@@ -69,42 +62,32 @@ fn integration_rules() -> Vec<Rewrite<TertiusLang, ()>> {
         // Integral of constant: int(c, x) = c*x
         rewrite!("int-const"; "(int ?c ?x)" => "(* ?c ?x)"
             if is_const_wrt("?c", "?x")),
-
         // Integral of variable: int(x, x) = x^2/2
         rewrite!("int-var"; "(int ?x ?x)" => "(/ (^ ?x 2) 2)"),
-
         // Linearity of integration
         rewrite!("int-add"; "(int (+ ?f ?g) ?x)" => "(+ (int ?f ?x) (int ?g ?x))"),
         rewrite!("int-sub"; "(int (- ?f ?g) ?x)" => "(- (int ?f ?x) (int ?g ?x))"),
         rewrite!("int-const-mul"; "(int (* ?c ?f) ?x)" => "(* ?c (int ?f ?x))"
             if is_const_wrt("?c", "?x")),
         rewrite!("int-neg"; "(int (neg ?f) ?x)" => "(neg (int ?f ?x))"),
-
         // Power rule: int(x^n, x) = x^(n+1)/(n+1) for n != -1
         rewrite!("int-power"; "(int (^ ?x ?n) ?x)" => "(/ (^ ?x (+ ?n 1)) (+ ?n 1))"),
-
         // Special case: int(1/x, x) = ln(x)
         rewrite!("int-recip"; "(int (/ 1 ?x) ?x)" => "(ln ?x)"),
         rewrite!("int-pow-neg1"; "(int (^ ?x (neg 1)) ?x)" => "(ln ?x)"),
-
         // Trigonometric integrals
         rewrite!("int-sin"; "(int (sin ?x) ?x)" => "(neg (cos ?x))"),
         rewrite!("int-cos"; "(int (cos ?x) ?x)" => "(sin ?x)"),
         rewrite!("int-tan"; "(int (tan ?x) ?x)" => "(neg (ln (cos ?x)))"),
-
         // int(sec^2(x), x) = tan(x) (via 1/cos^2)
         rewrite!("int-sec2"; "(int (^ (cos ?x) (neg 2)) ?x)" => "(tan ?x)"),
-
         // Exponential integrals
         rewrite!("int-exp"; "(int (exp ?x) ?x)" => "(exp ?x)"),
-
         // int(a^x, x) = a^x / ln(a)
         rewrite!("int-exp-base"; "(int (^ ?a ?x) ?x)" => "(/ (^ ?a ?x) (ln ?a))"
             if is_const_wrt("?a", "?x")),
-
         // Logarithmic integral: int(ln(x), x) = x*ln(x) - x
         rewrite!("int-ln"; "(int (ln ?x) ?x)" => "(- (* ?x (ln ?x)) ?x)"),
-
         // Inverse trig integrals
         rewrite!("int-asin"; "(int (asin ?x) ?x)" =>
             "(+ (* ?x (asin ?x)) (sqrt (- 1 (^ ?x 2))))"),
@@ -112,26 +95,25 @@ fn integration_rules() -> Vec<Rewrite<TertiusLang, ()>> {
             "(- (* ?x (acos ?x)) (sqrt (- 1 (^ ?x 2))))"),
         rewrite!("int-atan"; "(int (atan ?x) ?x)" =>
             "(- (* ?x (atan ?x)) (/ (ln (+ 1 (^ ?x 2))) 2))"),
-
         // Standard forms
         // int(1/(1+x^2), x) = atan(x)
         rewrite!("int-atan-form"; "(int (/ 1 (+ 1 (^ ?x 2))) ?x)" => "(atan ?x)"),
-
         // int(1/sqrt(1-x^2), x) = asin(x)
         rewrite!("int-asin-form"; "(int (/ 1 (sqrt (- 1 (^ ?x 2)))) ?x)" => "(asin ?x)"),
-
         // Fundamental theorem verification
         // D(int(f, x), x) = f
         // Note: This can cause infinite loops with other rules, use carefully
         rewrite!("ftc"; "(D (int ?f ?x) ?x)" => "?f"),
-
         // Integration by parts is left out as it creates cycles
         // For IBP, users should apply it explicitly
     ]
 }
 
 /// Condition checker for "constant with respect to variable".
-fn is_const_wrt(c_str: &str, x_str: &str) -> impl Fn(&mut egg::EGraph<TertiusLang, ()>, egg::Id, &egg::Subst) -> bool {
+fn is_const_wrt(
+    c_str: &str,
+    x_str: &str,
+) -> impl Fn(&mut egg::EGraph<TertiusLang, ()>, egg::Id, &egg::Subst) -> bool {
     let c_var: egg::Var = c_str.parse().unwrap();
     let x_var: egg::Var = x_str.parse().unwrap();
 
@@ -245,9 +227,7 @@ mod tests {
     fn test_ftc() {
         // D(int(f, x), x) = f
         // Use only the FTC rule to avoid cycles
-        let ftc_rule = vec![
-            rewrite!("ftc"; "(D (int ?f ?x) ?x)" => "?f"),
-        ];
+        let ftc_rule = vec![rewrite!("ftc"; "(D (int ?f ?x) ?x)" => "?f")];
         let start: RecExpr<TertiusLang> = "(D (int (sin x) x) x)".parse().unwrap();
         let runner: Runner<TertiusLang, ()> = Runner::default()
             .with_expr(&start)

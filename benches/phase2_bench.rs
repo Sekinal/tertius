@@ -77,11 +77,9 @@ fn bench_sparse_matrix(c: &mut Criterion) {
         let matrix = CsrMatrix::from_raw(values, col_indices, row_ptrs, size);
         let vector: Vec<GF101> = (0..size).map(|i| gf101(i as i64)).collect();
 
-        group.bench_with_input(
-            BenchmarkId::new("spmv", size),
-            &size,
-            |b, _| b.iter(|| black_box(matrix.spmv(&vector))),
-        );
+        group.bench_with_input(BenchmarkId::new("spmv", size), &size, |b, _| {
+            b.iter(|| black_box(matrix.spmv(&vector)))
+        });
     }
 
     group.finish();
@@ -119,9 +117,7 @@ fn bench_factorization(c: &mut Criterion) {
 
     // x^4 + 4 (Sophie Germain identity)
     let sophie = poly_z(&[4, 0, 0, 0, 1]);
-    group.bench_function("x^4+4", |b| {
-        b.iter(|| black_box(van_hoeij_factor(&sophie)))
-    });
+    group.bench_function("x^4+4", |b| b.iter(|| black_box(van_hoeij_factor(&sophie))));
 
     group.finish();
 }
@@ -141,11 +137,19 @@ fn bench_groebner(c: &mut Criterion) {
     // cyclic-3: x + y + z, xy + yz + zx, xyz - 1
     let cyclic3 = vec![
         // x + y + z
-        vec![(ff(1), mono(&[1, 0, 0])), (ff(1), mono(&[0, 1, 0])), (ff(1), mono(&[0, 0, 1]))],
+        vec![
+            (ff(1), mono(&[1, 0, 0])),
+            (ff(1), mono(&[0, 1, 0])),
+            (ff(1), mono(&[0, 0, 1])),
+        ],
         // xy + yz + zx
-        vec![(ff(1), mono(&[1, 1, 0])), (ff(1), mono(&[0, 1, 1])), (ff(1), mono(&[1, 0, 1]))],
+        vec![
+            (ff(1), mono(&[1, 1, 0])),
+            (ff(1), mono(&[0, 1, 1])),
+            (ff(1), mono(&[1, 0, 1])),
+        ],
         // xyz - 1
-        vec![(ff(1), mono(&[1, 1, 1])), (ff(100), mono(&[0, 0, 0]))],  // 100 = -1 mod 101
+        vec![(ff(1), mono(&[1, 1, 1])), (ff(100), mono(&[0, 0, 0]))], // 100 = -1 mod 101
     ];
 
     group.bench_function("cyclic-3", |b| {
