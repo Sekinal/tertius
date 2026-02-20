@@ -28,8 +28,9 @@ mod vector;
 pub use diff::{diff, diff_n, diff_with_assumptions};
 pub use partial::{gradient, hessian, jacobian, partial};
 pub use vector::{
-    curl_cartesian, divergence_cartesian, gradient_cartesian, gradient_cylindrical,
-    gradient_spherical,
+    curl_cartesian, curl_cylindrical, curl_spherical, divergence_cartesian, divergence_cylindrical,
+    divergence_spherical, gradient_cartesian, gradient_cylindrical, gradient_spherical,
+    laplacian_cartesian, laplacian_cylindrical, laplacian_spherical,
 };
 
 #[cfg(test)]

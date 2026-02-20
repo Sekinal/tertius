@@ -45,6 +45,7 @@ pub mod rothstein_trager;
 pub mod special_definite;
 pub mod special_forms;
 pub mod unified;
+pub mod vector_calculus;
 
 // Primary API - unified integration
 pub use unified::api::{integrate_numerical, integrate_numerical_with_params};
@@ -66,4 +67,8 @@ pub use risch::{risch_integrate, IntegralExpression, RischResult};
 pub use rothstein_trager::{rothstein_trager_q, AlgebraicLogarithmicPart, LogarithmicPart};
 pub use special_forms::{
     recognize_special_form, SpecialFormResult, SpecialFunction as SpecialFormFunc, SpecialIntegral,
+};
+pub use vector_calculus::{
+    line_integral_from_tangent, surface_flux_integral, volume_integral, CoordinateFrame,
+    LineIntegralScaffold, SurfaceIntegralScaffold, VolumeIntegralScaffold,
 };

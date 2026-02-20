@@ -171,6 +171,74 @@ pub fn solve_separable_power(k: f64, n: f64, x0: f64, y0: f64) -> SeparablePower
     SeparablePowerSolution { k, n, x0, y0 }
 }
 
+/// Residual `y' + a y - b` using centered finite differences.
+#[must_use]
+pub fn verify_first_order_linear_constant_solution(
+    solution: &FirstOrderLinearSolution,
+    a: f64,
+    b: f64,
+    x: f64,
+) -> f64 {
+    let h = 1e-6;
+    let y_plus = solution.eval(x + h);
+    let y_minus = solution.eval(x - h);
+    let y = solution.eval(x);
+    let dy = (y_plus - y_minus) / (2.0 * h);
+    dy + a * y - b
+}
+
+/// Residual `a y'' + b y' + c y` using finite differences.
+#[must_use]
+pub fn verify_second_order_constant_homogeneous_solution(
+    solution: &SecondOrderHomogeneousSolution,
+    a: f64,
+    b: f64,
+    c: f64,
+    x: f64,
+) -> f64 {
+    let h = 1e-5;
+    let y_plus = solution.eval(x + h);
+    let y = solution.eval(x);
+    let y_minus = solution.eval(x - h);
+    let dy = (y_plus - y_minus) / (2.0 * h);
+    let ddy = (y_plus - 2.0 * y + y_minus) / (h * h);
+    a * ddy + b * dy + c * y
+}
+
+/// Numerical fallback by forward Euler for `y' + a y = b`.
+#[must_use]
+pub fn euler_fallback_first_order_linear(
+    a: f64,
+    b: f64,
+    y0: f64,
+    x0: f64,
+    x_target: f64,
+    step: f64,
+) -> f64 {
+    if step.abs() < 1e-15 || (x_target - x0).abs() < 1e-15 {
+        return y0;
+    }
+
+    let mut x = x0;
+    let mut y = y0;
+    let h = if x_target >= x0 {
+        step.abs()
+    } else {
+        -step.abs()
+    };
+
+    while (x_target - x).abs() > h.abs() {
+        y += h * (b - a * y);
+        x += h;
+    }
+
+    let rem = x_target - x;
+    if rem.abs() > 1e-15 {
+        y += rem * (b - a * y);
+    }
+    y
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -198,5 +266,27 @@ mod tests {
         let sol = solve_separable_power(2.0, 2.0, 0.0, 1.0);
         assert!((sol.eval(0.0) - 1.0).abs() < 1e-9);
         assert!((sol.eval(0.1) - 1.25).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_verify_first_order_solution_residual() {
+        let sol = solve_first_order_linear_constant(2.0, 4.0, Some(1.0));
+        let residual = verify_first_order_linear_constant_solution(&sol, 2.0, 4.0, 0.7);
+        assert!(residual.abs() < 1e-5);
+    }
+
+    #[test]
+    fn test_verify_second_order_solution_residual() {
+        let sol = solve_second_order_constant_homogeneous(1.0, 0.0, 1.0, Some((0.0, 1.0)));
+        let residual = verify_second_order_constant_homogeneous_solution(&sol, 1.0, 0.0, 1.0, 0.8);
+        assert!(residual.abs() < 1e-4);
+    }
+
+    #[test]
+    fn test_euler_fallback_first_order_linear() {
+        // y' + y = 1, y(0)=0 => y(1) = 1 - e^-1
+        let y_num = euler_fallback_first_order_linear(1.0, 1.0, 0.0, 0.0, 1.0, 1e-3);
+        let y_exact = 1.0 - (-1.0f64).exp();
+        assert!((y_num - y_exact).abs() < 2e-3);
     }
 }

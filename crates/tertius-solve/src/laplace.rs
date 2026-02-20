@@ -122,6 +122,35 @@ fn approx_eq(a: f64, b: f64) -> bool {
     (a - b).abs() < 1e-9
 }
 
+/// Laplace-domain image `Y(s)` for `y' + a y = b`, `y(0)=y0`.
+///
+/// Formula:
+/// `Y(s) = (y0*s + a*y0 + b) / (s^2 + a*s)`.
+#[must_use]
+pub fn first_order_linear_ivp_image(a: f64, b: f64, y0: f64) -> LaplaceImage {
+    LaplaceImage {
+        // y0*s + a*y0 + b
+        numerator: vec![a * y0 + b, y0],
+        // s^2 + a*s
+        denominator: vec![0.0, a, 1.0],
+    }
+}
+
+/// Laplace-domain image `Y(s)` for `y'' + b y' + c y = 0`,
+/// with `y(0)=y0`, `y'(0)=v0`.
+///
+/// Formula:
+/// `Y(s) = (s*y0 + v0 + b*y0) / (s^2 + b*s + c)`.
+#[must_use]
+pub fn second_order_homogeneous_ivp_image(b: f64, c: f64, y0: f64, v0: f64) -> LaplaceImage {
+    LaplaceImage {
+        // s*y0 + v0 + b*y0
+        numerator: vec![v0 + b * y0, y0],
+        // s^2 + b*s + c
+        denominator: vec![c, b, 1.0],
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -151,5 +180,21 @@ mod tests {
             inverse_laplace_basic(&img),
             Some(TimeTerm::Sin { omega: 2.0 })
         );
+    }
+
+    #[test]
+    fn test_first_order_linear_ivp_image_shape() {
+        // y' + 2y = 4, y(0)=1 => Y(s) = (s+6)/(s^2+2s)
+        let image = first_order_linear_ivp_image(2.0, 4.0, 1.0);
+        assert_eq!(image.numerator, vec![6.0, 1.0]);
+        assert_eq!(image.denominator, vec![0.0, 2.0, 1.0]);
+    }
+
+    #[test]
+    fn test_second_order_homogeneous_ivp_image_shape() {
+        // y'' + y = 0, y(0)=0, y'(0)=1 => Y(s)=1/(s^2+1)
+        let image = second_order_homogeneous_ivp_image(0.0, 1.0, 0.0, 1.0);
+        assert_eq!(image.numerator, vec![1.0, 0.0]);
+        assert_eq!(image.denominator, vec![1.0, 0.0, 1.0]);
     }
 }
