@@ -23,9 +23,14 @@
 mod diff;
 mod partial;
 mod rules;
+mod vector;
 
 pub use diff::{diff, diff_n, diff_with_assumptions};
 pub use partial::{gradient, hessian, jacobian, partial};
+pub use vector::{
+    curl_cartesian, divergence_cartesian, gradient_cartesian, gradient_cylindrical,
+    gradient_spherical,
+};
 
 #[cfg(test)]
 mod tests {

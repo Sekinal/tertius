@@ -24,6 +24,7 @@
 
 pub mod dense_matrix;
 pub mod parallel;
+pub mod physics_matrix2;
 pub mod simd;
 pub mod sparse_matrix;
 
@@ -34,8 +35,9 @@ mod smith_normal_form;
 pub use berlekamp_massey::berlekamp_massey;
 pub use block_wiedemann::{BlockWiedemann, BlockWiedemannConfig};
 pub use dense_matrix::DenseMatrix;
+pub use physics_matrix2::Matrix2;
 pub use simd::{Gf2x64, GfPx64};
-pub use smith_normal_form::{SmithNormalForm, smith_normal_form};
+pub use smith_normal_form::{smith_normal_form, SmithNormalForm};
 pub use sparse_matrix::CsrMatrix;
 
 #[cfg(test)]

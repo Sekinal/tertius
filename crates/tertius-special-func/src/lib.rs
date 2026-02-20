@@ -18,14 +18,16 @@
 //! - ∫ 1/ln(x) dx = li(x)
 //! - ∫ ln(x)/(x-1) dx = Li₂(x) + C
 
-pub mod polylog;
-pub mod error_func;
-pub mod elliptic;
-pub mod hypergeometric;
 pub mod catalog;
+pub mod elliptic;
+pub mod error_func;
+pub mod hypergeometric;
+pub mod physics;
+pub mod polylog;
 
-pub use polylog::{Polylogarithm, dilog, trilog};
-pub use error_func::{ErrorFunction, error_func_series};
-pub use elliptic::{EllipticF, EllipticE, EllipticPi};
-pub use hypergeometric::{Hypergeometric2F1, hypergeometric_series};
-pub use catalog::{SpecialFunction, recognize_special_function};
+pub use catalog::{recognize_special_function, SpecialFunction};
+pub use elliptic::{EllipticE, EllipticF, EllipticPi};
+pub use error_func::{error_func_series, ErrorFunction};
+pub use hypergeometric::{hypergeometric_series, Hypergeometric2F1};
+pub use physics::{bessel_j, hermite_h, laguerre_l, legendre_p, spherical_harmonic_y_00};
+pub use polylog::{dilog, trilog, Polylogarithm};

@@ -27,8 +27,18 @@
 //! ```
 
 pub mod fglm;
+pub mod laplace;
+pub mod ode;
+pub mod pde;
 pub mod quotient;
 pub mod triangular;
 
 pub use fglm::{fglm_convert, FGLMResult};
+pub use laplace::{inverse_laplace_basic, laplace_transform_basic, LaplaceImage, TimeTerm};
+pub use ode::{
+    solve_first_order_linear_constant, solve_second_order_constant_homogeneous,
+    solve_separable_power, FirstOrderLinearSolution, SecondOrderHomogeneousSolution,
+    SeparablePowerSolution,
+};
+pub use pde::{heat_mode, laplace_rectangle_mode, wave_mode, SeparatedMode};
 pub use triangular::{solve_triangular, TriangularSystem};
