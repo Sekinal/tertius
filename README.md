@@ -194,6 +194,14 @@ let b = a.inv().unwrap();
 assert_eq!((a * b).value(), 1);
 ```
 
+## Differential Correctness Checks
+
+For randomized cross-checks against SymPy (currently univariate factorization):
+
+```bash
+uv run --project scripts python scripts/differential_sympy.py --build-binary --cases 500
+```
+
 ---
 
 ## Algorithm Details

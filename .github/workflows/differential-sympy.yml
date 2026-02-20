@@ -1,0 +1,34 @@
+name: Differential SymPy Checks
+
+on:
+  pull_request:
+    paths:
+      - "crates/tertius-factor/**"
+      - "scripts/differential_sympy.py"
+      - "scripts/pyproject.toml"
+      - ".github/workflows/differential-sympy.yml"
+  workflow_dispatch:
+
+jobs:
+  univariate-factorization:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Build CLI
+        run: cargo build -p tertius-factor --bin univariate_factor_cli
+
+      - name: Differential test vs SymPy
+        run: |
+          uv run --project scripts \
+            python scripts/differential_sympy.py \
+            --cases 1500 \
+            --seed 123 \
+            --timeout 0.6
